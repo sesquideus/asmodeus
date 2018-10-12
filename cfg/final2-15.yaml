@@ -1,0 +1,135 @@
+mp:
+    processes: 4
+
+dataset:
+    name: 'final2-15'
+    variant: 'pickle'
+
+observers:
+    teplicne:
+        latitude: 48.68231
+        longitude: 19.8575
+        altitude: 692
+    
+integrator:                                                 # Properties of the integrator
+    name: 'rk4'                                             # Integrator to be used. Allowed values are 'rk4' and 'euler'.
+    fps: 15                                                 # Frames per second.
+    spf: 10                                                 # Steps per frame. Higher values mean more precise trajectories
+
+meteors:
+    count:                      100000
+    shape:
+        dragCoefficient:        0.6                         # 0.47 for a spherical body
+        shapeFactor:            1.21                        # 1.21 for a spherical body
+    material:
+        density:                'cometary'                  # Density profile (see configuration/density.py). Possible values 'cometary', 'asteroid', 'iron', or a number (kg/m3)
+        heatTransfer:           0.5                         # Heat transfer coefficient, default 0.5
+        ablationHeat:           6000000                     # Specific enthalpy of vaporization, in J/kg
+    mass:
+        distribution:           'pareto'                    # Particle mass distribution. Possible values 'pareto' or a number
+        parameters:
+            minimum:            0.000005                    # Minimum particle mass, in kg
+            shape:              2.15                        # Shape of the distribution, corresponds to s-index (N(m) \propto m^-s)
+    position:
+        distribution:           'rectangle'                 # Name of the distribution, currently only 'rectangle'
+        parameters:
+            south:              45                          # Southern bound, degrees of latitude
+            north:              53                          # Northern bound, degrees of latitude
+            west:               15                          # Western bound, degrees of longitude
+            east:               25                          # Eastern bound, degrees of longitude
+            elevation:          130000                      # Initial elevation of meteors, in m
+    velocity:
+        distribution:           'shower'                    # Currently only 'shower'
+        parameters:
+            ra:                 43                          # Right ascension in degrees
+            dec:                56                          # Declination in degrees
+            speed:              59000                       # Entry speed in m/s
+    time:
+        begin:                  2016-08-11T19:00:00         # Beginning of the interval, ISO8601
+        end:                    2016-08-12T02:00:00         # End of the interval, ISO8601
+
+bias:
+    magnitude:
+        function:               'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
+        parameters:
+            fillFactor:         1                           # Fill factor, the maximum detection efficiency for m -> -infty
+            limit:              -0.17                       # Limiting magnitude m0
+            omega:              0.362                       # Width of the function
+    angularSpeed:
+        function:               'flat'                      # Angular speed detection efficiency profile, possible values 'flat' or 'linear'
+        parameters:
+            fillFactor:         1
+            zero:               1
+            slope:              -0.01
+    altitude:
+        function:               'powersine'                 # Altitude detection efficiency profile, possible values 'step' or 'linear' or 'powersine'
+        parameters:
+            exponent:           0.25                        # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
+
+plot:
+    dark:                       False
+    streaks:                    False
+    seenOnly:                   True
+    pixels:                     5400
+    sky:
+        speed:                  False
+        power:                  True
+        sighted:                True
+        angularSpeed:           True
+        mass:                   True
+        distance:               False
+        elevation:              True
+
+statistics:                                                 # Histograms to be plotted for simulation data
+    histograms: 
+        altitude:
+            min:                0
+            max:                90
+            bin:                5
+            name:               'altitude'
+            xunit:              '°'
+        azimuth:
+            min:                0
+            max:                360
+            bin:                15
+            name:               'azimuth'
+            xunit:              '°'
+        magnitude:
+            min:                -10
+            max:                10
+            bin:                0.5
+            name:               'apparent magnitude'
+        angularSpeed:
+            min:                0
+            max:                40
+            bin:                1
+            name:               'angular speed'
+            xunit:              '°/s'
+
+multifit:                                                   # Exhaustive search of the parameter space
+    magnitude:
+        repeat:                 0
+        function:               'sigmoid'
+        parameters:
+            limit:
+                min:            -0.5
+                max:            -0.1
+                step:           0.02
+            omega:
+                min:            0.26
+                max:            0.46
+                step:           0.02
+    altitude:
+        repeat:                 100
+        function:               'powersine'
+        parameters:
+            exponent:
+                min:            0.00
+                max:            2.0
+                step:           0.02
+    angularSpeed:
+        repeat:                 100
+        function:               'powersine'
+        parameters:
+            exponent:
+                min:

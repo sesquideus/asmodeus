@@ -1,0 +1,105 @@
+mp:
+    processes: 4
+
+dataset:
+    name: 'single'
+    variant: 'pickle'
+
+observers:
+    ago:
+        latitude: 48.37267
+        longitude: 17.27387
+        altitude: 531
+    
+integrator:
+    name: 'rk4'
+    inverse_dt: 15
+    steps_per_frame: 500
+
+meteors:
+    count:                      1
+    shape:
+        dragCoefficient:        0.6                 # 0.6 for sphere
+        shapeFactor:            1.21                # 1.21 for sphere
+    material:
+        heatTransfer:           0.5                 # 0.5
+        ablationHeat:           6000000             # J/kg
+        density:                'cometary'
+    mass:
+        distribution:           'constant'
+        parameters:
+            mass:               1   
+            minimum:            0.00000003      # kg
+            shape:              2.05            # mass index
+    velocity:
+        distribution:           'shower'
+        parameters:
+            ra:                 43              # degrees
+            dec:                56              # degrees
+            speed:              59000           # m/s
+    position:
+        distribution:           'rectangle'
+        parameters:
+            south:              48
+            north:              48
+            west:               17
+            east:               17
+            elevation:          130000
+    time:
+        begin:                  2016-08-12T02:30:00
+        end:                    2016-08-12T02:30:00
+
+bias:
+    magnitude:
+        function:               'sigmoid'
+        parameters:
+            fillFactor:         1
+            limit:              -0.5
+            omega:              0.5
+    angularSpeed:
+        function:               'flat'
+        parameters:
+            fillFactor:         1
+            zero:               1
+            slope:              -0.01
+    altitude:
+        function:               'step'
+        parameters:
+            limit:              15
+
+plot:
+    dark:                       True
+    streaks:                    True
+    seenOnly:                   True
+    pixels:                     1800
+    sky:
+        speed:                  False
+        power:                  True
+        sighted:                True
+        angularSpeed:           True
+        mass:                   True
+        distance:               False
+        elevation:              True
+
+statistics:
+    histogram:
+        altitude:
+            min:                0
+            max:                90
+            bin:                5
+        azimuth:
+            min:                0
+            max:                360
+            bin:                5
+        apparentMagnitude:
+            min:                -10
+            max:                15
+            bin:                0.5
+        angularSpeed:
+            min:                0
+            max:                40
+            bin:                1
+        mass:
+            min:                0
+            max:                0.01
+            bin:                0.000001
