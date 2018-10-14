@@ -20,11 +20,11 @@ class DensityDistribution(Distribution):
         }.get(name, self.default)(**kwargs)
         
     def cometary(self, **kwargs):
-        return self.constant(value = 620000)
+        return self.constant(value = 620)
 
     def asteroidal(self, **kwargs):
-        return lambda: random.gauss(3300, 50) 
+        return self.gauss(3300, 50) 
 
     def iron(self, **kwargs):
-        return lambda: random.gauss(7800, 30)
+        return self.gauss(7800, 30)
 

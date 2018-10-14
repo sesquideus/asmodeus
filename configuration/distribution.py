@@ -11,11 +11,8 @@ class Distribution():
         return lambda: value
 
     def gauss(self, *, mu = 0, sigma = 1):  
-        return random.gauss(mean, sigma)
+        return lambda: random.gauss(mean, sigma)
 
     def default(self, **kwargs):
         raise KeyError("No default distribution defined")
-
-
-
 

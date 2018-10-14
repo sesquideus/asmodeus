@@ -1,4 +1,4 @@
-import math, random, numbers, logging
+import math, random, numbers, logging, datetime
 from utils import colour
 
 from configuration.distribution import Distribution
@@ -10,14 +10,13 @@ class TimeDistribution(Distribution):
         super().__init__()
     
     def create(self, name, **kwargs):
-        if isinstance(name, numbers.Number):
-            return lambda: name 
-        
         return {
-            'cometary':     self.cometary,
-            'asteroidal':   self.asteroidal,
-            'iron':         self.iron,
+            'uniform':      self.uniform,
         }.get(name, self.default)(**kwargs)
         
-    def uniform(self, **kwargs):
-        return self.constant(value = 620000)
+    def uniform(self, *, begin, end):
+        def fun():
+            timeSpan        = (end - begin).total_seconds()
+            return begin + datetime.timedelta(seconds = random.uniform(0, timeSpan))
+
+        return fun

@@ -4,19 +4,17 @@ import numpy as np, multiprocessing as mp
 import datetime, argparse, yaml, sys, datetime, random, pprint, os, shutil, logging, io, math
 
 import asmodeus, coord, configuration
-import configuration.velocity, configuration.position, configuration.mass
+import configuration.velocity, configuration.position, configuration.mass, configuration.time
 from models.meteor import Meteor
 from coord import Vector3D, rotMatrixZ
 
 from log import setupLog
 from utils import readableDir, writeableDir, colour, formatParameters
 
-from configuration.density import DensityDistribution
-
+import configuration
 
 def createMeteor():
-    timeSpan            = (config.meteors.time.end - config.meteors.time.begin).total_seconds()
-    timestamp           = config.meteors.time.begin + datetime.timedelta(seconds = random.uniform(0, timeSpan))
+    timestamp           = temporalDistribution()
 
     mass                = massDistribution()
     density             = densityDistribution()
@@ -77,7 +75,7 @@ if __name__ == "__main__":
     config = asmodeus.initialize('generate')
 
     log.info("Particle mass distribution is {} ({})".format(colour(config.meteors.mass.distribution, 'name'), formatParameters(config.meteors.mass.parameters)))
-    massDistribution = configuration.mass.distribution(config.meteors.mass.distribution, **config.meteors.mass.parameters._asdict())
+    massDistribution = configuration.mass.MassDistribution().create(config.meteors.mass.distribution, **config.meteors.mass.parameters._asdict())
 
     log.info("Initial position distribution is {} ({})".format(colour(config.meteors.position.distribution, 'name'), formatParameters(config.meteors.position.parameters)))
     positionDistribution = configuration.position.distribution(config.meteors.position.distribution, **config.meteors.position.parameters._asdict())
@@ -86,8 +84,10 @@ if __name__ == "__main__":
     velocityDistribution = configuration.velocity.distribution(config.meteors.velocity.distribution, **config.meteors.velocity.parameters._asdict())
 
     log.info("Particle density distribution is {}".format(colour(config.meteors.material.density, 'name')))
-    densityDistribution = DensityDistribution().create(config.meteors.material.density)
+    densityDistribution = configuration.density.DensityDistribution().create(config.meteors.material.density)
 
+    log.info("Temporal distribution is {} ({})".format(colour(config.meteors.time.distribution, 'name'), formatParameters(config.meteors.time.parameters)))
+    temporalDistribution = configuration.time.TimeDistribution().create(config.meteors.time.distribution, **config.meteors.time.parameters._asdict())
 
     main(sys.argv)
     log.info("Finished successfully")

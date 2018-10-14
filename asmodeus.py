@@ -1,5 +1,5 @@
 import multiprocessing as mp
-import os, sys, logging, shutil, argparse, time
+import os, sys, logging, shutil, time
 from utils import colour, jinjaEnv, filterVisible
 
 from configuration import configuration, density, mass
@@ -7,6 +7,8 @@ from models.observer import Observer
 from models.sighting import Sighting
 from models.sightingframe import SightingFrame
 from histogram import Histogram
+
+import argparser
 
 log = logging.getLogger('root')
 
@@ -105,32 +107,13 @@ def createAmosHistograms(file):
 
 ### Parsers
 
-class AsmodeusParser(argparse.ArgumentParser):
-    def __init__(self):
-        super().__init__(description = "All-Sky Meteor Orbit and Detection Efficiency Simulator")
-        self.add_argument('config',               type = argparse.FileType('r'))
-        self.add_argument('-d', '--debug',        action = 'store_true')
-        self.add_argument('-p', '--processes',    type = int)
-        self.add_argument('-s', '--dataset',      type = str)
-        self.add_argument('-l', '--logfile',      type = argparse.FileType('w'))
-
-class AsmodeusParserGenerate(AsmodeusParser):
-    def __init__(self):
-        super().__init__()    
-        self.add_argument('-c', '--count', type = int)
-
-class AsmodeusParserObserve(AsmodeusParser):
-    def __init__(self):
-        super().__init__()
-        self.add_argument('--plot-sky', action = 'store_true')
-
 ### Master initializer
 
 def initialize(script):
     global config
     global startTime
     startTime = time.time()
-    args = AsmodeusParserGenerate().parse_args()
+    args = argparser.AsmodeusParserGenerate().parse_args()
     config = configuration.applyOverrides(script, args)
 
     log.info("Initializing {}".format(colour("asmodeus-{}".format(script), 'script')))

@@ -125,8 +125,9 @@ class Meteor:
             
             if (frame % stepsPerFrame == 0):
                 self.frames.append(models.frame.Frame(self))
-                log.debug("{frame:04d} | {latitude:6.4f} °N, {longitude:6.4f} °E, {elevation:6.0f} m  |  d {density:9.3e} kg/m3 |  v {speed:9.3f} m/s, dv {acceleration:13.3f} m/s2, tau {lumEff:6.4f} | m {mass:8.4e} kg, dm {ablation:10.4e} kg/s | I {lp:10.3e} W".format(
+                log.debug("{frame:04d} {time:6.3f} s | {latitude:6.4f} °N, {longitude:6.4f} °E, {elevation:6.0f} m  |  d {density:9.3e} kg/m3 |  v {speed:9.3f} m/s, dv {acceleration:13.3f} m/s2, tau {lumEff:6.4f} | m {mass:8.4e} kg, dm {ablation:10.4e} kg/s | I {lp:10.3e} W".format(
                     frame           = frame,
+                    time            = frame * dt,
                     latitude        = self.position.latitude(),
                     longitude       = self.position.longitude(),
                     elevation       = self.position.elevation(),

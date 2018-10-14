@@ -1,64 +1,42 @@
 import math, random, sys, numbers, logging
+import numpy as np
 from utils import colour
 
 from configuration.distribution import Distribution
 
 log = logging.getLogger('root')
 
-class DensityDistribution(Distribution):
+class MassDistribution(Distribution):
     def __init__(self):
         super().__init__()
+
+    def magic(self, config):
+        if (isinstance(config.distribution, numbers.Number)):
+            return lambda: name
+        else:
+            return {
+                'pareto':   lambda: (np.random.pareto(config.parameters.shape - 1) + 1) * config.parameters.minimum
+            }
     
     def create(self, name, **kwargs):
         if isinstance(name, numbers.Number):
             return lambda: name 
         
         return {
-            'cometary':     self.cometary,
-            'asteroidal':   self.asteroidal,
-            'iron':         self.iron,
+            'pareto':       self.pareto,
+            'exponential':  self.exponential,
+            'power':        self.power,
+            'constant':     self.constant,
         }.get(name, self.default)(**kwargs)
         
-    def pareto(self, *, shape, minimum):
-        return lambda: (np.random.pareto(shape - 1) + 1)
+    def pareto(self, *, shape: float, minimum: float) -> (lambda: float):
+        return lambda: (np.random.pareto(shape - 1) + 1) * minimum
 
-    def iron(self, **kwargs):
-        return lambda: random.gauss(7800, 30)
+    def exponential(self, *, shape: float) -> (lambda: float):
+        return lambda: np.random.exponential(shape)
 
-def constant(**kwargs):
-    def fun():
-        return kwargs['mass']
+    def constant(self, *, mass: float) -> (lambda: float):
+        return lambda: mass
 
-    return fun
-
-def pareto(**kwargs):
-    shape       = kwargs['shape']
-    minimum     = kwargs['minimum']
-
-    def fun():
-        return (np.random.pareto(shape - 1) + 1) * minimum
-
-    return fun
-
-def power(**kwargs):
-    shape       = kwargs['shape']
-    minimum     = kwargs['minimum']
-
-    def fun():
-        return (minimum**(shape + 1) * (1 - random.random()))**(1 / (shape + 1))
-
-    return fun
-
-def distribution(name, **kwargs):
-    if isinstance(name, numbers.Number):
-        return name
-
-    try:
-        return {
-            'pareto': pareto,
-            'constant': constant,
-            'power': power,
-        }[name](**kwargs)
-    except KeyError as e:
-        log.error("Unknown mass distribution function {}".format(colour(e, 'error')))
-        return constant(mass = 0.001)
+    def power(self, *, shape, minimum):
+        return lambda: (minimum**(shape + 1) * random.random())**(1 / (shape + 1))
