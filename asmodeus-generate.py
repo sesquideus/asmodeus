@@ -50,10 +50,10 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         self.dataset.prepare()   
      
         self.meteors = list(filter(lambda x: x is not None, [self.createMeteor() for _ in range(0, self.config.meteors.count)]))
-        log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass:.6f} kg".format(
+        log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass}".format(
             total       = c.num(len(self.meteors)),
             percent     = c.num("{:5.2f}%".format(100 * len(self.meteors) / self.config.meteors.count)),
-            mass        = sum(map(lambda x: x.mass, self.meteors))
+            mass        = c.num("{:6f} kg".format(sum(map(lambda x: x.mass, self.meteors)))),
         ))
 
 
