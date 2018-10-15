@@ -14,7 +14,9 @@ def rectangle(**kwargs):
     east = kwargs['east']  
     elevation = kwargs['elevation']
     
-    log.info("This means a total area of about {:.0f} km²".format((math.sin(math.radians(north)) - math.sin(math.radians(south))) * math.radians(east - west) * (6371 + elevation / 1000)**2))
+    log.info("This means a total area of about {:.0f} km²".format(
+        (math.sin(math.radians(north)) - math.sin(math.radians(south))) * math.radians(east - west) * (6371 + elevation / 1000)**2)
+    )
 
     def fun():
         latitude = random.uniform(south, north)

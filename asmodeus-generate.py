@@ -3,15 +3,50 @@
 import numpy as np, multiprocessing as mp
 import datetime, argparse, yaml, sys, datetime, random, pprint, os, shutil, logging, io, math
 
-import asmodeus, coord, configuration
+import asmodeus, coord, configuration, dataset
 import configuration.velocity, configuration.position, configuration.mass, configuration.time
 from models.meteor import Meteor
 from coord import Vector3D, rotMatrixZ
 
 from log import setupLog
-from utils import readableDir, writeableDir, colour, formatParameters
 
-import configuration
+import colour as c
+import configuration, utils
+
+class AsmodeusGenerate(asmodeus.Asmodeus):
+    def __init__(self):
+        log.info("Initializing {}".format(c.script("asmodeus-generate")))
+        super().__init__() 
+
+    def createArgparser(self):
+        log.debug("Creating argparser for {}".format(c.script("asmodeus-generate")))
+        super().createArgparser()
+        self.argparser.add_argument('-c', '--count', type = int)
+
+    def overrideConfig(self):
+        log.debug("Overriding config for {}".format(c.script("asmodeus-generate")))
+        super().overrideConfig()
+
+        if (self.args.count):
+            self.overrideWarning('count', self.config.meteors.count, self.args.count)
+            self.config.meteors.count = self.args.count
+
+    def configure(self):
+        self.distributionInfo("Particle mass", self.config.meteors.mass.distribution, self.config.meteors.mass.parameters)
+        self.massDistribution       = configuration.mass.MassDistribution().create(self.config.meteors.mass.distribution, **self.config.meteors.mass.parameters._asdict())
+
+        self.distributionInfo("Initial position", self.config.meteors.position.distribution, self.config.meteors.position.parameters)
+        self.positionDistribution   = configuration.position.distribution(self.config.meteors.position.distribution, **self.config.meteors.position.parameters._asdict())
+        
+        self.distributionInfo("Initial velocity", self.config.meteors.velocity.distribution, self.config.meteors.velocity.parameters)
+        self.velocityDistribution   = configuration.velocity.distribution(self.config.meteors.velocity.distribution, **self.config.meteors.velocity.parameters._asdict())
+
+        self.distributionInfo("Particle density", self.config.meteors.material.density)
+        self.densityDistribution    = configuration.density.DensityDistribution().create(self.config.meteors.material.density)
+
+        self.distributionInfo("Temporal", self.config.meteors.time.distribution, self.config.meteors.time.parameters)
+        self.temporalDistribution   = configuration.time.TimeDistribution().create(self.config.meteors.time.distribution, **self.config.meteors.time.parameters._asdict())
+
 
 def createMeteor():
     timestamp           = temporalDistribution()
@@ -52,43 +87,29 @@ def simulate(meteor):
     meteor.save(config.dataset.path)
 
 def main(argv):
-    log.info("About to simulate {} meteoroids".format(colour(config.meteors.count, 'num')))
-    asmodeus.prepareDataset()
-    
+    log.info("About to generate {} meteoroids".format(c.num(config.meteors.count)))
+    dataset.prepare()   
+ 
     meteors = list(filter(lambda x: x is not None, [createMeteor() for _ in range(0, config.meteors.count)]))
     log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass:.6f} kg".format(
-        total       = colour(len(meteors), 'num'),
-        percent     = colour("{:5.2f}%".format(100 * len(meteors) / config.meteors.count), 'num'),
+        total       = c.num(len(meteors)),
+        percent     = c.num("{:5.2f}%".format(100 * len(meteors) / config.meteors.count)),
         mass        = sum(map(lambda x: x.mass, meteors))
     ))
     meteors = process(meteors)
 
     log.info("{number} meteors written to {directory}".format(
-        number      = colour(len(meteors), 'num'),
-        directory   = colour(asmodeus.datasetPath('meteors'), 'dir'))
-    )
+        number      = c.num(len(meteors)),
+        directory   = c.path(asmodeus.datasetPath('meteors')),
+    ))
     log.info("Finished in {:.6f} seconds ({:.3f} meteors per second)".format(asmodeus.runTime(), len(meteors) / asmodeus.runTime()))
 
 
 if __name__ == "__main__":
     log = setupLog('root')
-    config = asmodeus.initialize('generate')
-
-    log.info("Particle mass distribution is {} ({})".format(colour(config.meteors.mass.distribution, 'name'), formatParameters(config.meteors.mass.parameters)))
-    massDistribution = configuration.mass.MassDistribution().create(config.meteors.mass.distribution, **config.meteors.mass.parameters._asdict())
-
-    log.info("Initial position distribution is {} ({})".format(colour(config.meteors.position.distribution, 'name'), formatParameters(config.meteors.position.parameters)))
-    positionDistribution = configuration.position.distribution(config.meteors.position.distribution, **config.meteors.position.parameters._asdict())
+    asmo = AsmodeusGenerate()
+    asmo.configure()
     
-    log.info("Initial velocity distribution is {} ({})".format(colour(config.meteors.velocity.distribution, 'name'), formatParameters(config.meteors.velocity.parameters)))
-    velocityDistribution = configuration.velocity.distribution(config.meteors.velocity.distribution, **config.meteors.velocity.parameters._asdict())
-
-    log.info("Particle density distribution is {}".format(colour(config.meteors.material.density, 'name')))
-    densityDistribution = configuration.density.DensityDistribution().create(config.meteors.material.density)
-
-    log.info("Temporal distribution is {} ({})".format(colour(config.meteors.time.distribution, 'name'), formatParameters(config.meteors.time.parameters)))
-    temporalDistribution = configuration.time.TimeDistribution().create(config.meteors.time.distribution, **config.meteors.time.parameters._asdict())
-
     main(sys.argv)
     log.info("Finished successfully")
     log.info("---------------------")

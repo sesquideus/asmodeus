@@ -3,6 +3,8 @@ import namedtupled as nt
 import numpy as np
 from colorama import Fore, Style
 
+import colour as c
+
 class readableDir(argparse.Action):
     def __call__(self, parser, namespace, values, option_string = None):
         tryDir = values
@@ -41,8 +43,7 @@ def colour(what, c):
     return "{}{}{}".format(clr[c], what, Style.RESET_ALL)
 
 def formatParameters(parameters):
-    formatted = ["{} = {}".format(colour(name, 'param'), value) for name, value in sorted(parameters._asdict().items())]
-
+    formatted = ["{} = {}".format(c.param(name), value) for name, value in sorted(parameters._asdict().items())]
     return ", ".join(formatted)
 
 def jinjaEnv(directory):
@@ -59,7 +60,7 @@ def filterVisible(sightings):
     return list(filter(lambda s: s.sighted, sightings))
 
 def generateParameterSpace(**parameters):
-    spaces = itertools.product(*[[{name: value} for value in linSpace(param.min, param.max, param.step)] for name, param in sorted(parameters.items())])
+    spaces = itertools.product(*[[{name: value} for value in linSpace(param.min, param.max, param.step)] for name, param in parameters.items()])
     
     output = []
     for space in spaces:

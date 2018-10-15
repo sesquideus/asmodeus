@@ -27,13 +27,21 @@ class Vector3D:
 
     def __sub__(self, other):
         if not isinstance(other, Vector3D):
-            raise TypeError()
+            raise TypeError("Vector3D: cannot __sub__ {}".format(type(other)))
         return Vector3D(
             self.x - other.x,
             self.y - other.y,
             self.z - other.z
         )
     
+    def __isub__(self, other):
+        if not isinstance(other, Vector3D):
+            raise TypeError("Vector3D: cannot __isub__ {}".format(type(other)))
+        self.x -= other.x
+        self.y -= other.y
+        self.z -= other.z
+        return self
+
     def __mul__(self, other):
         if isinstance(other, Vector3D):
             return self.x * other.x + self.y * other.y + self.z * other.z
@@ -66,7 +74,7 @@ class Vector3D:
 
     def __truediv__(self, other):
         if not isinstance(other, numbers.Number):
-            raise TypeError("Cannot __truediv__ with {}".format(type(other)))
+            raise TypeError("Vector3D: Cannot __truediv__ with {}".format(type(other)))
 
         return Vector3D(
             self.x / other,
@@ -135,27 +143,27 @@ def rotMatrixX(angle):
     c = np.cos(np.radians(angle))
     s = np.sin(np.radians(angle))
     return np.matrix([
-        [1, 0, 0],
-        [0, c, -s],
-        [0, s, c],
+        [1,  0,  0],
+        [0,  c, -s],
+        [0,  s,  c],
     ])
 
 def rotMatrixY(angle):
     c = np.cos(np.radians(angle))
     s = np.sin(np.radians(angle))
     return np.matrix([
-        [c, 0,-s],
-        [0, 1, 0],
-        [s, 0, c],
+        [c,  0, -s],
+        [0,  1,  0],
+        [s,  0,  c],
     ])
 
 def rotMatrixZ(angle):
     c = np.cos(np.radians(angle))
     s = np.sin(np.radians(angle))
     return np.matrix([
-        [c,-s, 0],
-        [s, c, 0],
-        [0, 0, 1],
+        [c, -s,  0],
+        [s,  c,  0],
+        [0,  0,  1],
     ])
 
 def obliquity():

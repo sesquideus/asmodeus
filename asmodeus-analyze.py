@@ -7,7 +7,7 @@ import asmodeus, configuration, models
 import discriminators.magnitude, discriminators.altitude, discriminators.angularSpeed
 
 from histogram import Histogram
-from utils import colour, formatParameters
+from utils import formatParameters
 
 from log import setupLog
 

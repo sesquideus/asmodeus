@@ -1,21 +1,90 @@
 import multiprocessing as mp
-import os, sys, logging, shutil, time
-from utils import colour, jinjaEnv, filterVisible
+import argparse, os, sys, logging, shutil, time
 
 from configuration import configuration, density, mass
-from models.observer import Observer
-from models.sighting import Sighting
-from models.sightingframe import SightingFrame
 from histogram import Histogram
 
-import argparser
+
+
+
+
+
+import argparser, namedtupled
+import colour as c
+import utils
 
 log = logging.getLogger('root')
 
-def runTime():
-    return time.time() - startTime
+class Asmodeus():
+    def __init__(self):
+        self.startTime = time.time()
+        self.createArgparser()
+        self.args = self.argparser.parse_args()
+
+        self.loadConfig()
+        self.overrideConfig()
+        self.config = namedtupled.map(self.config.toDict())
+
+    def createArgparser(self):
+        self.argparser = argparse.ArgumentParser(description = "All-Sky Meteor Observation and Detection Efficiency Simulator")
+        self.argparser.add_argument('config',               type = argparse.FileType('r'))
+        self.argparser.add_argument('-d', '--debug',        action = 'store_true')
+        self.argparser.add_argument('-p', '--processes',    type = int)
+        self.argparser.add_argument('-s', '--dataset',      type = str)
+        self.argparser.add_argument('-l', '--logfile',      type = argparse.FileType('w'))
+
+    def loadConfig(self):
+        self.config = configuration.load(self.args.config)
+
+    def overrideConfig(self):
+        log.setLevel(logging.DEBUG if self.args.debug else logging.INFO)
+
+        if self.args.debug:
+            log.warning("Debug output {}".format(c.over('active')))
+
+        if self.args.logfile:
+            log.addHandler(logging.FileHandler(self.args.logfile.name))
+            log.warning("Added log output {}".format(c.over(self.args.logfile.name)))
+
+        if self.args.processes:
+            self.overrideWarning('process count', self.config.mp.processes, self.args.processes)
+            self.config.mp.processes = self.args.processes
+
+        if self.args.dataset:
+            self.overrideWarning('dataset', self.config.dataset.name, self.args.dataset)
+            self.config.dataset.name = self.args.dataset
+        
+        self.config.dataset.path = os.path.join('datasets', self.config.dataset.name)
+       
+    def runTime(self):
+        return time.time() - startTime
+
+    def loadObservers():
+        self.observers = []
+        for oid, obs in config.observers._asdict().items():
+            observers.append(Observer(oid, config.statistics.histograms._asdict(), **dict(obs._asdict().items())))
+
+        log.info("Loaded {} observers:".format(len(observers)))
+        for o in observers:
+            log.info(o)
+
+        return observers
 
 
+    def overrideWarning(self, parameter, old, new):
+        log.warning("Overriding {parameter:<15} ({old:>15} -> {new:>15})".format(
+            parameter   = parameter,
+            old         = c.over(old),
+            new         = c.over(new),
+        ))
+
+    def distributionInfo(self, quantity, name, params = None):
+        log.info("{quantity:<27} distribution is {name:>20}{params}".format(
+            quantity    = c.param(quantity),
+            name        = c.name(name),
+            params      = "" if params is None else " ({})".format(utils.formatParameters(params)),
+        ))
+        
 
 ### Multiprocessing wrappers
 
@@ -49,47 +118,9 @@ def buildConfigTemplate(template, context, outputDirectory = None):
 
 ### Preparation of dataset directories
 
-def remove(*directory):
-    directory = datasetPath(*directory)
-
-    if os.path.exists(directory):
-        log.warning("Directory {} exists, removing...".format(colour(directory, 'dir')))
-        shutil.rmtree(directory)
-
-def createSightingsDirectory():
-    sightingsDirectory = datasetPath('sightings')
-
-    os.makedirs(sightingsDirectory, exist_ok = True)
-    for observer in config.observers._asdict().keys():
-        os.makedirs(os.path.join(sightingsDirectory, observer), exist_ok = True)
-    
-def prepareDataset():
-    remove()        
-    os.makedirs(datasetPath('meteors'), exist_ok = True)
-    createSightingsDirectory()
-    os.makedirs(datasetPath('plots'), exist_ok = True)
-    os.makedirs(datasetPath('histograms'), exist_ok = True)
-
-    for observer in config.observers._asdict().keys():
-        os.makedirs(datasetPath('histograms', observer), exist_ok = True)
-
-    log.info("Created directory for dataset {}".format(colour(config.dataset.name, 'dir')))
-
-def datasetPath(*args):
-    return os.path.join('datasets', config.dataset.name, *args)
 
 ### Preparation of observers
 
-def loadObservers():
-    observers = []
-    for oid, obs in config.observers._asdict().items():
-        observers.append(Observer(oid, config.statistics.histograms._asdict(), **dict(obs._asdict().items())))
-
-    log.info("Loaded {} observers:".format(len(observers)))
-    for o in observers:
-        log.info(o)
-
-    return observers
 
 def createAmosHistograms(file):
     h = config.statistics.histograms
@@ -109,12 +140,4 @@ def createAmosHistograms(file):
 
 ### Master initializer
 
-def initialize(script):
-    global config
-    global startTime
-    startTime = time.time()
-    args = argparser.AsmodeusParserGenerate().parse_args()
-    config = configuration.applyOverrides(script, args)
 
-    log.info("Initializing {}".format(colour("asmodeus-{}".format(script), 'script')))
-    return config

@@ -8,7 +8,7 @@ log = logging.getLogger('root')
 def load(configFile):
     try:
         config = yaml.load(configFile)
-    except e:
+    except FileNotFoundError as e:
         log.error("Could not load configuration file {}: {}".format(configFile, e))
     return dotmap.DotMap(config)
 
@@ -41,10 +41,7 @@ def applyGenericOverrides(args):
     return config
 
 def applyOverridesGenerate(args, config):
-    if (args.count):
-        log.warning("Overriding count ({} to {})".format(colour(config.meteors.count, 'over'), colour(args.count, 'over')))
-        config.meteors.count = args.count
-
+    
     return config
 
 def applyOverridesObserve(args, config):
