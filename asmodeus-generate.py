@@ -19,12 +19,10 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         super().__init__() 
 
     def createArgparser(self):
-        log.debug("Creating argparser for {}".format(c.script("asmodeus-generate")))
         super().createArgparser()
         self.argparser.add_argument('-c', '--count', type = int)
 
     def overrideConfig(self):
-        log.debug("Overriding config for {}".format(c.script("asmodeus-generate")))
         super().overrideConfig()
 
         if (self.args.count):
@@ -47,69 +45,73 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         self.distributionInfo("Temporal", self.config.meteors.time.distribution, self.config.meteors.time.parameters)
         self.temporalDistribution   = configuration.time.TimeDistribution().create(self.config.meteors.time.distribution, **self.config.meteors.time.parameters._asdict())
 
+    def generate(self):
+        log.info("About to generate {} meteoroids".format(c.num(self.config.meteors.count)))
+        self.dataset.prepare()   
+     
+        self.meteors = list(filter(lambda x: x is not None, [self.createMeteor() for _ in range(0, self.config.meteors.count)]))
+        log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass:.6f} kg".format(
+            total       = c.num(len(self.meteors)),
+            percent     = c.num("{:5.2f}%".format(100 * len(self.meteors) / self.config.meteors.count)),
+            mass        = sum(map(lambda x: x.mass, self.meteors))
+        ))
 
-def createMeteor():
-    timestamp           = temporalDistribution()
 
-    mass                = massDistribution()
-    density             = densityDistribution()
-    position            = positionDistribution()
-    velocityEquatorial  = velocityDistribution()
+    def createMeteor(self):
+        timestamp           = self.temporalDistribution()
+        mass                = self.massDistribution()
+        density             = self.densityDistribution()
+        position            = self.positionDistribution()
+        velocityEquatorial  = self.velocityDistribution()
 
-    velocityECEF        = Vector3D.fromNumpyVector((rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
-    entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
-    entryAngle          = math.degrees(math.asin(entryAngleSin))
+        velocityECEF        = Vector3D.fromNumpyVector((rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
+        entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
+        entryAngle          = math.degrees(math.asin(entryAngleSin))
 
-    accept              = random.random()
-    if accept > entryAngleSin:
-        log.debug("Meteoroid rejected: sine of entry angle {}, random value {}".format(entryAngleSin, accept))
-        return None
-    else:
-        log.debug("Meteoroid accepted: sine of entry angle {}, random value {}".format(entryAngleSin, accept))
-        return Meteor(
-            mass            = mass,
-            density         = density,
-            velocity        = velocityECEF,
-            position        = position,
-            timestamp       = timestamp,
-            ablationHeat    = config.meteors.material.ablationHeat,
-            heatTransfer    = config.meteors.material.heatTransfer,
-            dragCoefficient = config.meteors.shape.dragCoefficient,
-        )
+        accept              = random.random()
+        if accept > entryAngleSin:
+            log.debug("Meteoroid rejected: sine of entry angle {}, random value {}".format(entryAngleSin, accept))
+            return None
+        else:
+            log.debug("Meteoroid accepted: sine of entry angle {}, random value {}".format(entryAngleSin, accept))
+            return Meteor(
+                mass            = mass,
+                density         = density,
+                velocity        = velocityECEF,
+                position        = position,
+                timestamp       = timestamp,
+                ablationHeat    = self.config.meteors.material.ablationHeat,
+                heatTransfer    = self.config.meteors.material.heatTransfer,
+                dragCoefficient = self.config.meteors.shape.dragCoefficient,
+            )
     
-def process(meteors):
-    pool = mp.Pool(processes = config.mp.processes)
-    results = [pool.apply_async(simulate, (meteor, )) for meteor in meteors]
-    return [result.get(timeout = 10) for result in results]
+    def process(self):
+        pool = mp.Pool(processes = self.config.mp.processes)
+        results = [pool.apply_async(simulate, (meteor, self.config.integrator.fps, self.config.integrator.spf, self.dataset.name)) for meteor in self.meteors]
+        return [result.get(timeout = 10) for result in results]
 
-def simulate(meteor):
-    meteor.flyRK4(config.integrator.fps, config.integrator.spf)
-    meteor.save(config.dataset.path)
+    def finalize(self):
+        log.info("{number} meteors written to {directory}".format(
+            number      = c.num(len(self.meteors)),
+            directory   = c.path(self.dataset.path('meteors')),
+        ))
+        log.info("Finished in {:.6f} seconds ({:.3f} meteors per second)".format(self.runTime(), len(self.meteors) / self.runTime()))
 
-def main(argv):
-    log.info("About to generate {} meteoroids".format(c.num(config.meteors.count)))
-    dataset.prepare()   
- 
-    meteors = list(filter(lambda x: x is not None, [createMeteor() for _ in range(0, config.meteors.count)]))
-    log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass:.6f} kg".format(
-        total       = c.num(len(meteors)),
-        percent     = c.num("{:5.2f}%".format(100 * len(meteors) / config.meteors.count)),
-        mass        = sum(map(lambda x: x.mass, meteors))
-    ))
-    meteors = process(meteors)
+def simulate(meteor, fps, spf, dataset):
+    meteor.flyRK4(fps, spf)
+    meteor.save(dataset)
 
-    log.info("{number} meteors written to {directory}".format(
-        number      = c.num(len(meteors)),
-        directory   = c.path(asmodeus.datasetPath('meteors')),
-    ))
-    log.info("Finished in {:.6f} seconds ({:.3f} meteors per second)".format(asmodeus.runTime(), len(meteors) / asmodeus.runTime()))
 
 
 if __name__ == "__main__":
     log = setupLog('root')
     asmo = AsmodeusGenerate()
     asmo.configure()
+    asmo.generate()
     
-    main(sys.argv)
+    asmo.process()
+   
+    asmo.finalize()
+
     log.info("Finished successfully")
     log.info("---------------------")

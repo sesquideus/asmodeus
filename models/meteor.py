@@ -64,10 +64,11 @@ class Meteor:
         )
 
     def __repr__(self):
-        return str(self.asDict())
+        return 'abc'#str(self.asDict())
 
     def save(self, dataset):
-        fileIO = io.FileIO(os.path.join(dataset, 'meteors', '{}.{}'.format(self.id, 'pickle')), 'wb')
+        fn = os.path.join(dataset, 'meteors', '{}.{}'.format(self.id, 'pickle'))
+        fileIO = io.FileIO(os.path.join('datasets', dataset, 'meteors', '{}.{}'.format(self.id, 'pickle')), 'wb')
         pickle.dump(self, fileIO)
 
     def saveKML(self, dataset):
@@ -78,9 +79,6 @@ class Meteor:
 
     def pickle(self):
         return pickle.dumps(self)
-
-    def toYAML(self):
-        return yaml.dump(self.asDict(), default_flow_style = False)
 
     def acceleration(self, state):
         airRho = airDensity(state.position.norm() - constants.earthRadius)

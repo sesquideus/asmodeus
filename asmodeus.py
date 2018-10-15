@@ -11,7 +11,7 @@ from histogram import Histogram
 
 import argparser, namedtupled
 import colour as c
-import utils
+import utils, dataset
 
 log = logging.getLogger('root')
 
@@ -24,6 +24,8 @@ class Asmodeus():
         self.loadConfig()
         self.overrideConfig()
         self.config = namedtupled.map(self.config.toDict())
+
+        self.dataset = dataset.Dataset(self.config.dataset.name, self.config.observers)
 
     def createArgparser(self):
         self.argparser = argparse.ArgumentParser(description = "All-Sky Meteor Observation and Detection Efficiency Simulator")
@@ -57,7 +59,7 @@ class Asmodeus():
         self.config.dataset.path = os.path.join('datasets', self.config.dataset.name)
        
     def runTime(self):
-        return time.time() - startTime
+        return time.time() - self.startTime
 
     def loadObservers():
         self.observers = []
