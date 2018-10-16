@@ -10,11 +10,12 @@ observers:
         latitude: 48.37267
         longitude: 17.27387
         altitude: 531
+        horizon: 15
     
 integrator:
     name: 'rk4'
-    inverse_dt: 15
-    steps_per_frame: 500
+    fps: 20
+    spf: 1
 
 meteors:
     count:                      1
@@ -24,13 +25,15 @@ meteors:
     material:
         heatTransfer:           0.5                 # 0.5
         ablationHeat:           6000000             # J/kg
-        density:                'cometary'
+        density:                
+            distribution:       'gauss'
+            parameters:         
+                mean:           620
+                sigma:          10
     mass:
         distribution:           'constant'
         parameters:
-            mass:               1   
-            minimum:            0.00000003      # kg
-            shape:              2.05            # mass index
+            mass:               0.001 
     velocity:
         distribution:           'shower'
         parameters:
@@ -46,8 +49,10 @@ meteors:
             east:               17
             elevation:          130000
     time:
-        begin:                  2016-08-12T02:30:00
-        end:                    2016-08-12T02:30:00
+        distribution:           'uniform'
+        parameters:
+            begin:              2016-08-12T00:30:00
+            end:                2016-08-12T00:30:00
 
 bias:
     magnitude:
@@ -82,7 +87,7 @@ plot:
         elevation:              True
 
 statistics:
-    histogram:
+    histograms:
         altitude:
             min:                0
             max:                90

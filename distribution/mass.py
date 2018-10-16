@@ -1,8 +1,7 @@
 import math, random, sys, numbers, logging
 import numpy as np
-from utils import colour
 
-from configuration.distribution import Distribution
+from distribution.distribution import Distribution
 
 log = logging.getLogger('root')
 

@@ -1,58 +1,74 @@
 #!/usr/bin/env python
 
-import numpy as np
 import multiprocessing as mp
-import namedtupled as nt
-import datetime, argparse, yaml, sys, datetime, random, pprint, os, shutil, logging, io
+import datetime, random, pprint, os, shutil, logging, io, math
 
-import asmodeus, configuration, models
+from core import asmodeus, coord, configuration, dataset, logger
+from distribution import position, velocity, mass, density, time
+from utilities import colour as c, utilities as ut
+
 from models.meteor import Meteor
-from models.observer import Observer
 from models.sighting import Sighting
-from models.sightingframe import SightingFrame
 
-from utils import colour, formatParameters
+class AsmodeusObserve(asmodeus.Asmodeus):
+    def __init__(self):
+        log.info("Initializing {}".format(c.script("asmodeus-observe")))
+        super().__init__() 
+        self.configure()
 
-from log import setupLog
+    def createArgparser(self):
+        super().createArgparser()
 
-def observeMeteors():
-    pool = mp.Pool(processes = config.mp.processes)
-    results = [pool.apply_async(observeMeteor, (meteorFile,)) for meteorFile in os.listdir(os.path.join('datasets', config.dataset.name, 'meteors'))]
-    out = [result.get(timeout = 5) for result in results]
+    def overrideConfig(self):
+        super().overrideConfig()
 
-    log.info("Results written to {output} ({count} meteors processed from {observers} observing sites)".format(
-        output      = colour(os.path.join(config.dataset.path, 'sightings'), 'dir'),
-        count       = len(results),
-        observers   = len(observers),
-    ))
+    def configure(self):
+        self.loadObservers()
+        self.dataset.require('meteors')
+
+        self.dataset.reset('sightings')
+        for observer in self.observers:
+            self.dataset.create('sightings', observer.id)
+
+    def observe(self):
+        pool        = mp.Pool(processes = self.config.mp.processes)
+        path        = self.dataset.path('meteors')
+        meteorFiles = os.listdir(path)
+    
+        self.markTime()
+        results = [ ### Refactor this more
+            pool.apply_async(
+                observeMeteor, (self.observers[0], os.path.join(path, meteorFile), self.observers[0].horizon, self.dataset.name)
+            ) for meteorFile in meteorFiles
+        ]
+        out = [result.get(timeout = 5) for result in results]
+
+        log.info("Results written to {output} ({count} meteors processed from {observers} observing sites)".format(
+            output      = c.path(self.dataset.path('sightings')),
+            count       = len(results),
+            observers   = len(self.observers),
+        ))
    
-    return len(results)
+        log.info("Finished in {:.6f} seconds ({:.3f} meteors per second)".format(self.runTime(), len(results) / self.runTime()))
 
-def observeMeteor(filename):
-    meteor = Meteor.load(os.path.join('datasets', config.dataset.name, 'meteors', filename), 'pickle')
+def observeMeteor(observer, filename, minAlt, out):
+    meteor = Meteor.load(filename)
 
-    for observer in observers:
-        sighting = Sighting(observer, meteor)
-        if sighting.brightestFrame.altAz.latitude() >= config.meteors.minAltitude:
-            sighting.save(config.dataset.name) 
+    sighting = Sighting(observer, meteor)
+    if sighting.brightestFrame.altAz.latitude() >= minAlt:
+        sighting.save(out) 
 
     return True
-                
-def main(argv):
-    asmodeus.remove('sightings')
-    asmodeus.createSightingsDirectory()
-    observedCount = observeMeteors()
 
+def main(argv):
     for observer in observers:
         observer.createSkyPlot()
 
-    log.info("Finished in {:.6f} seconds ({:.3f} meteors per second)".format(asmodeus.runTime(), observedCount / asmodeus.runTime()))
 
 if __name__ == "__main__":
-    log = setupLog('root')
-    config = asmodeus.initialize('observe')
-    observers = asmodeus.loadObservers()
+    log = logger.setupLog('root')
+    asmo = AsmodeusObserve()
+    asmo.observe()
     
-    main(sys.argv)
     log.info("Finished successfully")
     log.info("---------------------")

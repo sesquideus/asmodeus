@@ -1,23 +1,15 @@
 import multiprocessing as mp
-import argparse, os, sys, logging, shutil, time
+import argparse, os, sys, logging, shutil, time, namedtupled
 
-from configuration import configuration, density, mass
-from histogram import Histogram
+from core import configuration, dataset
+from utilities import colour as c, utilities as util
 
-
-
-
-
-
-import argparser, namedtupled
-import colour as c
-import utils, dataset
+from models.observer import Observer
 
 log = logging.getLogger('root')
 
 class Asmodeus():
     def __init__(self):
-        self.startTime = time.time()
         self.createArgparser()
         self.args = self.argparser.parse_args()
 
@@ -58,23 +50,23 @@ class Asmodeus():
         
         self.config.dataset.path = os.path.join('datasets', self.config.dataset.name)
        
+    def markTime(self):
+        self.startTime = time.time()
+
     def runTime(self):
         return time.time() - self.startTime
 
-    def loadObservers():
+    def loadObservers(self):
         self.observers = []
-        for oid, obs in config.observers._asdict().items():
-            observers.append(Observer(oid, config.statistics.histograms._asdict(), **dict(obs._asdict().items())))
+        for oid, obs in self.config.observers._asdict().items():
+            self.observers.append(Observer(oid, **dict(obs._asdict().items())))
 
-        log.info("Loaded {} observers:".format(len(observers)))
-        for o in observers:
+        log.info("Loaded {} observers:".format(len(self.observers)))
+        for o in self.observers:
             log.info(o)
 
-        return observers
-
-
     def overrideWarning(self, parameter, old, new):
-        log.warning("Overriding {parameter:<15} ({old:>15} -> {new:>15})".format(
+        log.warning("Overriding {parameter} ({old} -> {new})".format(
             parameter   = parameter,
             old         = c.over(old),
             new         = c.over(new),
@@ -84,7 +76,7 @@ class Asmodeus():
         log.info("{quantity:<27} distribution is {name:>20}{params}".format(
             quantity    = c.param(quantity),
             name        = c.name(name),
-            params      = "" if params is None else " ({})".format(utils.formatParameters(params)),
+            params      = "" if params is None else " ({})".format(util.formatParameters(params)),
         ))
         
 

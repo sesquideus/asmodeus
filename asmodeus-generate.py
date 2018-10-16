@@ -1,22 +1,18 @@
 #!/usr/bin/env python
 
-import numpy as np, multiprocessing as mp
-import datetime, argparse, yaml, sys, datetime, random, pprint, os, shutil, logging, io, math
+import multiprocessing as mp
+import datetime, random, pprint, os, shutil, logging, io, math
 
-import asmodeus, coord, configuration, dataset
-import configuration.velocity, configuration.position, configuration.mass, configuration.time
+from core import asmodeus, coord, configuration, dataset, logger, exceptions
+from distribution import position, velocity, mass, density, time
+from utilities import colour as c, utilities as ut
 from models.meteor import Meteor
-from coord import Vector3D, rotMatrixZ
-
-from log import setupLog
-
-import colour as c
-import configuration, utils
 
 class AsmodeusGenerate(asmodeus.Asmodeus):
     def __init__(self):
         log.info("Initializing {}".format(c.script("asmodeus-generate")))
         super().__init__() 
+        self.configure()
 
     def createArgparser(self):
         super().createArgparser()
@@ -30,32 +26,38 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.config.meteors.count = self.args.count
 
     def configure(self):
-        self.distributionInfo("Particle mass", self.config.meteors.mass.distribution, self.config.meteors.mass.parameters)
-        self.massDistribution       = configuration.mass.MassDistribution().create(self.config.meteors.mass.distribution, **self.config.meteors.mass.parameters._asdict())
-
-        self.distributionInfo("Initial position", self.config.meteors.position.distribution, self.config.meteors.position.parameters)
-        self.positionDistribution   = configuration.position.distribution(self.config.meteors.position.distribution, **self.config.meteors.position.parameters._asdict())
+        meteors = self.config.meteors
         
-        self.distributionInfo("Initial velocity", self.config.meteors.velocity.distribution, self.config.meteors.velocity.parameters)
-        self.velocityDistribution   = configuration.velocity.distribution(self.config.meteors.velocity.distribution, **self.config.meteors.velocity.parameters._asdict())
+        try:
+            self.massDistribution       = mass.MassDistribution().create(meteors.mass.distribution, **meteors.mass.parameters._asdict())
+            self.distributionInfo("Particle mass", meteors.mass.distribution, meteors.mass.parameters)
 
-        self.distributionInfo("Particle density", self.config.meteors.material.density)
-        self.densityDistribution    = configuration.density.DensityDistribution().create(self.config.meteors.material.density)
+            self.positionDistribution   = position.distribution(meteors.position.distribution, **meteors.position.parameters._asdict())
+            self.distributionInfo("Initial position", meteors.position.distribution, meteors.position.parameters)
+            
+            self.velocityDistribution   = velocity.distribution(meteors.velocity.distribution, **meteors.velocity.parameters._asdict())
+            self.distributionInfo("Initial velocity", meteors.velocity.distribution, meteors.velocity.parameters)
 
-        self.distributionInfo("Temporal", self.config.meteors.time.distribution, self.config.meteors.time.parameters)
-        self.temporalDistribution   = configuration.time.TimeDistribution().create(self.config.meteors.time.distribution, **self.config.meteors.time.parameters._asdict())
+            self.densityDistribution    = density.DensityDistribution().create(meteors.material.density.distribution, **meteors.material.density.parameters._asdict())
+            self.distributionInfo("Particle density", meteors.material.density.distribution, meteors.material.density.parameters)
+
+            self.temporalDistribution   = time.TimeDistribution().create(meteors.time.distribution, **meteors.time.parameters._asdict())
+            self.distributionInfo("Temporal", meteors.time.distribution, meteors.time.parameters)
+        except AttributeError as e:
+            raise exceptions.ConfigurationError
+
+        self.dataset.reset()
+        self.dataset.create('meteors')
 
     def generate(self):
         log.info("About to generate {} meteoroids".format(c.num(self.config.meteors.count)))
-        self.dataset.prepare()   
      
-        self.meteors = list(filter(lambda x: x is not None, [self.createMeteor() for _ in range(0, self.config.meteors.count)]))
+        self.meteors = [meteor for meteor in [self.createMeteor() for _ in range(0, self.config.meteors.count)] if meteor is not None]
         log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass}".format(
             total       = c.num(len(self.meteors)),
             percent     = c.num("{:5.2f}%".format(100 * len(self.meteors) / self.config.meteors.count)),
             mass        = c.num("{:6f} kg".format(sum(map(lambda x: x.mass, self.meteors)))),
         ))
-
 
     def createMeteor(self):
         timestamp           = self.temporalDistribution()
@@ -64,7 +66,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         position            = self.positionDistribution()
         velocityEquatorial  = self.velocityDistribution()
 
-        velocityECEF        = Vector3D.fromNumpyVector((rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
+        velocityECEF        = coord.Vector3D.fromNumpyVector((coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
         entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
         entryAngle          = math.degrees(math.asin(entryAngleSin))
 
@@ -86,6 +88,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             )
     
     def process(self):
+        self.markTime()
         pool = mp.Pool(processes = self.config.mp.processes)
         results = [pool.apply_async(simulate, (meteor, self.config.integrator.fps, self.config.integrator.spf, self.dataset.name)) for meteor in self.meteors]
         return [result.get(timeout = 10) for result in results]
@@ -99,19 +102,18 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
 
 def simulate(meteor, fps, spf, dataset):
     meteor.flyRK4(fps, spf)
-    meteor.save(dataset)
-
-
+    meteor.save(dataset) 
 
 if __name__ == "__main__":
-    log = setupLog('root')
-    asmo = AsmodeusGenerate()
-    asmo.configure()
-    asmo.generate()
-    
-    asmo.process()
-   
-    asmo.finalize()
+    log = logger.setupLog('root')
 
-    log.info("Finished successfully")
-    log.info("---------------------")
+    try:
+        asmo = AsmodeusGenerate()
+        asmo.generate()
+        asmo.process()
+        asmo.finalize()
+
+        log.info("Finished successfully")
+        log.info("---------------------")
+    except exceptions.ConfigurationError as e:
+        log.critical(c.err("Terminating due to a configuration error"))

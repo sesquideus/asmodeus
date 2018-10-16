@@ -1,7 +1,7 @@
 import numpy as np
-import datetime, argparse, math, yaml, sys, datetime, random, pprint, logging, copy, pickle, io, os
+import datetime, argparse, math, sys, datetime, random, pprint, logging, copy, pickle, io, os
 
-import configuration, atmosphere
+from core import atmosphere
 
 log = logging.getLogger('root')
 

@@ -13,7 +13,7 @@ def err(what):
     return colour(what, Fore.RED)
     
 def path(what):
-    return colour(what, Fore.YELLOW)
+    return colour(what, Fore.BLUE)
 
 def name(what):
     return colour(what, Fore.YELLOW)
@@ -22,7 +22,7 @@ def over(what):
     return colour(what, Fore.LIGHTGREEN_EX)
 
 def script(what):
-    return colour(what, Fore.LIGHTRED_EX)
+    return colour(what, Fore.LIGHTMAGENTA_EX)
 
 def param(what):
     return colour(what, Fore.LIGHTBLUE_EX)

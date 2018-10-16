@@ -2,10 +2,9 @@ import numpy as np
 import datetime, argparse, math, yaml, sys, datetime, random, pprint, logging, copy, pickle, io, os
 import functools, operator
 
-import configuration
 from models.frame import Frame
 from models.sightingframe import SightingFrame
-from atmosphere import airMass
+from core import atmosphere
 
 log = logging.getLogger('root')
 

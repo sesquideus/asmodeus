@@ -1,8 +1,6 @@
 import logging, random, math
-from colorama import Fore, Style
 
-from utils import colour
-import coord, configuration
+from core import configuration, coord
 
 log = logging.getLogger('root')
 

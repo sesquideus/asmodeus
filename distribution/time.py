@@ -1,7 +1,6 @@
 import math, random, numbers, logging, datetime
-from utils import colour
 
-from configuration.distribution import Distribution
+from distribution.distribution import Distribution
 
 log = logging.getLogger('root')
 

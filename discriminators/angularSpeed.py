@@ -1,9 +1,7 @@
 import logging, os, random, math
-from colorama import Fore, Style
 
-from utils import colour
-from coord import Vector3D
-import configuration
+from utilities import colour as c
+from core import coord
 
 log = logging.getLogger('root')
 

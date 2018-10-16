@@ -2,32 +2,30 @@ import numpy as np, multiprocessing as mp
 import datetime, yaml, sys, datetime, random, pprint, logging, os
 import itertools, functools
 
-import asmodeus
 import discriminators.magnitude, discriminators.altitude, discriminators.angularSpeed
 
+from core                   import coord, histogram
 from models.frame           import Frame
 from models.sighting        import Sighting
 from models.sightingframe   import SightingFrame
-from coord                  import rotMatrixX, rotMatrixY, rotMatrixZ, Vector3D
-from utils                  import colour, linSpace, generateParameterSpace
-from histogram              import Histogram
+from utilities              import colour as c, utilities as utils
 
 log = logging.getLogger('root')
 
 class Observer():
-    def __init__(self, name, histogramSettings, **kwargs):
+    def __init__(self, name, **kwargs):
         self.id                 = name
-        self.position           = Vector3D.fromGeodetic(
-                                      kwargs.get('latitude', 48),
-                                      kwargs.get('longitude', 17),
+        self.position           = coord.Vector3D.fromGeodetic(
+                                      kwargs.get('latitude', 0),
+                                      kwargs.get('longitude', 0),
                                       kwargs.get('altitude', 0)
                                   )
-        self.histogramSettings  = histogramSettings
+        self.horizon            = kwargs.get('horizon', 0)
+        #self.histogramSettings  = histogramSettings
         self.allSightings       = []
         self.visibleSightings   = []
 
-        self.earthToAltAzMatrix = functools.reduce(np.dot, [np.fliplr(np.eye(3)), rotMatrixY(-self.position.latitude()), rotMatrixZ(-self.position.longitude())])
-        self.skyPlotFile        = asmodeus.datasetPath('plots', "{}.tsv".format(self.id))
+        self.earthToAltAzMatrix = functools.reduce(np.dot, [np.fliplr(np.eye(3)), coord.rotMatrixY(-self.position.latitude()), coord.rotMatrixZ(-self.position.longitude())])
        
     def observe(self, meteor):
         log.debug("Observer {:<10} trying to see meteor {}".format(colour(self.id, 'name'), meteor)) 
@@ -35,9 +33,9 @@ class Observer():
 
     # This observer's AltAz coordinates of an EarthLocation point
     # point: EarthLocation
-    def altAz(self, point):        
+    def altAz(self, point: coord.Vector3D) -> coord.Vector3D:
         diff = point - self.position
-        return Vector3D.fromNumpyVector(self.earthToAltAzMatrix @ diff.toNumpyVector())
+        return coord.Vector3D.fromNumpyVector(self.earthToAltAzMatrix @ diff.toNumpyVector())
     
     def skyChartTSV(self, filename):
         output = open(filename, 'w')
@@ -48,7 +46,7 @@ class Observer():
 
     def __str__(self):
         return "Observer {id:<15} at {position}".format(
-            id          = colour(self.id, 'name'),
+            id          = c.name(self.id),
             position    = self.position.strGeodetic(),
         )
         

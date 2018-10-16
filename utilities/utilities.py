@@ -1,9 +1,8 @@
 import argparse, os, jinja2, itertools
 import namedtupled as nt
 import numpy as np
-from colorama import Fore, Style
 
-import colour as c
+from utilities import colour as c
 
 class readableDir(argparse.Action):
     def __call__(self, parser, namespace, values, option_string = None):
@@ -30,27 +29,15 @@ class writeableDir(argparse.Action):
         else:
             raise argparse.ArgumentTypeError("writeableDir: {0} is not a writeable directory".format(tryDir))
 
-def colour(what, c):
-    clr = {
-        'dir': Fore.CYAN,
-        'over': Fore.LIGHTGREEN_EX,
-        'script': Fore.LIGHTRED_EX,
-        'name': Fore.YELLOW,
-        'error': Fore.RED,
-        'param': Fore.LIGHTBLUE_EX,
-        'num': Fore.GREEN,
-    }
-    return "{}{}{}".format(clr[c], what, Style.RESET_ALL)
-
 def formatParameters(parameters):
     formatted = ["{} = {}".format(c.param(name), value) for name, value in sorted(parameters._asdict().items())]
     return ", ".join(formatted)
 
 def jinjaEnv(directory):
     return jinja2.Environment(
-	trim_blocks = True,
-	autoescape = False,
-	loader = jinja2.FileSystemLoader(directory),
+        trim_blocks = True,
+        autoescape = False,
+        loader = jinja2.FileSystemLoader(directory),
     )
 
 def linSpace(min, max, step):

@@ -1,7 +1,6 @@
 import yaml, namedtupled, dotmap, logging, os
-from colorama import Fore, Style
 
-from utils import colour
+from utilities import colour as c
 
 log = logging.getLogger('root')
 
@@ -14,7 +13,7 @@ def load(configFile):
 
 def applyOverridesObserve(args, config):
     if (args.plot_sky):
-        log.warning("Overriding plot-sky ({} to {})".format(colour(config.plot.sky, 'over'), colour(args.plot_sky, 'over')))
+        log.warning("Overriding plot-sky ({} to {})".format(c.over(config.plot.sky), c.over(args.plot_sky)))
         config.plot.sky = args.plot_sky
 
     return config

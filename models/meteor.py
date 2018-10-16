@@ -2,10 +2,8 @@ import datetime, argparse, yaml, sys, datetime, random, pprint, logging, math, i
 
 import models.frame
 
-import asmodeus, constants
-from atmosphere import airMass, airDensity, luminousEfficiency
-from coord import Vector3D
-from utils import jinjaEnv
+from utilities import constants
+from core import atmosphere, coord
 
 log = logging.getLogger('root')
 
@@ -27,8 +25,8 @@ class Meteor:
         self.density            = kwargs.get('density',         800)
         self.radius             = (3 * self.mass / (self.density * math.pi * 4))**(1/3) 
         
-        self.position           = kwargs.get('position',        Vector3D.fromGeodetic(48, 17, 120000))
-        self.velocity           = kwargs.get('velocity',        Vector3D(0, 0, 0))
+        self.position           = kwargs.get('position',        coord.Vector3D.fromGeodetic(48, 17, 120000))
+        self.velocity           = kwargs.get('velocity',        coord.Vector3D(0, 0, 0))
 
         self.timestamp          = kwargs.get('timestamp',       datetime.datetime.now())
 
@@ -47,7 +45,7 @@ class Meteor:
         log.debug(self.__str__())
 
     @staticmethod
-    def load(filename, fmt):
+    def load(filename):
         return pickle.load(io.FileIO(filename, 'rb'))
 
     def __str__(self):
@@ -78,12 +76,12 @@ class Meteor:
         return pickle.dumps(self)
 
     def acceleration(self, state):
-        airRho = airDensity(state.position.norm() - constants.earthRadius)
+        airRho = atmosphere.airDensity(state.position.norm() - constants.earthRadius)
         speed = state.velocity.norm()
         return -(self.dragCoefficient * self.shapeFactor * airRho * speed**2 / (state.mass**(1/3) * self.density**(2/3))) * state.velocity / speed
 
     def ablation(self, state):
-        airRho = airDensity(state.position.norm() - 6371000)
+        airRho = atmosphere.airDensity(state.position.norm() - 6371000)
         speed = state.velocity.norm()
         return -(self.heatTransfer * self.shapeFactor * airRho * speed**3 * (state.mass / self.density)**(2/3) / (2 * self.ablationHeat))
 
@@ -106,7 +104,7 @@ class Meteor:
 
         while True:
             state = State(self.position, self.velocity, self.mass)
-            d0 = Diff(Vector3D(0, 0, 0), Vector3D(0, 0, 0), 0.0)
+            d0 = Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0)
             d1 = self.evaluate(state, d0, 0.0)
             d2 = self.evaluate(state, d1, dt/2)
             d3 = self.evaluate(state, d2, dt/2)
@@ -116,20 +114,23 @@ class Meteor:
             dvdt = 1/6 * (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt)
             dmdt = 1/6 * (d1.dmdt + 2 * d2.dmdt + 2 * d3.dmdt + d4.dmdt)
 
-            self.luminousPower = -(luminousEfficiency(self.velocity.norm()) * dmdt * self.velocity.norm()**2 / 2.0)
+            self.luminousPower = -(atmosphere.luminousEfficiency(self.velocity.norm()) * dmdt * self.velocity.norm()**2 / 2.0)
             
             if (frame % stepsPerFrame == 0):
                 self.frames.append(models.frame.Frame(self))
-                log.debug("{frame:04d} {time:6.3f} s | {latitude:6.4f} °N, {longitude:6.4f} °E, {elevation:6.0f} m  |  d {density:9.3e} kg/m3 |  v {speed:9.3f} m/s, dv {acceleration:13.3f} m/s2, tau {lumEff:6.4f} | m {mass:8.4e} kg, dm {ablation:10.4e} kg/s | I {lp:10.3e} W".format(
+                log.debug("{frame:04d} {time:6.3f} s | "
+                    "{latitude:6.4f} °N, {longitude:6.4f} °E, {elevation:6.0f} m | {density:9.3e} kg/m3 | "
+                    "v {speed:9.3f} m/s, dv {acceleration:13.3f} m/s2, tau {lumEff:6.4f} | "
+                    "m {mass:8.4e} kg, dm {ablation:10.4e} kg/s | I {lp:10.3e} W".format(
                     frame           = frame,
                     time            = frame * dt,
                     latitude        = self.position.latitude(),
                     longitude       = self.position.longitude(),
                     elevation       = self.position.elevation(),
-                    density         = airDensity(self.position.elevation()),
+                    density         = atmosphere.airDensity(self.position.elevation()),
                     speed           = self.velocity.norm(),
                     acceleration    = -dvdt.norm(),
-                    lumEff          = luminousEfficiency(self.velocity.norm()),
+                    lumEff          = atmosphere.luminousEfficiency(self.velocity.norm()),
                     ablation        = dmdt,
                     mass            = self.mass,
                     lp              = self.luminousPower,
@@ -168,3 +169,7 @@ class Meteor:
                 log.debug("IMPACT")
                 self.fate = "Crater"
                 break
+
+    def simulate(self):
+        self.flyRK4()
+        self.save()
