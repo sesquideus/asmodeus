@@ -51,7 +51,7 @@ class Meteor:
         return pickle.load(io.FileIO(filename, 'rb'))
 
     def __str__(self):
-        return "<Meteor {id} at {position}, velocity {velocity}> | " \
+        return "<Meteor {id} at {position}, velocity {velocity} | " \
                 "rho {density:4.0f} kg/m3, Q {ablationHeat:8.0f} J/kg, " \
                 "m {mass:10.6e} kg, r {radius:10.3f} mm>".format(
             id              = self.id,
@@ -62,9 +62,6 @@ class Meteor:
             density         = self.density,
             ablationHeat    = self.ablationHeat,
         )
-
-    def __repr__(self):
-        return 'abc'#str(self.asDict())
 
     def save(self, dataset):
         fn = os.path.join(dataset, 'meteors', '{}.{}'.format(self.id, 'pickle'))

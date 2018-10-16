@@ -1,0 +1,10 @@
+astropy==3.0.4
+colorama==0.4.0
+dotmap==1.2.39
+future==0.16.0
+Jinja2==2.10
+MarkupSafe==1.0
+namedtupled==0.3.3
+numpy==1.15.2
+pkg-resources==0.0.0
+PyYAML==3.13
