@@ -60,11 +60,11 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         ))
 
     def createMeteor(self):
-        timestamp           = self.temporalDistribution()
-        mass                = self.massDistribution()
-        density             = self.densityDistribution()
-        position            = self.positionDistribution()
-        velocityEquatorial  = self.velocityDistribution()
+        timestamp           = self.temporalDistribution.sample()
+        mass                = self.massDistribution.sample()
+        density             = self.densityDistribution.sample()
+        position            = self.positionDistribution.sample()
+        velocityEquatorial  = self.velocityDistribution.sample()
 
         velocityECEF        = coord.Vector3D.fromNumpyVector((coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
         entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
@@ -115,5 +115,5 @@ if __name__ == "__main__":
 
         log.info("Finished successfully")
         log.info("---------------------")
-    except exceptions.ConfigurationError as e:
+    except KeyError: #exceptions.ConfigurationError as e:
         log.critical(c.err("Terminating due to a configuration error"))

@@ -5,8 +5,12 @@ from utilities import colour as c
 log = logging.getLogger('root')
 
 class Distribution():
-    def __init__(self):
-        pass
+    def __init__(self, name, **kwargs):
+        try:
+            self.sample = self.allowedFunctions[name](**kwargs)
+        except KeyError as e:
+            self.errorUnknown(name)
+            raise exceptions.ConfigurationError()        
 
     def constant(self, *, value):
         return lambda: value
@@ -17,9 +21,6 @@ class Distribution():
     def default(self, **kwargs):
         raise KeyError("No default distribution defined")
 
-    def create(self, name, parameters):
-        pass
-       
     def warningDefault(self, name):
         log.warning("No {} distribution defined, defaulting to {}".format(self.quantity, self.default)) 
 

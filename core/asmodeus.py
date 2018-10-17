@@ -34,7 +34,7 @@ class Asmodeus():
         log.setLevel(logging.DEBUG if self.args.debug else logging.INFO)
 
         if self.args.debug:
-            log.warning("Debug output {}".format(c.over('active')))
+            log.warning("Debug output is {}".format(c.over('active')))
 
         if self.args.logfile:
             log.addHandler(logging.FileHandler(self.args.logfile.name))
