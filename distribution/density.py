@@ -7,20 +7,19 @@ log = logging.getLogger('root')
 
 class DensityDistribution(Distribution):
     def __init__(self, name, **kwargs):
-        super().__init__(name, **kwargs)
         self.quantity           = 'density'
         self.functions          = {
             'asteroidal':       self.asteroidal,
             'iron':             self.iron,
             'constant':         self.constant,
+            'gauss':            self.gauss,
         }
-    
+        super().__init__(name, **kwargs)
+        
     @classmethod
-    def asteroidal(self, **kwargs):
-        return lambda: self.gauss(3300, 50) 
+    def asteroidal(cls):
+        return lambda: cls.gauss(3300, 50) 
 
-    def iron(self, **kwargs):
-        return lambda: self.gauss(7800, 30)
-
-    def default(self, **kwargs):
-        self.warningDefault()
+    @classmethod
+    def iron(cls):
+        return lambda: cls.gauss(7800, 30)

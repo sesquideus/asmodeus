@@ -3,9 +3,10 @@
 import multiprocessing as mp
 import datetime, random, pprint, os, shutil, logging, io, math
 
-from core import asmodeus, coord, configuration, dataset, logger
-from distribution import position, velocity, mass, density, time
-from utilities import colour as c, utilities as ut
+from core               import asmodeus, configuration, dataset, logger
+from distribution       import position, velocity, mass, density, time
+from physics            import coord
+from utilities          import colour as c, utilities as ut
 
 from models.meteor import Meteor
 from models.sighting import Sighting

@@ -30,7 +30,7 @@ class writeableDir(argparse.Action):
             raise argparse.ArgumentTypeError("writeableDir: {0} is not a writeable directory".format(tryDir))
 
 def formatParameters(parameters):
-    formatted = ["{} = {}".format(c.param(name), value) for name, value in sorted(parameters._asdict().items())]
+    formatted = ["{} = {}".format(c.param(name), value) for name, value in parameters.items()]
     return ", ".join(formatted)
 
 def jinjaEnv(directory):

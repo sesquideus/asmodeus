@@ -1,36 +1,43 @@
 import logging, os, random, math
-from colorama import Fore, Style
 
-from core import configuration, coord
+from distribution.distribution  import Distribution
+from core                       import configuration
+from physics                    import coord
 
 log = logging.getLogger('root')
 
-def rectangle(**kwargs):
-    south = kwargs['south']
-    north = kwargs['north']
-    west = kwargs['west']
-    east = kwargs['east']  
-    elevation = kwargs['elevation']
+class PositionDistribution(Distribution):
+    def __init__(self, name, **kwargs):
+        self.quantity = 'position'
+        self.functions = {
+            'rectangle':    self.rectangle, 
+            'circle':       self.circle,
+        }
+        super().__init__(name, **kwargs)
     
-    #log.info("This means a total area of about {:.0f} km²".format(
-    #    (math.sin(math.radians(north)) - math.sin(math.radians(south))) * math.radians(east - west) * (6371 + elevation / 1000)**2)
-    #)
+    def constant(self, *, mass: float) -> (lambda: float):
+        return lambda: mass
 
-    def fun():
-        latitude = random.uniform(south, north)
-        longitude = random.uniform(west, east)
-        p = random.random() 
-        if p < math.cos(math.radians(latitude)):
-            log.debug("Meteoroid position accepted") 
-            return coord.Vector3D.fromGeodetic(latitude, longitude, elevation)
-        else:
-            log.debug("Meteoroid position rejected at {}".format(latitude))
-            return fun()
+    def rectangle(self, *, south: float, north: float, west: float, east: float, elevation: float) -> (lambda: coord.Vector3D):
+        #log.info("This means a total area of about {:.0f} km²".format(
+        #    (math.sin(math.radians(north)) - math.sin(math.radians(south))) * math.radians(east - west) * (6371 + elevation / 1000)**2)
+        #)
 
-    return fun
+        def fun():
+            latitude = random.uniform(south, north)
+            longitude = random.uniform(west, east)
+            p = random.random() 
+            if p < math.cos(math.radians(latitude)):
+                log.debug("Meteoroid position accepted") 
+                return coord.Vector3D.fromGeodetic(latitude, longitude, elevation)
+            else:
+                log.debug("Meteoroid position rejected at {}".format(latitude))
+                return fun()
 
-def distribution(name, **kwargs):
-    return {
-        'rectangle': rectangle,
-    }[name](**kwargs)
+        return fun
 
+    def circle(self, *, latitude: float, longitude: float, radius: float, elevation: float) -> (lambda: coord.Vector3D):
+        def fun():
+            return coord.Vector3D.fromGeodetic(0, 0, 0) ### Put real computation here
+
+        return fun

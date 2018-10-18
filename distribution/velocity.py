@@ -1,22 +1,27 @@
 import logging, random, math
 
-from core import configuration, coord
+from distribution.distribution  import Distribution
+from core                       import configuration
+from physics                    import coord
 
 log = logging.getLogger('root')
 
-def shower(**kwargs):
-    ra = kwargs.get('ra', 0)
-    dec = kwargs.get('dec', 90)
-    speed = kwargs.get('speed', 72000)
-
-    def fun():
-        return -coord.Vector3D(
+class VelocityDistribution(Distribution):
+    def __init__(self, name, **kwargs):
+        self.quantity = 'velocity'
+        self.functions = {
+            'shower':       self.shower, 
+        }
+        super().__init__(name, **kwargs)
+    
+    def shower(cls, *, ra, dec, speed):
+        return lambda: -coord.Vector3D(
             math.cos(math.radians(dec)) * math.cos(math.radians(ra)),
             math.cos(math.radians(dec)) * math.sin(math.radians(ra)),
             math.sin(math.radians(dec))
         ) * speed
 
-    return fun
+        return fun
 
 def distribution(name, **kwargs):
     return {

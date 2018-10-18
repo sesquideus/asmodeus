@@ -4,7 +4,8 @@ import itertools, functools
 
 import discriminators.magnitude, discriminators.altitude, discriminators.angularSpeed
 
-from core                   import coord, histogram
+from core                   import histogram
+from physics                import coord
 from models.frame           import Frame
 from models.sighting        import Sighting
 from models.sightingframe   import SightingFrame

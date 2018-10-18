@@ -2,7 +2,7 @@ import logging, os, random, math
 from colorama import Fore, Style
 
 from utilities import colour as c
-from core import coord
+from physics import coord
 
 log = logging.getLogger('root')
 

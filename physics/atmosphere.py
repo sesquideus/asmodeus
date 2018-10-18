@@ -5,9 +5,12 @@ def airMassKastenYoung(altitude, observerElevation = 0):
     if altitude > 0:
         return (airDensity(observerElevation) / 1.28) / (math.sin(math.radians(altitude)) + 0.50572 * (math.radians(altitude) + 6.07995) ** (-1.6364))
     else:
-        return 1e6
+        return 1e9
 
 airMass = airMassKastenYoung
+
+def attenuate(flux, airMass):
+    return flux * math.exp(-0.294 * airMass)
 
 def airDensityLogMSIS(altitude):
     if altitude >= 300000:
@@ -623,18 +626,3 @@ def airDensityLogMSIS(altitude):
     return math.exp(logs[i] + (logs[i+1] - logs[i]) * f) * 1000
 
 airDensity = airDensityLogMSIS
-
-
-def luminousEfficiency(speed):
-    if speed < 6200:
-        return 0
-    elif speed < 20000:
-        zeta = (-2.1887e-9 + 4.2903e-13 * speed - 1.2447e-17 * speed**2) * speed**2
-    elif speed < 60000:
-        zeta = 2.37044e-6 * speed**1.25
-    elif speed < 100000:
-        zeta = -12.835 + speed * (6.7672e-4 + speed * (-1.163076e-8 + speed * (9.191681e-14 + speed * -2.7465805e-19)))
-    else:
-        zeta = 1.615 + speed * 1.3725e-5
-
-    return 2 * 7.668e6 * zeta / speed**2

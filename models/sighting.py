@@ -4,7 +4,7 @@ import functools, operator
 
 from models.frame import Frame
 from models.sightingframe import SightingFrame
-from core import atmosphere
+from physics import atmosphere
 
 log = logging.getLogger('root')
 
@@ -27,7 +27,7 @@ class Sighting():
 
             if self.firstFrame == None:
                 self.firstFrame = currentFrame
-            if self.brightestFrame == None or currentFrame.lightFlux > self.brightestFrame.lightFlux:
+            if self.brightestFrame == None or currentFrame.fluxDensity > self.brightestFrame.fluxDensity:
                 self.brightestFrame = currentFrame
             self.lastFrame = currentFrame
         
@@ -74,7 +74,7 @@ class PointSighting():
         self.initialMass        = sighting.firstFrame.frame.mass
         self.mass               = sighting.brightestFrame.frame.mass
         self.luminousPower      = sighting.brightestFrame.frame.luminousPower
-        self.lightFlux          = sighting.brightestFrame.lightFlux
+        self.fluxDensity        = sighting.brightestFrame.fluxDensity
         self.magnitude          = sighting.brightestFrame.magnitude
 
         self.frames             = [frame.tsv() for frame in sighting.frames]
@@ -83,7 +83,7 @@ class PointSighting():
         return "{timestamp}\t{lifeTime:6.3f}\t{trackLength:7.0f}\t" \
             "{altitude:6.3f}\t{azimuth:7.3f}\t{distance:6.0f}\t" \
             "{elevation:7.0f}\t{speed:6.0f}\t{angularSpeed:7.3f}\t" \
-            "{initialMass:12.6e}\t{luminousPower:9.3e}\t{lightFlux:9.3e}\t{magnitude:6.2f}\t{sighted}".format(
+            "{initialMass:12.6e}\t{luminousPower:9.3e}\t{fluxDensity:9.3e}\t{magnitude:6.2f}\t{sighted}".format(
             timestamp           = self.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
             lifeTime            = self.lifeTime,
             trackLength         = self.trackLength,
@@ -96,7 +96,7 @@ class PointSighting():
             initialMass         = self.initialMass,
             mass                = self.mass,
             luminousPower       = self.luminousPower,
-            lightFlux           = self.lightFlux,
+            fluxDensity         = self.fluxDensity,
             magnitude           = self.magnitude,
             sighted             = int(self.sighted),
         )

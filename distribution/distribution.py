@@ -1,16 +1,30 @@
 import math, random, numbers, logging
 
-from utilities import colour as c
+from utilities import colour as c, utilities as util
 
 log = logging.getLogger('root')
 
 class Distribution():
     def __init__(self, name, **kwargs):
+        self.name   = name
+        self.params = kwargs
         try:
-            self.sample = self.allowedFunctions[name](**kwargs)
+            self.sample = self.functions.get(name, self.default)(**kwargs)
         except KeyError as e:
             self.errorUnknown(name)
             raise exceptions.ConfigurationError()        
+    
+    @classmethod
+    def fromConfig(cls, config):
+        return cls(config.distribution, **config.parameters._asdict())
+
+    def logInfo(self):
+        log.info("{quantity:<27} distribution is {name:>20}{params}".format(
+            quantity    = c.param(self.quantity),
+            name        = c.name(self.name),
+            params      = "" if self.params is None else " ({})".format(util.formatParameters(self.params)),
+        ))
+        return self
 
     def constant(self, *, value):
         return lambda: value

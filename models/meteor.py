@@ -2,8 +2,8 @@ import datetime, argparse, yaml, sys, datetime, random, pprint, logging, math, i
 
 import models.frame
 
-from utilities import constants
-from core import atmosphere, coord
+from utilities      import constants
+from physics        import atmosphere, coord, radiometry
 
 log = logging.getLogger('root')
 
@@ -114,14 +114,14 @@ class Meteor:
             dvdt = 1/6 * (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt)
             dmdt = 1/6 * (d1.dmdt + 2 * d2.dmdt + 2 * d3.dmdt + d4.dmdt)
 
-            self.luminousPower = -(atmosphere.luminousEfficiency(self.velocity.norm()) * dmdt * self.velocity.norm()**2 / 2.0)
+            self.luminousPower = -(radiometry.luminousEfficiency(self.velocity.norm()) * dmdt * self.velocity.norm()**2 / 2.0)
             
             if (frame % stepsPerFrame == 0):
                 self.frames.append(models.frame.Frame(self))
                 log.debug("{frame:04d} {time:6.3f} s | "
-                    "{latitude:6.4f} °N, {longitude:6.4f} °E, {elevation:6.0f} m | {density:9.3e} kg/m3 | "
-                    "v {speed:9.3f} m/s, dv {acceleration:13.3f} m/s2, tau {lumEff:6.4f} | "
-                    "m {mass:8.4e} kg, dm {ablation:10.4e} kg/s | I {lp:10.3e} W".format(
+                    "{latitude:6.4f} °N, {longitude:6.4f} °E, {elevation:6.0f} m | {density:9.3e} kg/m³ | "
+                    "v {speed:9.3f} m/s, dv {acceleration:13.3f} m/s², τ {lumEff:6.4f} | "
+                    "m {mass:8.4e} kg, dm {ablation:10.4e} kg/s | I {lp:10.3e} W, M {absmag:6.2f}m".format(
                     frame           = frame,
                     time            = frame * dt,
                     latitude        = self.position.latitude(),
@@ -130,10 +130,11 @@ class Meteor:
                     density         = atmosphere.airDensity(self.position.elevation()),
                     speed           = self.velocity.norm(),
                     acceleration    = -dvdt.norm(),
-                    lumEff          = atmosphere.luminousEfficiency(self.velocity.norm()),
+                    lumEff          = radiometry.luminousEfficiency(self.velocity.norm()),
                     ablation        = dmdt,
                     mass            = self.mass,
                     lp              = self.luminousPower,
+                    absmag          = radiometry.absoluteMagnitude(self.luminousPower),
                 ))
                
             frame += 1

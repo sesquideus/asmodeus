@@ -3,7 +3,8 @@
 import multiprocessing as mp
 import datetime, random, pprint, os, shutil, logging, io, math
 
-from core import asmodeus, coord, configuration, dataset, logger, exceptions
+from core import asmodeus, configuration, dataset, logger, exceptions
+from physics import coord
 from distribution import position, velocity, mass, density, time
 from utilities import colour as c, utilities as ut
 from models.meteor import Meteor
@@ -20,7 +21,6 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
 
     def overrideConfig(self):
         super().overrideConfig()
-
         if (self.args.count):
             self.overrideWarning('count', self.config.meteors.count, self.args.count)
             self.config.meteors.count = self.args.count
@@ -29,20 +29,11 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         meteors = self.config.meteors
         
         try:
-            self.massDistribution       = mass.MassDistribution().create(meteors.mass.distribution, **meteors.mass.parameters._asdict())
-            self.distributionInfo("Particle mass", meteors.mass.distribution, meteors.mass.parameters)
-
-            self.positionDistribution   = position.distribution(meteors.position.distribution, **meteors.position.parameters._asdict())
-            self.distributionInfo("Initial position", meteors.position.distribution, meteors.position.parameters)
-            
-            self.velocityDistribution   = velocity.distribution(meteors.velocity.distribution, **meteors.velocity.parameters._asdict())
-            self.distributionInfo("Initial velocity", meteors.velocity.distribution, meteors.velocity.parameters)
-
-            self.densityDistribution    = density.DensityDistribution().create(meteors.material.density.distribution, **meteors.material.density.parameters._asdict())
-            self.distributionInfo("Particle density", meteors.material.density.distribution, meteors.material.density.parameters)
-
-            self.temporalDistribution   = time.TimeDistribution().create(meteors.time.distribution, **meteors.time.parameters._asdict())
-            self.distributionInfo("Temporal", meteors.time.distribution, meteors.time.parameters)
+            self.massDistribution       = mass.MassDistribution.fromConfig(meteors.mass).logInfo()
+            self.positionDistribution   = position.PositionDistribution.fromConfig(meteors.position).logInfo()
+            self.velocityDistribution   = velocity.VelocityDistribution.fromConfig(meteors.velocity).logInfo()
+            self.densityDistribution    = density.DensityDistribution.fromConfig(meteors.material.density).logInfo()
+            self.temporalDistribution   = time.TimeDistribution.fromConfig(meteors.time).logInfo()
         except AttributeError as e:
             raise exceptions.ConfigurationError
 
@@ -91,7 +82,9 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         self.markTime()
         pool = mp.Pool(processes = self.config.mp.processes)
         results = [pool.apply_async(simulate, (meteor, self.config.integrator.fps, self.config.integrator.spf, self.dataset.name)) for meteor in self.meteors]
-        return [result.get(timeout = 10) for result in results]
+
+        for result in results:
+            result.get()
 
     def finalize(self):
         log.info("{number} meteors written to {directory}".format(

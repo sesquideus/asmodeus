@@ -1,15 +1,77 @@
 #!/usr/bin/env python
 
-import multiprocessing as mp
-import datetime, argparse, yaml, sys, datetime, random, pprint, os, logging, itertools
+import datetime, random, pprint, os, shutil, logging, io, math
 
-import asmodeus, configuration, models
-import discriminators.magnitude, discriminators.altitude, discriminators.angularSpeed
+from core               import asmodeus, configuration, dataset, histogram, logger
+from discriminators     import magnitude, altitude, angularSpeed
+from physics            import coord
+from utilities          import colour as c, utilities as ut
 
-from histogram import Histogram
-from utils import formatParameters
+class AsmodeusAnalyze(asmodeus.Asmodeus):
+    def __init__(self):
+        log.info("Initializing {}".format(c.script("asmodeus-analyze")))
+        super().__init__() 
+        self.configure()
 
-from log import setupLog
+    def createArgparser(self):
+        super().createArgparser()
+
+    def overrideConfig(self):
+        super().overrideConfig()
+
+    def configure(self):
+        self.loadObservers()
+        self.dataset.require('sightings')
+
+    def analyze(self):
+        pool        = mp.Pool(processes = self.config.mp.processes)
+        path        = self.dataset.path('meteors')
+        meteorFiles = os.listdir(path)
+    
+        self.markTime()
+        results = [ ### Refactor this more
+            pool.apply_async(
+                observeMeteor, (self.observers[0], os.path.join(path, meteorFile), self.observers[0].horizon, self.dataset.name)
+            ) for meteorFile in meteorFiles
+        ]
+        out = [result.get(timeout = 5) for result in results]
+
+        log.info("Results written to {output} ({count} meteors processed from {observers} observing sites)".format(
+            output      = c.path(self.dataset.path('sightings')),
+            count       = len(results),
+            observers   = len(self.observers),
+        ))
+   
+        log.info("Finished in {:.6f} seconds ({:.3f} meteors per second)".format(self.runTime(), len(results) / self.runTime()))
+
+def observeMeteor(observer, filename, minAlt, out):
+    meteor = Meteor.load(filename)
+
+    sighting = Sighting(observer, meteor)
+    if sighting.brightestFrame.altAz.latitude() >= minAlt:
+        sighting.save(out) 
+
+    return True
+
+def main(argv):
+    for observer in observers:
+        observer.createSkyPlot()
+
+
+if __name__ == "__main__":
+    log = logger.setupLog('root')
+    asmo = AsmodeusAnalyze()
+    asmo.analyze()
+    
+    log.info("Finished successfully")
+    log.info("---------------------")
+
+
+
+
+
+
+######
 
 def main(argv):
     log.info("Magnitude detection efficiency profile is {} ({})".format(colour(config.bias.magnitude.function, 'name'), formatParameters(config.bias.magnitude.parameters)))

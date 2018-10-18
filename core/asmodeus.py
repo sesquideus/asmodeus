@@ -71,15 +71,7 @@ class Asmodeus():
             old         = c.over(old),
             new         = c.over(new),
         ))
-
-    def distributionInfo(self, quantity, name, params = None):
-        log.info("{quantity:<27} distribution is {name:>20}{params}".format(
-            quantity    = c.param(quantity),
-            name        = c.name(name),
-            params      = "" if params is None else " ({})".format(util.formatParameters(params)),
-        ))
-        
-
+   
 ### Multiprocessing wrappers
 
 def multiProcess(function, args, count):

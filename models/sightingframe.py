@@ -1,7 +1,7 @@
 import numpy as np
 import datetime, argparse, math, sys, datetime, random, pprint, logging, copy, pickle, io, os
 
-from core import atmosphere
+from physics import atmosphere, radiometry
 
 log = logging.getLogger('root')
 
@@ -14,23 +14,25 @@ class SightingFrame():
         self.relativePosition   = self.frame.position - self.observer.position
         
         dot                     = self.relativePosition * self.frame.velocity
-        proj                    = dot / (self.relativePosition.norm() ** 2) * self.relativePosition
-        perp                    = self.frame.velocity - proj
-
-        self.angularSpeed       = math.degrees(perp.norm() / self.relativePosition.norm())
+        projection              = dot / (self.relativePosition.norm() ** 2) * self.relativePosition
+        rejection               = self.frame.velocity - projection
+        self.angularSpeed       = math.degrees(rejection.norm() / self.relativePosition.norm())
+        
         try:
-            self.lightFlux      = self.frame.luminousPower * math.exp(-0.294 * atmosphere.airMass(self.altAz.latitude(), self.observer.position.elevation())) / (self.altAz.norm()**2 * 4 * math.pi)
+            airMass             = atmosphere.airMass(self.altAz.latitude(), self.observer.position.elevation())
+            attenuatedPower     = atmosphere.attenuate(self.frame.luminousPower, airMass)
+            self.fluxDensity    = radiometry.fluxDensity(attenuatedPower, self.altAz.norm())
         except OverflowError:
             log.error("Light flux overflow: luminous power {}, air mass {}, alt-az {}".format(self.frame.luminousPower, airMass(self.altAz.latitude(), self.observer.position.elevation()), self.altAz))
 
-        self.magnitude          = math.inf if self.lightFlux == 0 else -19.989 - 2.5 * math.log10(self.lightFlux)
+        self.magnitude          = radiometry.apparentMagnitude(self.fluxDensity)
         self.sighted            = False
             
-        log.debug("{timestamp} | {truePos}, {trueSpeed:7.0f} m/s | {altaz}, {angSpeed:6.3f}°/s | {mass:6.4e} kg, {lightFlux:8.3e} W/m2, {magnitude:6.2f} m".format(
-            timestamp           = frame.timestamp,
+        log.debug("{timestamp} | {truePos}, {trueSpeed:7.0f} m/s | {altaz}, {angSpeed:6.3f}°/s | {mass:6.4e} kg, {fluxDensity:8.3e} W/m2, {magnitude:6.2f} m".format(
+            timestamp           = frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
             mass                = frame.mass,
             angSpeed            = self.angularSpeed,
-            lightFlux           = self.lightFlux,
+            fluxDensity         = self.fluxDensity,
             magnitude           = self.magnitude,
             altaz               = self.altAz.strSpherical(),
             truePos             = self.frame.position.strGeodetic(),
@@ -50,7 +52,7 @@ class SightingFrame():
             'angularSpeed'      : self.angularSpeed,
             'mass'              : self.frame.mass,
             'luminousPower'     : self.frame.luminousPower,
-            'lightFlux'         : self.lightFlux,
+            'fluxDensity'       : self.fluxDensity,
             'magnitude'         : self.magnitude,
         }
     
@@ -58,7 +60,7 @@ class SightingFrame():
         return "{timestamp}\t{lifeTime:6.3f}\t{trackLength:7.0f}\t" \
             "{altitude:6.3f}\t{azimuth:7.3f}\t{distance:6.0f}\t" \
             "{elevation:7.0f}\t{speed:6.0f}\t{angularSpeed:7.3f}\t" \
-            "{mass:12.6e}\t{luminousPower:9.3e}\t{lightFlux:9.3e}\t{magnitude:6.2f}".format(
+            "{mass:12.6e}\t{luminousPower:9.3e}\t{fluxDensity:9.3e}\t{magnitude:6.2f}".format(
             timestamp           = self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
             lifeTime            = self.frame.lifeTime,
             trackLength         = self.frame.trackLength,
@@ -70,10 +72,9 @@ class SightingFrame():
             angularSpeed        = self.angularSpeed,
             mass                = self.frame.mass,
             luminousPower       = self.frame.luminousPower,
-            lightFlux           = self.lightFlux,
+            fluxDensity         = self.fluxDensity,
             magnitude           = self.magnitude,
         )
 
     def pickle(self):
         return pickle.dumps(self)
-
