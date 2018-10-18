@@ -26,9 +26,11 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.config.meteors.count = self.args.count
 
     def configure(self):
-        meteors = self.config.meteors
+        self.dataset.reset()
+        self.dataset.create('meteors')
         
         try:
+            meteors = self.config.meteors
             self.massDistribution       = mass.MassDistribution.fromConfig(meteors.mass).logInfo()
             self.positionDistribution   = position.PositionDistribution.fromConfig(meteors.position).logInfo()
             self.velocityDistribution   = velocity.VelocityDistribution.fromConfig(meteors.velocity).logInfo()
@@ -36,9 +38,6 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.temporalDistribution   = time.TimeDistribution.fromConfig(meteors.time).logInfo()
         except AttributeError as e:
             raise exceptions.ConfigurationError
-
-        self.dataset.reset()
-        self.dataset.create('meteors')
 
     def generate(self):
         log.info("About to generate {} meteoroids".format(c.num(self.config.meteors.count)))

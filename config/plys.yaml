@@ -57,21 +57,21 @@ meteors:
 
 bias:
     magnitude:
-        function:               'all'                       # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
+        discriminator:          'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
         parameters:
             fillFactor:         1                           # Fill factor, the maximum detection efficiency for m -> -infty
             limit:              2.0                         # Limiting magnitude m0
-            omega:              2                           # Width of the function
+            width:              2                           # Width of the function
     angularSpeed:
-        function:               'flat'                      # Angular speed detection efficiency profile, possible values 'flat' or 'linear'
+        discriminator:          'all'                       # Angular speed detection efficiency profile, possible values 'flat' or 'linear'
         parameters:
-            fillFactor:         1
-            zero:               1
-            slope:              -0.01
+#            fillFactor:         1
+#            zero:               1
+#            slope:              -0.01
     altitude:
-        function:               'all'                       # Altitude detection efficiency profile, possible values 'step' or 'linear' or 'powersine'
+        discriminator:          'sinexp'                    # Altitude detection efficiency profile, possible values 'step' or 'linear' or 'powersine'
         parameters:
-            exponent:           9.05                        # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
+            exponent:           0.4                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
 
 plot:
     dark:                       False

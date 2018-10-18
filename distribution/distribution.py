@@ -29,13 +29,15 @@ class Distribution():
     def constant(self, *, value):
         return lambda: value
 
-    def gauss(self, *, mean = 0, sigma = 1):  
+    @classmethod
+    def gauss(cls, *, mean = 0, sigma = 1):  
         return lambda: random.gauss(mean, sigma)
 
-    def default(self, **kwargs):
+    @classmethod
+    def default(cls, **kwargs):
         raise KeyError("No default distribution defined")
 
-    def warningDefault(self, name):
+    def warningDefault(self):
         log.warning("No {} distribution defined, defaulting to {}".format(self.quantity, self.default)) 
 
     def errorUnknown(self, name):

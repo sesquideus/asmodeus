@@ -56,19 +56,19 @@ meteors:
 
 bias:
     magnitude:
-        function:               'sigmoid'
+        discriminator:          'sigmoid'
         parameters:
             fillFactor:         1
             limit:              -0.5
             omega:              0.5
     angularSpeed:
-        function:               'flat'
+        discriminator:          'flat'
         parameters:
             fillFactor:         1
             zero:               1
             slope:              -0.01
     altitude:
-        function:               'step'
+        discriminator:          'step'
         parameters:
             limit:              15
 

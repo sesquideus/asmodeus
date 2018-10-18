@@ -15,8 +15,9 @@ class PositionDistribution(Distribution):
         }
         super().__init__(name, **kwargs)
     
-    def constant(self, *, mass: float) -> (lambda: float):
-        return lambda: mass
+    @classmethod
+    def constant(self, *, latitude: float, longitude: float, elevation: float) -> (lambda: float):
+        return lambda: coord.Vector3D.fromGeodetic(latitude, longitude, elevation)
 
     def rectangle(self, *, south: float, north: float, west: float, east: float, elevation: float) -> (lambda: coord.Vector3D):
         #log.info("This means a total area of about {:.0f} km²".format(

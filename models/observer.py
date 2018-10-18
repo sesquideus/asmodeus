@@ -2,14 +2,14 @@ import numpy as np, multiprocessing as mp
 import datetime, yaml, sys, datetime, random, pprint, logging, os
 import itertools, functools
 
-import discriminators.magnitude, discriminators.altitude, discriminators.angularSpeed
 
-from core                   import histogram
-from physics                import coord
-from models.frame           import Frame
-from models.sighting        import Sighting
-from models.sightingframe   import SightingFrame
-from utilities              import colour as c, utilities as utils
+from core                       import histogram
+from physics                    import coord
+from models.frame               import Frame
+from models.sighting            import Sighting
+from models.sightingframe       import SightingFrame
+from utilities                  import colour as c, utilities as utils
+from discriminator.magnitude    import MagnitudeDiscriminator
 
 log = logging.getLogger('root')
 

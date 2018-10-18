@@ -17,7 +17,7 @@ class DensityDistribution(Distribution):
         super().__init__(name, **kwargs)
         
     @classmethod
-    def asteroidal(cls):
+    def asteroidal(cls, **kwargs):
         return lambda: cls.gauss(3300, 50) 
 
     @classmethod
