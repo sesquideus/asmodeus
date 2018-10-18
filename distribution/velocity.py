@@ -8,7 +8,7 @@ log = logging.getLogger('root')
 
 class VelocityDistribution(Distribution):
     def __init__(self, name, **kwargs):
-        self.quantity = 'velocity'
+        self.quantity = 'Initial velocity'
         self.functions = {
             'shower':       self.shower, 
         }

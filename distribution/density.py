@@ -7,7 +7,7 @@ log = logging.getLogger('root')
 
 class DensityDistribution(Distribution):
     def __init__(self, name, **kwargs):
-        self.quantity           = 'density'
+        self.quantity           = 'Meteoroid density'
         self.functions          = {
             'asteroidal':       self.asteroidal,
             'iron':             self.iron,
