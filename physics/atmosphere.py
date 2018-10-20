@@ -2,8 +2,8 @@ import sys, math
 import numpy as np
 
 def airMassKastenYoung(altitude, observerElevation = 0):
-    if altitude > 0:
-        return (airDensity(observerElevation) / 1.28) / (math.sin(math.radians(altitude)) + 0.50572 * (math.radians(altitude) + 6.07995) ** (-1.6364))
+    if altitude >= 0:
+        return (airDensity(observerElevation) / airDensity(0)) / (math.sin(math.radians(altitude)) + 0.50572 * ((altitude + 6.07995) ** (-1.6364)))
     else:
         return 1e9
 
