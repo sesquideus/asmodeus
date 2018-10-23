@@ -6,7 +6,7 @@ log = logging.getLogger('root')
 
 class TimeDistribution(Distribution):
     def __init__(self, name, **kwargs):
-        self.quantity = 'Temporal'
+        self.quantity = 'temporal'
         self.functions = {
             'uniform':      self.uniform, 
         }

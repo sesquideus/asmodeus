@@ -8,7 +8,7 @@ log = logging.getLogger('root')
 
 class PositionDistribution(Distribution):
     def __init__(self, name, **kwargs):
-        self.quantity = 'Initial position'
+        self.quantity = 'initial position'
         self.functions = {
             'rectangle':    self.rectangle, 
             'circle':       self.circle,

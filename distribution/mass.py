@@ -9,7 +9,7 @@ log = logging.getLogger('root')
 
 class MassDistribution(Distribution):
     def __init__(self, name, **kwargs):
-        self.quantity = 'Meteoroid mass'
+        self.quantity = 'meteoroid mass'
         self.functions = {
             'pareto':       self.pareto, 
             'exponential':  self.exponential,

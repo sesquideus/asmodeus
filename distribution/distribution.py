@@ -32,7 +32,7 @@ class Distribution():
 
     def logInfo(self):
         log.info("{quantity:<27} distribution is {name:>20}{params}".format(
-            quantity    = c.param(self.quantity),
+            quantity    = c.param(self.quantity.capitalize()),
             name        = c.name(self.name),
             params      = "" if self.params is None else " ({})".format(util.formatParameters(self.params)),
         ))
