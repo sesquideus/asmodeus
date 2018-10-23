@@ -1,3 +1,4 @@
+from physics import constants
 import math
 
 def excitationCoefficient(speed: float) -> float:
@@ -21,10 +22,10 @@ def fluxDensity(flux, distance):
 def absoluteMagnitude(flux):
     if flux < 1e-25:
         return math.inf
-    return 8.03 - 2.5 * math.log10(flux) 
+    return constants.absoluteMagnitudeOneWatt - 2.5 * math.log10(flux) 
 
 def apparentMagnitude(fluxDensity: float) -> float:
-    if fluxDensity < 1e-25:
+    if fluxDensity < 1e-50:
         return math.inf
-    return -19.86 - 2.5 * math.log10(fluxDensity)
+    return constants.apparentMagnitudeOneWm2 - 2.5 * math.log10(fluxDensity)
 

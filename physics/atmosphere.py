@@ -1,16 +1,24 @@
 import sys, math
 import numpy as np
 
+from physics import constants
+
 def airMassKastenYoung(altitude, observerElevation = 0):
     if altitude >= 0:
         return (airDensity(observerElevation) / airDensity(0)) / (math.sin(math.radians(altitude)) + 0.50572 * ((altitude + 6.07995) ** (-1.6364)))
     else:
         return 1e9
 
+def airMassPickering2002(altitude, observerElevation = 0):
+    if altitude >= 0:
+        return (airDensity(observerElevation) / airDensity(0)) / (math.sin(math.radians(altitude + (244 / (165 + 47 * altitude**1.1)))))
+    else:
+        return 1e9
+
 airMass = airMassKastenYoung
 
 def attenuate(flux, airMass):
-    return flux * math.exp(-0.294 * airMass)
+    return flux * math.exp(constants.attenuationOneAirMass * airMass)
 
 def airDensityLogMSIS(altitude):
     if altitude >= 300000:
