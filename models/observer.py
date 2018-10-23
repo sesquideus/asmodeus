@@ -1,9 +1,9 @@
 import numpy as np, multiprocessing as mp
-import datetime, yaml, sys, datetime, random, pprint, logging, os
+import datetime, yaml, sys, datetime, random, pprint, logging, os, io
 import itertools, functools
 
 
-from core                       import histogram
+from core                       import histogram, dataset
 from physics                    import coord
 from models.frame               import Frame
 from models.sighting            import Sighting
@@ -14,8 +14,9 @@ from discriminator.magnitude    import MagnitudeDiscriminator
 log = logging.getLogger('root')
 
 class Observer():
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, dataset, **kwargs):
         self.id                 = name
+        self.dataset            = dataset
         self.position           = coord.Vector3D.fromGeodetic(
                                       kwargs.get('latitude', 0),
                                       kwargs.get('longitude', 0),
@@ -27,9 +28,9 @@ class Observer():
         self.visibleSightings   = []
 
         self.earthToAltAzMatrix = functools.reduce(np.dot, [np.fliplr(np.eye(3)), coord.rotMatrixY(-self.position.latitude()), coord.rotMatrixZ(-self.position.longitude())])
-       
+
     def observe(self, meteor):
-        log.debug("Observer {:<10} trying to see meteor {}".format(colour(self.id, 'name'), meteor)) 
+        log.debug("Observer {:<10} trying to see meteor {}".format(c.name(self.id), meteorFile))
         return [SightingFrame(self, frame) for frame in meteor.frames]
 
     # This observer's AltAz coordinates of an EarthLocation point
@@ -52,8 +53,8 @@ class Observer():
         )
         
     def loadSightings(self):
-        self.allSightings = [Sighting.load(asmodeus.datasetPath('sightings', self.id, file)) for file in os.listdir(asmodeus.datasetPath('sightings', self.id))]
-        log.info("Sightings loaded ({})".format(colour(len(self.allSightings), 'num')))
+        self.allSightings = [Sighting.load(self.dataset.path('sightings', self.id, file)) for file in os.listdir(self.dataset.path('sightings', self.id))]
+        log.info("Sightings loaded ({})".format(c.num(len(self.allSightings))))
         return self.allSightings
         
     def applyBias(self, *discriminators):
@@ -62,17 +63,16 @@ class Observer():
 
         self.visibleSightings = [s for s in self.allSightings if s.sighted]
         log.info("Selection bias applied ({bc} discriminators), {sc} sightings survived".format(
-            bc      = colour(len(discriminators), 'num'),
-            sc      = colour("{:6d}".format(len(self.visibleSightings)), 'num'),
+            bc      = c.num(len(discriminators)),
+            sc      = c.num("{:6d}".format(len(self.visibleSightings))),
         ))
 
         return self.visibleSightings
        
     def processSightings(self, *discriminators):
-        asmodeus.remove(asmodeus.datasetPath('sightings', self.id))
         self.applyBias(*discriminators)
         
-        self.createSkyPlot()
+        #self.createSkyPlot()
         self.createHistograms()
         self.saveHistograms()
 
@@ -82,8 +82,8 @@ class Observer():
     
     def createHistograms(self):
         log.debug("Creating histograms for observer {name}, {count} sightings to process".format(
-            name        = colour(self.id, 'name'),
-            count       = colour(len(self.visibleSightings), 'num'),
+            name        = c.name(self.id),
+            count       = c.num(len(self.visibleSightings)),
         ))
 
         data = []
@@ -145,3 +145,6 @@ class Observer():
                 chisq       = chiSquare,
             ), file = open(resultFile, 'a'))
 
+
+def observe(observer, meteor):
+    observer.observe(meteor)

@@ -32,3 +32,6 @@ class AltitudeDiscriminator(Discriminator):
     @classmethod
     def sinexp(cls, *, exponent: float):
         return lambda sighting: random.random() < math.sin(math.radians(sighting.altitude))**exponent
+
+    def default(cls):
+        return cls.all

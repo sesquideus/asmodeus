@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import multiprocessing as mp
-import datetime, random, pprint, os, shutil, logging, io, math
+import datetime, random, pprint, os, shutil, logging, io, math, pickle, dill
 
 from core               import asmodeus, configuration, dataset, logger
 from distribution       import position, velocity, mass, density, time
@@ -32,25 +32,18 @@ class AsmodeusObserve(asmodeus.Asmodeus):
             self.dataset.create('sightings', observer.id)
 
     def observe(self):
-        pool        = mp.Pool(processes = self.config.mp.processes)
-        path        = self.dataset.path('meteors')
-        meteorFiles = os.listdir(path)
-    
         self.markTime()
-        results = [ ### Refactor this more
-            pool.apply_async(
-                observeMeteor, (self.observers[0], os.path.join(path, meteorFile), self.observers[0].horizon, self.dataset.name)
-            ) for meteorFile in meteorFiles
-        ]
-        out = [result.get(timeout = 5) for result in results]
+        pool        = mp.Pool(processes = self.config.mp.processes)
+        meteorFiles = self.dataset.list('meteors')
 
-        log.info("Results written to {output} ({count} meteors processed from {observers} observing sites)".format(
-            output      = c.path(self.dataset.path('sightings')),
-            count       = len(results),
-            observers   = len(self.observers),
-        ))
-   
-        log.info("Finished in {:.6f} seconds ({:.3f} meteors per second)".format(self.runTime(), len(results) / self.runTime()))
+        results = [
+            pool.apply_async(
+                observeMeteor,
+                (observer, self.dataset.path('meteors', meteorFile), observer.horizon, self.dataset.path('sightings', observer.id, meteorFile))
+            ) for meteorFile in meteorFiles for observer in self.observers
+        ]
+        out = [result.get() for result in results]
+        log.info("Finished in {:.6f} seconds ({:.3f} meteors per second)".format(self.runTime(), len(out) / self.runTime()))
 
 def observeMeteor(observer, filename, minAlt, out):
     meteor = Meteor.load(filename)

@@ -14,7 +14,7 @@ class Discriminator():
         self.name   = name
         self.params = kwargs
         try:
-            self.sample = self.functions.get(name, self.default)(**kwargs)
+            self.apply = self.functions.get(name, self.default)(**kwargs)
         except KeyError as e:
             self.errorUnknown(name)
             raise exceptions.ConfigurationError()        
@@ -36,14 +36,14 @@ class Discriminator():
 
     def logInfo(self):
         log.info("{quantity:<27} discriminator is {name:>20}{params}".format(
-            quantity    = c.param(self.property),
+            quantity    = c.param(self.property.capitalize()),
             name        = c.name(self.name),
             params      = "" if self.params is None else " ({})".format(util.formatParameters(self.params)),
         ))
         return self
 
     def warningDefault(self, name):
-        log.warning("No {} distribution defined, defaulting to {}".format(self.property, self.default)) 
+        log.warning("No {} discriminator defined, defaulting to {}".format(self.property, self.default)) 
         return self
 
     def errorUnknown(self, name):

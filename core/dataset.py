@@ -6,7 +6,7 @@ log = logging.getLogger('root')
 class Dataset():
     def __init__(self, name, observers):
         self.name = name
-        self.observers = observers._asdict().keys()
+        self.observers = list(observers._asdict().keys())
 
     def path(self, *args):
         return Dataset.staticPath(self.name, *args)
@@ -48,9 +48,5 @@ class Dataset():
     def staticPath(name, *args):
         return os.path.join('datasets', name, *args)
 
-def createSightingsDirectory():
-    sightingsDirectory = datasetPath('sightings')
-
-    os.makedirs(sightingsDirectory, exist_ok = True)
-    for observer in config.observers._asdict().keys():
-        os.makedirs(os.path.join(sightingsDirectory, observer), exist_ok = True)
+    def list(self, *path):
+        return os.listdir(self.path(*path))

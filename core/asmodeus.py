@@ -59,7 +59,7 @@ class Asmodeus():
     def loadObservers(self):
         self.observers = []
         for oid, obs in self.config.observers._asdict().items():
-            self.observers.append(Observer(oid, **dict(obs._asdict().items())))
+            self.observers.append(Observer(oid, self.dataset, **dict(obs._asdict().items())))
 
         log.info("Loaded {} observers:".format(len(self.observers)))
         for o in self.observers:

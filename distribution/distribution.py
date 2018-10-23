@@ -18,14 +18,7 @@ class Distribution():
     def fromConfig(cls, config):
         return cls(config.distribution, **config.parameters._asdict())
 
-    def logInfo(self):
-        log.info("{quantity:<27} distribution is {name:>20}{params}".format(
-            quantity    = c.param(self.quantity),
-            name        = c.name(self.name),
-            params      = "" if self.params is None else " ({})".format(util.formatParameters(self.params)),
-        ))
-        return self
-
+    @classmethod
     def constant(self, *, value):
         return lambda: value
 
@@ -37,8 +30,16 @@ class Distribution():
     def default(cls, **kwargs):
         raise KeyError("No default distribution defined")
 
+    def logInfo(self):
+        log.info("{quantity:<27} distribution is {name:>20}{params}".format(
+            quantity    = c.param(self.quantity),
+            name        = c.name(self.name),
+            params      = "" if self.params is None else " ({})".format(util.formatParameters(self.params)),
+        ))
+        return self
+
     def warningDefault(self):
-        log.warning("No {} distribution defined, defaulting to {}".format(self.quantity, self.default)) 
+        log.warning("No {} distribution defined, defaulting to {}".format(c.name(self.quantity), c.name(self.default)))
 
     def errorUnknown(self, name):
-        log.error(c.err("Unknown {} distribution \"{}\"".format(self.quantity, name)))
+        log.error("Unknown {} distribution \"{}\"".format(self.quantity, name))

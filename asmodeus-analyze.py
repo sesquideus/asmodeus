@@ -34,7 +34,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
     def analyze(self):
         for observer in self.observers:
             observer.loadSightings()
-            observer.processSightings(magDis, altDis, aspDis)
+            observer.processSightings(self.magDis, self.altDis, self.aspDis)
 
             #observer.createSkyPlot()
         

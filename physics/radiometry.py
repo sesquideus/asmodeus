@@ -19,7 +19,7 @@ def fluxDensity(flux, distance):
     return flux / (4 * math.pi * distance**2)
 
 def absoluteMagnitude(flux):
-    if flux < 1e-12:
+    if flux < 1e-25:
         return math.inf
     return 8.03 - 2.5 * math.log10(flux) 
 

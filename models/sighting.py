@@ -49,9 +49,8 @@ class Sighting():
         else:
             print(self.asPointTSV(), file = file)
 
-    def save(self, dataset):
-        fileIO = io.FileIO(os.path.join('datasets', dataset, 'sightings', self.observer.id, '{}.pickle'.format(self.meteor.id)), 'wb')
-        pickle.dump(PointSighting(self), fileIO)
+    def save(self, filename):
+        pickle.dump(PointSighting(self), io.FileIO(filename, 'wb'))
 
     def __str__(self):
         return "<Sighting by {observer} at {timestamp}>".format(
@@ -102,7 +101,7 @@ class PointSighting():
         )
 
     def applyBias(self, *discriminators):
-        self.sighted            = all(map(lambda x: x(self), discriminators))
+        self.sighted            = all(map(lambda dis: dis.apply(self), discriminators))
         return self.sighted
 
     def printSkyPlot(self, filename, streaks):

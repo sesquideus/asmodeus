@@ -33,8 +33,6 @@ def plotSky(observers):
         'dataset': config.dataset.name,
         'streaks': config.plot.streaks,
         'dark': config.plot.dark,
-#            2: 'time',
-#            3: 'length',
         'observers': observers,
         'pixels': config.plot.pixels,
     }
