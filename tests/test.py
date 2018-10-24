@@ -9,7 +9,7 @@ class TestAtmosphere(unittest.TestCase):
     def testAirmass0(self):
         self.assertLess(abs(atmosphere.airMass(0) - 38), 1)
 
-    def testAirmass10(self):
+    def testAirmass45(self):
         self.assertLess(abs(atmosphere.airMass(45) - 1.4), 0.02)
 
     def testDensityTooHigh(self):
