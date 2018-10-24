@@ -57,7 +57,7 @@ meteors:
 
 bias:
     magnitude:
-        discriminator:          'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
+        discriminator:          'all'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
         parameters:
             fillFactor:         1                           # Fill factor, the maximum detection efficiency for m -> -infty
             limit:              2.0                         # Limiting magnitude m0

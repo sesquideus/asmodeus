@@ -18,6 +18,8 @@ class Discriminator():
         except KeyError as e:
             self.errorUnknown(name)
             raise exceptions.ConfigurationError()        
+        except TypeError as e:
+            log.warning(e)
     
     @classmethod
     def fromConfig(cls, config):
@@ -27,7 +29,7 @@ class Discriminator():
             return cls(config.discriminator)
     
     @classmethod
-    def all(self):
+    def all(self, **kwargs):
         return lambda _: True
 
     @classmethod

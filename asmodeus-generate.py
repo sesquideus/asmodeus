@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 
 import multiprocessing as mp
-import datetime, random, pprint, os, shutil, logging, io, math
+import random
+import math
 
-from core import asmodeus, configuration, dataset, logger, exceptions
+from core import asmodeus, logger, exceptions
 from physics import coord
 from distribution import position, velocity, mass, density, time
-from utilities import colour as c, utilities as ut
+from utilities import colour as c
 from models.meteor import Meteor
+
 
 class AsmodeusGenerate(asmodeus.Asmodeus):
     def __init__(self):
         log.info("Initializing {}".format(c.script("asmodeus-generate")))
-        super().__init__() 
+        super().__init__()
         self.configure()
 
     def createArgparser(self):
@@ -36,11 +38,11 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.velocityDistribution   = velocity.VelocityDistribution.fromConfig(meteors.velocity).logInfo()
             self.densityDistribution    = density.DensityDistribution.fromConfig(meteors.material.density).logInfo()
             self.temporalDistribution   = time.TimeDistribution.fromConfig(meteors.time).logInfo()
-        except AttributeError as e:
+        except AttributeError:
             raise exceptions.ConfigurationError
 
     def generate(self):
-        log.info("About to generate {} meteoroids".format(c.num(self.config.meteors.count)))
+        log.info("About to generate {} meteoroids using {} processes".format(c.num(self.config.meteors.count), c.num(self.config.mp.processes)))
      
         self.meteors = [meteor for meteor in [self.createMeteor() for _ in range(0, self.config.meteors.count)] if meteor is not None]
         log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass}".format(

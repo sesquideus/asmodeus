@@ -4,19 +4,19 @@ from physics import atmosphere, constants, radiometry
 
 class TestAtmosphere(unittest.TestCase):
     def testAirmass90(self):
-        self.assertLess(abs(atmosphere.airMass(90) - 1), 0.01)
+        self.assertAlmostEqual(atmosphere.airMass(90), 1, delta = 0.001)
 
     def testAirmass0(self):
-        self.assertLess(abs(atmosphere.airMass(0) - 38), 1)
+        self.assertAlmostEqual(atmosphere.airMass(0), 38, delta = 0.5)
 
     def testAirmass45(self):
-        self.assertLess(abs(atmosphere.airMass(45) - 1.4), 0.02)
+        self.assertAlmostEqual(atmosphere.airMass(45), 1.4, delta = 0.02)
 
     def testDensityTooHigh(self):
         self.assertEqual(atmosphere.airDensity(300000), 0)
 
     def testDensity10km(self):
-        self.assertLess(abs(atmosphere.airDensity(10000) - 0.42), 0.01)
+        self.assertAlmostEqual(atmosphere.airDensity(10000), 0.42, delta = 0.01)
 
     def testAttenuate_1_1(self):
         self.assertEqual(atmosphere.attenuate(1, 1), math.exp(constants.attenuationOneAirMass))
@@ -38,7 +38,7 @@ class TestRadiometry(unittest.TestCase):
         self.assertEqual(radiometry.fluxDensity(4 * math.pi, 1), 1)
 
     def testApparentMagnitudeSun(self):
-        self.assertLess(abs(radiometry.apparentMagnitude(546.8) + 26.74), 0.001)
+        self.assertAlmostEqual(radiometry.apparentMagnitude(546.8), constants.apparentMagnitudeSun, delta = 0.001)
 
 if __name__ == '__main__':
     unittest.main()

@@ -2,8 +2,7 @@ import datetime, argparse, yaml, sys, datetime, random, pprint, logging, math, i
 
 import models.frame
 
-from utilities      import constants
-from physics        import atmosphere, coord, radiometry
+from physics        import atmosphere, coord, radiometry, constants
 
 log = logging.getLogger('root')
 
