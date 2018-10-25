@@ -1,18 +1,16 @@
-import math, numbers, sys, logging
+import math, numbers, sys, logging, datetime
 import numpy as np
 
 log = logging.getLogger('root')
 
 class Histogram: 
-    def __init__(self, name, lower, upper, binWidth = 1):
+    def __init__(self, name, lower, upper):
         self.name       = name
         self.lower      = lower
         self.upper      = upper
-        self.binWidth   = binWidth
-        
-        self.bins       = [0 for x in np.arange(lower, upper, binWidth)]
-        self.binCount   = len(self.bins)
         self.totalCount = 0
+        self.bins       = [0 for x in np.arange(self.lower, self.upper, self.binWidth)]
+        self.binCount   = len(self.bins)
 
     def bin(self, value):
         b = int(math.floor(self.binCount * (value - self.lower) / (self.upper - self.lower)))
@@ -29,17 +27,18 @@ class Histogram:
             self.bins[self.bin(value)] += 1
             self.totalCount += 1
         except KeyError:
-            log.warning("Could not add value {}".format(value))
+            log.warning("Could not insert value {}".format(value))
 
     def normalize(self):
-        if self.count > 0:
+        if self.totalCount > 0:
+            print(self.bins)
             for bin in self.bins:
-                self.bin /= self.totalCount
+                bin /= self.totalCount
             self.totalCount = 1
 
         return self
 
-    def tsv(self, file = sys.stdout): 
+    def __str__(self, file = sys.stdout): 
         print("# Histogram \"{}\" ({} to {}, bin width {})".format(self.name, self.lower, self.upper, self.binWidth), file = file)
         for bin, count in enumerate(self.bins):
             print("{key:12.6f}\t{value:16.6f}".format(
@@ -81,4 +80,22 @@ class Histogram:
                 sum += (count - other.bins[bin])**2 / denom
 
         return sum
+
+class TimeHistogram(Histogram):
+    def __init__(self, name, lower, upper, binWidth = datetime.timedelta(seconds = 1)):
+        self.binWidth   = datetime.timedelta(seconds = binWidth)
+        super().__init__(name, lower, upper)
+    
+    def __str__(self, file = sys.stdout): 
+        print("# Histogram \"{}\" ({} to {}, bin width {})".format(self.name, self.lower, self.upper, self.binWidth), file = file)
+        for bin, count in enumerate(self.bins):
+            print("{key}\t{value:16.6f}".format(
+                key         = self.key(bin).isoformat(),
+                value       = count,
+            ), file = file)
+
+class FloatHistogram(Histogram):
+    def __init__(self, name, lower, upper, binWidth = 1):
+        self.binWidth   = binWidth
+        super().__init__(name, lower, upper)
 

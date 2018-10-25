@@ -14,7 +14,7 @@ from discriminator.magnitude    import MagnitudeDiscriminator
 log = logging.getLogger('root')
 
 class Observer():
-    def __init__(self, name, dataset, **kwargs):
+    def __init__(self, name, dataset, histogramSettings, **kwargs):
         self.id                 = name
         self.dataset            = dataset
         self.position           = coord.Vector3D.fromGeodetic(
@@ -23,7 +23,7 @@ class Observer():
                                       kwargs.get('altitude', 0)
                                   )
         self.horizon            = kwargs.get('horizon', 0)
-        #self.histogramSettings  = histogramSettings
+        self.histogramSettings  = histogramSettings
         self.allSightings       = []
         self.visibleSightings   = []
 
@@ -81,6 +81,7 @@ class Observer():
             sighting.printSkyPlot(self.skyPlotFile, True)
     
     def createHistograms(self):
+        global asmo
         log.debug("Creating histograms for observer {name}, {count} sightings to process".format(
             name        = c.name(self.id),
             count       = c.num(len(self.visibleSightings)),
@@ -90,7 +91,10 @@ class Observer():
         histograms = {}
 
         for stat, properties in self.histogramSettings.items():
-            histograms[stat] = Histogram(stat, properties.min, properties.max, properties.bin)
+            histograms[stat] = {
+                'number':   histogram.FloatHistogram,
+                'time':     histogram.TimeHistogram,
+            }.get(properties.xaxis, 'number')(stat, properties.min, properties.max, properties.bin)
 
         for sighting in self.visibleSightings:
             for stat in self.histogramSettings:
@@ -100,11 +104,12 @@ class Observer():
         return self.histograms
 
     def saveHistograms(self):
-        amos        = asmodeus.createAmosHistograms('amos.tsv')
+       # amos        = asmodeus.createAmosHistograms('amos.tsv')
         for name, histogram in self.histograms.items():
             histogram.normalize()
-            histogram.tsv(open(asmodeus.datasetPath('histograms', self.id, '{}.tsv'.format(histogram.name)), 'w'))
-            log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
+            with open(self.dataset.path('histograms', self.id, '{}.tsv'.format(histogram.name)), 'w') as f:
+                histogram.__str__(f)
+        #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
 
     def multifit(self, quantity, settings, *fixedDiscriminators):
         if settings.repeat == 0:

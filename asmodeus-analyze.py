@@ -22,6 +22,10 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
     def configure(self):
         self.loadObservers()
         self.dataset.require('sightings')
+
+        self.dataset.reset('histograms')
+        for observer in self.observers:
+            self.dataset.create('histograms', observer.id)
     
         try:
             bias            = self.config.bias
@@ -32,13 +36,14 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
             raise exceptions.ConfigurationError
 
     def analyze(self):
+        self.markTime()
         for observer in self.observers:
             observer.loadSightings()
             observer.processSightings(self.magDis, self.altDis, self.aspDis)
 
             #observer.createSkyPlot()
         
-        log.info("Finished in {:.6f} seconds".format(asmodeus.runTime()))
+        log.info("Finished in {:.6f} seconds".format(self.runTime()))
         
 if __name__ == "__main__":
     log = logger.setupLog('root')
