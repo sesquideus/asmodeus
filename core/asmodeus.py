@@ -15,7 +15,6 @@ class Asmodeus():
 
         self.loadConfig()
         self.overrideConfig()
-        self.config = namedtupled.map(self.config.toDict())
 
         self.dataset = dataset.Dataset(self.config.dataset.name, self.config.observers)
 

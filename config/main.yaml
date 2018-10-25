@@ -3,7 +3,6 @@ mp:
 
 dataset:
     name: 'main'
-    variant: 'pickle'
 
 observers:
     teplicne:
@@ -124,6 +123,7 @@ multifit:                                                   # Exhaustive search 
     magnitude:
         repeat:                 0
         function:               'sigmoid'
+        method:                 'exhaustive'                # Exhaustive or random or simulated annealing
         parameters:
             limit:
                 min:            -6

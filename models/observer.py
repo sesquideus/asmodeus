@@ -1,5 +1,5 @@
 import numpy as np, multiprocessing as mp
-import datetime, yaml, sys, datetime, random, pprint, logging, os, io
+import datetime, yaml, sys, datetime, random, pprint, logging, os, io, dotmap
 import itertools, functools
 
 
