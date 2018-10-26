@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import unittest, math
 
 from physics import atmosphere, constants, radiometry
