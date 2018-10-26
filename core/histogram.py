@@ -15,35 +15,43 @@ class Histogram:
     def bin(self, value):
         b = int(math.floor(self.binCount * (value - self.lower) / (self.upper - self.lower)))
         if b < 0 or b >= self.binCount:
-            raise KeyError("Value outside permissible range")
+            raise KeyError("Value {value} outside permissible range ({lower} - {upper})".format(
+                value   = value,
+                lower   = self.lower,
+                upper   = self.upper,
+            ))
         else:
             return b
 
     def key(self, bin):
         return (self.lower + bin * self.binWidth)
 
+    @classmethod
+    def formatKey(cls, key):
+        raise NotImplementedError("No formatter defined")
+
+    @classmethod
+    def formatValue(cls, value):
+        return "{:16.6f}".format(value)
+
     def add(self, value):
-        try:
-            self.bins[self.bin(value)] += 1
-            self.totalCount += 1
-        except KeyError:
-            log.warning("Could not insert value {}".format(value))
+        self.bins[self.bin(value)] += 1
+        self.totalCount += 1
 
     def normalize(self):
         if self.totalCount > 0:
-            print(self.bins)
             for bin in self.bins:
                 bin /= self.totalCount
             self.totalCount = 1
 
         return self
 
-    def __str__(self, file = sys.stdout): 
+    def print(self, file = sys.stdout): 
         print("# Histogram \"{}\" ({} to {}, bin width {})".format(self.name, self.lower, self.upper, self.binWidth), file = file)
         for bin, count in enumerate(self.bins):
-            print("{key:12.6f}\t{value:16.6f}".format(
-                key         = self.key(bin),
-                value       = count,
+            print("{key}\t{value}".format(
+                key         = self.formatKey(self.key(bin)),
+                value       = self.formatValue(count),
             ), file = file)
 
     @staticmethod
@@ -64,12 +72,12 @@ class Histogram:
 
     def chiSquare(self, other):
         if self.lower != other.lower or self.upper != other.upper or self.binWidth != other.binWidth:
-            raise Exception("Incompatible histograms")
+            raise TypeError("Incompatible histograms")
 
         if self.totalCount == 0 or other.totalCount == 0:
             return 2
     
-        sum = 0
+        chi2 = 0
 
         self.normalize()
         other.normalize()
@@ -77,9 +85,14 @@ class Histogram:
         for bin, count in enumerate(self.bins):
             denom = count + other.bins[bin]
             if denom > 0:
-                sum += (count - other.bins[bin])**2 / denom
+                chi2 += (count - other.bins[bin])**2 / denom
 
-        return sum
+        return chi2
+
+    @staticmethod
+    def merge(first, second):
+        if first.binWidth != second.binWidth or type(first) is not type(second):
+            raise TypeError("Incompatible histograms")
 
 class TimeHistogram(Histogram):
     def __init__(self, name, lower, upper, binWidth = datetime.timedelta(seconds = 1)):
@@ -94,8 +107,17 @@ class TimeHistogram(Histogram):
                 value       = count,
             ), file = file)
 
+    @classmethod
+    def formatKey(cls, key):
+        return key.isoformat()
+
 class FloatHistogram(Histogram):
     def __init__(self, name, lower, upper, binWidth = 1):
         self.binWidth   = binWidth
         super().__init__(name, lower, upper)
+
+    @classmethod
+    def formatKey(cls, key):
+        return "{key:12.6f}".format(key = key)
+
 

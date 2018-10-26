@@ -1,6 +1,7 @@
 import unittest, math
 
 from physics import atmosphere, constants, radiometry
+from core import coord
 
 class TestAtmosphere(unittest.TestCase):
     def testAirmass90(self):
@@ -39,6 +40,21 @@ class TestRadiometry(unittest.TestCase):
 
     def testApparentMagnitudeSun(self):
         self.assertAlmostEqual(radiometry.apparentMagnitude(546.8), constants.apparentMagnitudeSun, delta = 0.001)
+
+class CaseVector3D(unittest.TestCase):
+    def setUp(self):
+        self.a = coord.Vector3D(57, 38, 49)
+        self.b = coord.Vector3D(14, 33, 50)
+
+    def testAdd(self):
+        self.assertEqual(self.a + self.b, coord.Vector3D(71, 71, 99))
+
+    def testSub(self):
+        self.assertEqual(self.a - self.b, coord.Vector3D(43, 5, -1))
+
+    def testNorm(self):
+        self.assertEqual(self.a.norm(), math.sqrt(57*57 + 38*38 + 49*49))
+        
 
 if __name__ == '__main__':
     unittest.main()

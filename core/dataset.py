@@ -6,7 +6,7 @@ log = logging.getLogger('root')
 class Dataset():
     def __init__(self, name, observers):
         self.name = name
-        self.observers = list(observers._asdict().keys())
+        self.observers = observers
 
     def path(self, *args):
         return Dataset.staticPath(self.name, *args)

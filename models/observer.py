@@ -40,11 +40,10 @@ class Observer():
         return coord.Vector3D.fromNumpyVector(self.earthToAltAzMatrix @ diff.toNumpyVector())
     
     def skyChartTSV(self, filename):
-        output = open(filename, 'w')
-        print("# Timestamp                   Alt        Az           Dist       Speed          Bright    Mass     Colour", file = output)
-
-        for sighting in self.allSightings:
-            sighting.dumpTSV(output)
+        with open(filename, 'w') as output:
+            print("# Timestamp                   Alt        Az           Dist       Speed          Bright    Mass     Colour", file = output)
+            for sighting in self.allSightings:
+                sighting.dumpTSV(output)
 
     def __str__(self):
         return "Observer {id:<15} at {position}".format(
@@ -81,26 +80,27 @@ class Observer():
             sighting.printSkyPlot(self.skyPlotFile, True)
     
     def createHistograms(self):
-        global asmo
         log.debug("Creating histograms for observer {name}, {count} sightings to process".format(
             name        = c.name(self.id),
             count       = c.num(len(self.visibleSightings)),
         ))
 
         data = []
-        histograms = {}
+        self.histograms = {}
 
         for stat, properties in self.histogramSettings.items():
-            histograms[stat] = {
+            self.histograms[stat] = {
                 'number':   histogram.FloatHistogram,
                 'time':     histogram.TimeHistogram,
             }.get(properties.xaxis, 'number')(stat, properties.min, properties.max, properties.bin)
 
         for sighting in self.visibleSightings:
             for stat in self.histogramSettings:
-                histograms[stat].add(getattr(sighting, stat))
+                try:
+                    self.histograms[stat].add(getattr(sighting, stat))
+                except KeyError as e:
+                    log.warning(e)
 
-        self.histograms = histograms
         return self.histograms
 
     def saveHistograms(self):
@@ -108,7 +108,8 @@ class Observer():
         for name, histogram in self.histograms.items():
             histogram.normalize()
             with open(self.dataset.path('histograms', self.id, '{}.tsv'.format(histogram.name)), 'w') as f:
-                histogram.__str__(f)
+                histogram.print(f)
+                histogram.print()
         #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
 
     def multifit(self, quantity, settings, *fixedDiscriminators):

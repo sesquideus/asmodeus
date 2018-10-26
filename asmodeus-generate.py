@@ -2,13 +2,12 @@
 
 import multiprocessing as mp
 import random
-import math
 
-from core import asmodeus, logger, exceptions
-from physics import coord
-from distribution import position, velocity, mass, density, time
-from utilities import colour as c
-from models.meteor import Meteor
+from core           import asmodeus, logger, exceptions
+from physics        import coord
+from distribution   import position, velocity, mass, density, time
+from utilities      import colour as c
+from models.meteor  import Meteor
 
 
 class AsmodeusGenerate(asmodeus.Asmodeus):
@@ -30,7 +29,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
     def configure(self):
         self.dataset.reset()
         self.dataset.create('meteors')
-        
+
         try:
             meteors = self.config.meteors
             self.massDistribution       = mass.MassDistribution.fromConfig(meteors.mass).logInfo()
@@ -43,7 +42,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
 
     def generate(self):
         log.info("About to generate {} meteoroids using {} processes".format(c.num(self.config.meteors.count), c.num(self.config.mp.processes)))
-     
+
         self.meteors = [meteor for meteor in [self.createMeteor() for _ in range(0, self.config.meteors.count)] if meteor is not None]
         log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass}".format(
             total       = c.num(len(self.meteors)),
@@ -60,7 +59,6 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
 
         velocityECEF        = coord.Vector3D.fromNumpyVector((coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
         entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
-        entryAngle          = math.degrees(math.asin(entryAngleSin))
 
         accept              = random.random()
         if accept > entryAngleSin:
@@ -78,7 +76,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
                 heatTransfer    = self.config.meteors.material.heatTransfer,
                 dragCoefficient = self.config.meteors.shape.dragCoefficient,
             )
-    
+
     def process(self):
         self.markTime()
         pool = mp.Pool(processes = self.config.mp.processes)
@@ -94,9 +92,11 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         ))
         log.info("Finished in {:.6f} seconds ({:.3f} meteors per second)".format(self.runTime(), len(self.meteors) / self.runTime()))
 
+
 def simulate(meteor, fps, spf, dataset):
     meteor.flyRK4(fps, spf)
-    meteor.save(dataset) 
+    meteor.save(dataset)
+
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
@@ -109,5 +109,5 @@ if __name__ == "__main__":
 
         log.info("Finished successfully")
         log.info("---------------------")
-    except KeyError: #exceptions.ConfigurationError as e:
+    except KeyError:  # exceptions.ConfigurationError as e:
         log.critical(c.err("Terminating due to a configuration error"))

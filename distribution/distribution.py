@@ -16,7 +16,7 @@ class Distribution():
     
     @classmethod
     def fromConfig(cls, config):
-        return cls(config.distribution, **config.parameters._asdict())
+        return cls(config.distribution, **config.parameters.toDict())
 
     @classmethod
     def constant(self, *, value):
@@ -28,7 +28,7 @@ class Distribution():
 
     @classmethod
     def default(cls, **kwargs):
-        raise KeyError("No default distribution defined")
+        raise NotImplementedError("No default distribution defined")
 
     def logInfo(self):
         log.info("{quantity:<27} distribution is {name:>20}{params}".format(

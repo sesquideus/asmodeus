@@ -24,7 +24,7 @@ class Discriminator():
     @classmethod
     def fromConfig(cls, config):
         try:
-            return cls(config.discriminator, **config.parameters._asdict())
+            return cls(config.discriminator, **config.parameters.toDict())
         except AttributeError as e:
             return cls(config.discriminator)
     

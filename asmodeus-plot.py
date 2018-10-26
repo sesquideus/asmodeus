@@ -1,16 +1,29 @@
 #!/usr/bin/env python
 
-import namedtupled as nt
-import datetime, argparse, yaml, sys, datetime, pprint, os, shutil, logging, io, jinja2
+import datetime, random, pprint, os, shutil, logging, io, math
 
-import asmodeus, configuration, models
-import configuration.configuration
-from models.meteor import Meteor
-from models.observer import Observer
-from models.sighting import Sighting, SightingFrame
-from utils import colour, jinjaEnv
+from core               import asmodeus, configuration, dataset, histogram, logger, exceptions
+from discriminator      import magnitude, altitude, angularSpeed
+from physics            import coord
+from utilities          import colour as c, utilities as ut
 
 from log import setupLog
+
+class AsmodeusPlot(asmodeus.Asmodeus):
+    def __init__(self):
+        log.info("Initializing {}".format(c.script("asmodeus-plot")))
+        super().__init__() 
+        self.configure()
+
+    def configure(self):
+        self.loadObservers()
+        self.dataset.require('sightings')
+        self.dataset.require('histograms')
+
+    def plot(self):
+        for observer in self.observers:
+            observer.plot
+
 
 def main(argv):
     observers = list(config.observers._asdict().keys())
