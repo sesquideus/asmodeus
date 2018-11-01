@@ -1,8 +1,11 @@
-import yaml, namedtupled, dotmap, logging, os
+import yaml
+import dotmap
+import logging
 
 from utilities import colour as c
 
 log = logging.getLogger('root')
+
 
 def load(configFile):
     try:
@@ -10,6 +13,7 @@ def load(configFile):
     except FileNotFoundError as e:
         log.error("Could not load configuration file {}: {}".format(configFile, e))
     return dotmap.DotMap(config)
+
 
 def applyOverridesObserve(args, config):
     if (args.plot_sky):

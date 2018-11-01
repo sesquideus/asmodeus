@@ -1,4 +1,9 @@
-import datetime, argparse, yaml, sys, datetime, random, pprint, logging, math, io, os, pickle
+import datetime
+import logging
+import math
+import io
+import os
+import pickle
 
 import models.frame
 
@@ -6,11 +11,13 @@ from physics        import atmosphere, coord, radiometry, constants
 
 log = logging.getLogger('root')
 
+
 class State:
     def __init__(self, position, velocity, mass):
         self.position = position
         self.velocity = velocity
         self.mass = mass
+
 
 class Diff:
     def __init__(self, drdt, dvdt, dmdt):
@@ -18,12 +25,13 @@ class Diff:
         self.dvdt = dvdt
         self.dmdt = dmdt
 
+
 class Meteor:
     def __init__(self, **kwargs):
         self.mass               = kwargs.get('mass',            1)
         self.density            = kwargs.get('density',         800)
-        self.radius             = (3 * self.mass / (self.density * math.pi * 4))**(1/3) 
-        
+        self.radius             = (3 * self.mass / (self.density * math.pi * 4))**(1 / 3)
+
         self.position           = kwargs.get('position',        coord.Vector3D.fromGeodetic(48, 17, 120000))
         self.velocity           = kwargs.get('velocity',        coord.Vector3D(0, 0, 0))
 
@@ -49,19 +57,18 @@ class Meteor:
 
     def __str__(self):
         return "<Meteor {id} at {position}, velocity {velocity} | " \
-                "rho {density:4.0f} kg/m3, Q {ablationHeat:8.0f} J/kg, " \
-                "m {mass:10.6e} kg, r {radius:10.3f} mm>".format(
-            id              = self.id,
-            position        = self.position,
-            velocity        = self.velocity,
-            mass            = self.mass,
-            radius          = self.radius * 1000,
-            density         = self.density,
-            ablationHeat    = self.ablationHeat,
-        )
+            "rho {density:4.0f} kg/m3, Q {ablationHeat:8.0f} J/kg, " \
+            "m {mass:10.6e} kg, r {radius:10.3f} mm>".format(
+                id              = self.id,
+                position        = self.position,
+                velocity        = self.velocity,
+                mass            = self.mass,
+                radius          = self.radius * 1000,
+                density         = self.density,
+                ablationHeat    = self.ablationHeat,
+            )
 
     def save(self, dataset):
-        fn = os.path.join(dataset, 'meteors', '{}.{}'.format(self.id, 'pickle'))
         fileIO = io.FileIO(os.path.join('datasets', dataset, 'meteors', '{}.{}'.format(self.id, 'pickle')), 'wb')
         pickle.dump(self, fileIO)
 
@@ -77,16 +84,16 @@ class Meteor:
     def acceleration(self, state):
         airRho = atmosphere.airDensity(state.position.norm() - constants.earthRadius)
         speed = state.velocity.norm()
-        return -(self.dragCoefficient * self.shapeFactor * airRho * speed**2 / (state.mass**(1/3) * self.density**(2/3))) * state.velocity / speed
+        return -(self.dragCoefficient * self.shapeFactor * airRho * speed**2 / (state.mass**(1 / 3) * self.density**(2 / 3))) * state.velocity / speed
 
     def ablation(self, state):
         airRho = atmosphere.airDensity(state.position.norm() - 6371000)
         speed = state.velocity.norm()
-        return -(self.heatTransfer * self.shapeFactor * airRho * speed**3 * (state.mass / self.density)**(2/3) / (2 * self.ablationHeat))
+        return -(self.heatTransfer * self.shapeFactor * airRho * speed**3 * (state.mass / self.density)**(2 / 3) / (2 * self.ablationHeat))
 
     def evaluate(self, state, diff, dt):
         newState = State(
-            state.position + diff.drdt * dt, 
+            state.position + diff.drdt * dt,
             state.velocity + diff.dvdt * dt,
             max(state.mass + diff.dmdt * dt, 1e-8)
         )
@@ -105,39 +112,39 @@ class Meteor:
             state = State(self.position, self.velocity, self.mass)
             d0 = Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0)
             d1 = self.evaluate(state, d0, 0.0)
-            d2 = self.evaluate(state, d1, dt/2)
-            d3 = self.evaluate(state, d2, dt/2)
+            d2 = self.evaluate(state, d1, dt / 2)
+            d3 = self.evaluate(state, d2, dt / 2)
             d4 = self.evaluate(state, d3, dt)
 
-            drdt = 1/6 * (d1.drdt + 2 * d2.drdt + 2 * d3.drdt + d4.drdt)
-            dvdt = 1/6 * (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt)
-            dmdt = 1/6 * (d1.dmdt + 2 * d2.dmdt + 2 * d3.dmdt + d4.dmdt)
+            drdt = (d1.drdt + 2 * d2.drdt + 2 * d3.drdt + d4.drdt) / 6.0
+            dvdt = (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt) / 6.0
+            dmdt = (d1.dmdt + 2 * d2.dmdt + 2 * d3.dmdt + d4.dmdt) / 6.0
 
             self.luminousPower = -(radiometry.luminousEfficiency(self.velocity.norm()) * dmdt * self.velocity.norm()**2 / 2.0)
-            
+
             if (frame % stepsPerFrame == 0):
                 self.frames.append(models.frame.Frame(self))
                 log.debug("{frame:04d} {time:6.3f} s | "
-                    "{latitude:6.4f} °N, {longitude:6.4f} °E, {elevation:6.0f} m | {density:9.3e} kg/m³ | "
-                    "v {speed:9.3f} m/s, dv {acceleration:13.3f} m/s², τ {lumEff:6.4f} | "
-                    "m {mass:8.4e} kg, dm {ablation:10.4e} kg/s | I {lp:10.3e} W, M {absmag:6.2f}m".format(
-                    frame           = frame,
-                    time            = frame * dt,
-                    latitude        = self.position.latitude(),
-                    longitude       = self.position.longitude(),
-                    elevation       = self.position.elevation(),
-                    density         = atmosphere.airDensity(self.position.elevation()),
-                    speed           = self.velocity.norm(),
-                    acceleration    = -dvdt.norm(),
-                    lumEff          = radiometry.luminousEfficiency(self.velocity.norm()),
-                    ablation        = dmdt,
-                    mass            = self.mass,
-                    lp              = self.luminousPower,
-                    absmag          = radiometry.absoluteMagnitude(self.luminousPower),
-                ))
-               
+                          "{latitude:6.4f} °N, {longitude:6.4f} °E, {elevation:6.0f} m | {density:9.3e} kg/m³ | "
+                          "v {speed:9.3f} m/s, dv {acceleration:13.3f} m/s², τ {lumEff:6.4f} | "
+                          "m {mass:8.4e} kg, dm {ablation:10.4e} kg/s | I {lp:10.3e} W, M {absmag:6.2f}m".format(
+                              frame           = frame,
+                              time            = frame * dt,
+                              latitude        = self.position.latitude(),
+                              longitude       = self.position.longitude(),
+                              elevation       = self.position.elevation(),
+                              density         = atmosphere.airDensity(self.position.elevation()),
+                              speed           = self.velocity.norm(),
+                              acceleration    = -dvdt.norm(),
+                              lumEff          = radiometry.luminousEfficiency(self.velocity.norm()),
+                              ablation        = dmdt,
+                              mass            = self.mass,
+                              lp              = self.luminousPower,
+                              absmag          = radiometry.absoluteMagnitude(self.luminousPower),
+                          ))
+
             frame += 1
-        
+
             self.trackLength += self.velocity.norm() * dt
             self.lifeTime += dt
             self.timestamp += datetime.timedelta(seconds = dt)
@@ -145,7 +152,7 @@ class Meteor:
             self.position += drdt * dt
             self.velocity += dvdt * dt
             self.mass     += dmdt * dt
-            
+
             # Advance time by dt
             self.timestamp += datetime.timedelta(seconds = dt)
 

@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""
+    Generates a set of meteoroids and simulates their atmospheric entry.
+"""
 
 import multiprocessing as mp
 import random
@@ -40,15 +43,18 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         except AttributeError:
             raise exceptions.ConfigurationError
 
+        return self
+
     def generate(self):
         log.info("About to generate {} meteoroids using {} processes".format(c.num(self.config.meteors.count), c.num(self.config.mp.processes)))
 
         self.meteors = [meteor for meteor in [self.createMeteor() for _ in range(0, self.config.meteors.count)] if meteor is not None]
         log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass}".format(
-            total       = c.num(len(self.meteors)),
-            percent     = c.num("{:5.2f}%".format(100 * len(self.meteors) / self.config.meteors.count)),
-            mass        = c.num("{:6f} kg".format(sum(map(lambda x: x.mass, self.meteors)))),
+            total           = c.num(len(self.meteors)),
+            percent         = c.num("{:5.2f}%".format(100 * len(self.meteors) / self.config.meteors.count)),
+            mass            = c.num("{:6f} kg".format(sum(map(lambda x: x.mass, self.meteors)))),
         ))
+        return self
 
     def createMeteor(self):
         timestamp           = self.temporalDistribution.sample()
@@ -60,37 +66,49 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         velocityECEF        = coord.Vector3D.fromNumpyVector((coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
         entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
 
-        accept              = random.random()
-        if accept > entryAngleSin:
-            log.debug("Meteoroid rejected: sine of entry angle {}, random value {}".format(entryAngleSin, accept))
-            return None
-        else:
-            log.debug("Meteoroid accepted: sine of entry angle {}, random value {}".format(entryAngleSin, accept))
-            return Meteor(
-                mass            = mass,
-                density         = density,
-                velocity        = velocityECEF,
-                position        = position,
-                timestamp       = timestamp,
-                ablationHeat    = self.config.meteors.material.ablationHeat,
-                heatTransfer    = self.config.meteors.material.heatTransfer,
-                dragCoefficient = self.config.meteors.shape.dragCoefficient,
-            )
+        rnd                 = random.random()
+        accepted            = rnd < entryAngleSin
+
+        log.debug("Meteoroid {status}: sine of entry angle {sin:.6f}, random value {rnd:.6f}".format(
+            status          = c.ok('accepted') if accepted else c.err('rejected'),
+            sin             = entryAngleSin,
+            rnd             = rnd,
+        ))
+
+        return Meteor(
+            mass            = mass,
+            density         = density,
+            velocity        = velocityECEF,
+            position        = position,
+            timestamp       = timestamp,
+            ablationHeat    = self.config.meteors.material.ablationHeat,
+            heatTransfer    = self.config.meteors.material.heatTransfer,
+            dragCoefficient = self.config.meteors.shape.dragCoefficient,
+        ) if accepted else None
 
     def process(self):
         self.markTime()
         pool = mp.Pool(processes = self.config.mp.processes)
-        results = [pool.apply_async(simulate, (meteor, self.config.integrator.fps, self.config.integrator.spf, self.dataset.name)) for meteor in self.meteors]
+        results = [
+            pool.apply_async(
+                simulate, (meteor, self.config.meteors.integrator.fps, self.config.meteors.integrator.spf, self.dataset.name)
+            ) for meteor in self.meteors
+        ]
 
         for result in results:
             result.get()
 
+        return self
+
     def finalize(self):
-        log.info("{number} meteors written to {directory}".format(
-            number      = c.num(len(self.meteors)),
-            directory   = c.path(self.dataset.path('meteors')),
+        log.info("{num} meteors were generated in {time} seconds ({rate} meteors per second) and saved to {dir}".format(
+            num     = c.num(len(self.meteors)),
+            time    = c.num("{:.6f}".format(self.runTime())),
+            rate    = c.num("{:.3f}".format(len(self.meteors) / self.runTime())),
+            dir     = c.path(self.dataset.path('meteors')),
         ))
-        log.info("Finished in {:.6f} seconds ({:.3f} meteors per second)".format(self.runTime(), len(self.meteors) / self.runTime()))
+
+        return self
 
 
 def simulate(meteor, fps, spf, dataset):
@@ -100,14 +118,9 @@ def simulate(meteor, fps, spf, dataset):
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
-
     try:
         asmo = AsmodeusGenerate()
-        asmo.generate()
-        asmo.process()
-        asmo.finalize()
-
-        log.info("Finished successfully")
+        asmo.generate().process().finalize()
         log.info("---------------------")
-    except KeyError:  # exceptions.ConfigurationError as e:
-        log.critical(c.err("Terminating due to a configuration error"))
+    except exceptions.ConfigurationError as e:
+        log.critical(c.err("Terminating due to a configuration error: ", e))

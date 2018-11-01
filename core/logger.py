@@ -1,13 +1,7 @@
 import logging
-from colorama import Fore, Style
+
 
 def setupLog(name, **kwargs):
-    colour = {
-        'DEBUG': Fore.GREEN,
-        'INFO': Fore.GREEN,
-        'WARNING': Fore.YELLOW,
-        'ERROR': Fore.RED
-    }
     formatter = logging.Formatter('%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s', "%H:%M:%S")
 
     output = kwargs.get('output', None)

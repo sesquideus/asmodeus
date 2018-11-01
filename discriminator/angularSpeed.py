@@ -1,13 +1,11 @@
-import logging, os, random, math
+import logging
 
-from utilities import colour as c
-from physics import coord
-
-from discriminator.discriminator import Discriminator
+from discriminator import base
 
 log = logging.getLogger('root')
 
-class AngularSpeedDiscriminator(Discriminator):
+
+class AngularSpeedDiscriminator(base.Discriminator):
     def __init__(self, name, **kwargs):
         self.property   = 'angular speed'
         self.functions  = {
@@ -17,5 +15,5 @@ class AngularSpeedDiscriminator(Discriminator):
         super().__init__(name, **kwargs)
 
     @classmethod
-    def bracket(cls, *, lower: float, upper: float):
-        return lambda sighting: sighting.angularSpeed >= lower and sighting.angularSpeed <= upper
+    def bracket(cls, *, lower: float, upper: float) -> (lambda float: float):
+        return lambda sighting: int(sighting.angularSpeed >= lower and sighting.angularSpeed <= upper)

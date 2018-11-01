@@ -1,12 +1,16 @@
-import multiprocessing as mp
-import argparse, os, sys, logging, shutil, time, namedtupled
+import argparse
+import os
+import sys
+import logging
+import time
 
 from core import configuration, dataset
-from utilities import colour as c, utilities as util
+from utilities import colour as c
 
 from models.observer import Observer
 
 log = logging.getLogger('root')
+
 
 class Asmodeus():
     def __init__(self):
@@ -23,7 +27,7 @@ class Asmodeus():
         self.argparser.add_argument('config',               type = argparse.FileType('r'))
         self.argparser.add_argument('-d', '--debug',        action = 'store_true')
         self.argparser.add_argument('-p', '--processes',    type = int)
-        self.argparser.add_argument('-s', '--dataset',      type = str)
+        self.argparser.add_argument('-D', '--dataset',      type = str)
         self.argparser.add_argument('-l', '--logfile',      type = argparse.FileType('w'))
 
     def loadConfig(self):
@@ -46,9 +50,9 @@ class Asmodeus():
         if self.args.dataset:
             self.overrideWarning('dataset', self.config.dataset.name, self.args.dataset)
             self.config.dataset.name = self.args.dataset
-        
+
         self.config.dataset.path = os.path.join('datasets', self.config.dataset.name)
-       
+
     def markTime(self):
         self.startTime = time.time()
 
@@ -57,34 +61,21 @@ class Asmodeus():
 
     def loadObservers(self):
         self.observers = []
-        for oid, obs in self.config.observers.items():
+        for oid, obs in self.config.observations.observers.items():
             self.observers.append(Observer(oid, self.dataset, self.config.statistics.histograms, **obs.toDict()))
 
-        log.info("Loaded {} observers:".format(len(self.observers)))
+        log.info("Loaded {} observer{}:".format(len(self.observers), 's' if len(self.observers) > 1 else ''))
         for o in self.observers:
-            log.info(o)
+            log.info("    {}".format(o))
 
     def overrideWarning(self, parameter, old, new):
         log.warning("Overriding {parameter} ({old} -> {new})".format(
-            parameter   = parameter,
+            parameter   = c.param(parameter),
             old         = c.over(old),
             new         = c.over(new),
         ))
-   
-### Multiprocessing wrappers
 
-def multiProcess(function, args, count):
-    pool = mp.Pool(processes = config.mp.processes)
-    results = [pool.apply_async(function, args) for _ in range(0, count)]
-    return [result.get(timeout = 10) for result in results]
-
-def blockProcess(function, args, count):
-    pool = mp.Pool(processes = config.mp.processes)
-    resultLists = [pool.apply_async(function, (blocksize,)) for _ in range(0, count // config.mp.blocksize)]
-    resultRemainder = function(count % blocksize)
-
-    results = [result for resultList in resultLists for result in resultList]
-    output = results + resultRemainder
+# Old crap below
 
 
 def buildGnuplotTemplate(template, dataset, context, outputDirectory = None):
@@ -92,19 +83,6 @@ def buildGnuplotTemplate(template, dataset, context, outputDirectory = None):
         jinjaEnv('templates').get_template(template).render(context),
         file = sys.stdout if outputDirectory is None else open(os.path.join(outputDirectory, template), 'w')
     )
-
-def buildConfigTemplate(template, context, outputDirectory = None):
-    print(
-        jinjaEnv('templates').get_template(template).render(context),
-        file = sys.stdout if outputDirectory is None else open(os.path.join(outputDirectory, template), 'w')
-    )
-
-
-
-### Preparation of dataset directories
-
-
-### Preparation of observers
 
 
 def createAmosHistograms(file):
@@ -120,9 +98,3 @@ def createAmosHistograms(file):
         histogram.tsv(open(datasetPath('histograms', 'amos-{}.tsv'.format(histogram.name)), 'w'))
 
     return histograms
-
-### Parsers
-
-### Master initializer
-
-

@@ -1,61 +1,63 @@
 #!/usr/bin/env python
-import unittest, math
+import unittest, math, datetime
+import random
+import numpy as np
 
-from physics import atmosphere, constants, radiometry
-from core import coord
+from core.histogram import FloatHistogram, TimeHistogram
+from models import observer, meteor, sighting
+from core import dataset
+from physics import coord
+from discriminator import magnitude
 
-class TestAtmosphere(unittest.TestCase):
-    def testAirmass90(self):
-        self.assertAlmostEqual(atmosphere.airMass(90), 1, delta = 0.001)
 
-    def testAirmass0(self):
-        self.assertAlmostEqual(atmosphere.airMass(0), 38, delta = 0.5)
-
-    def testAirmass45(self):
-        self.assertAlmostEqual(atmosphere.airMass(45), 1.4, delta = 0.02)
-
-    def testDensityTooHigh(self):
-        self.assertEqual(atmosphere.airDensity(300000), 0)
-
-    def testDensity10km(self):
-        self.assertAlmostEqual(atmosphere.airDensity(10000), 0.42, delta = 0.01)
-
-    def testAttenuate_1_1(self):
-        self.assertEqual(atmosphere.attenuate(1, 1), math.exp(constants.attenuationOneAirMass))
-
-    def testAttenuate_4_7(self):
-        self.assertEqual(atmosphere.attenuate(4, 7), 4 * math.exp(constants.attenuationOneAirMass * 7))
-
-    def testAttenuate_5_3(self):
-        self.assertEqual(atmosphere.attenuate(5, 3), 5 * math.exp(constants.attenuationOneAirMass * 3))
-
-class TestRadiometry(unittest.TestCase):
-    def testFluxDensityZero(self):
-        self.assertEqual(radiometry.fluxDensity(0, 1), 0)
-
-    def testFluxDensityFar(self):
-        self.assertEqual(radiometry.fluxDensity(1, math.inf), 0)
-
-    def testFluxDensityNormal(self):
-        self.assertEqual(radiometry.fluxDensity(4 * math.pi, 1), 1)
-
-    def testApparentMagnitudeSun(self):
-        self.assertAlmostEqual(radiometry.apparentMagnitude(546.8), constants.apparentMagnitudeSun, delta = 0.001)
-
-class CaseVector3D(unittest.TestCase):
+class CaseDiscriminator(unittest.TestCase):
     def setUp(self):
-        self.a = coord.Vector3D(57, 38, 49)
-        self.b = coord.Vector3D(14, 33, 50)
+        self.dataset = dataset.Dataset('default', None)
+        self.observer = observer.Observer(
+            'default',
+            self.dataset,
+            None,
+            latitude    = 47,
+            longitude   = 18,
+            elevation   = 531,
+        )
+        self.meteor = meteor.Meteor(
+            mass        = 1,
+            density     = 800,
+            position    = coord.Vector3D.fromGeodetic(48, 17, 120000),
+            velocity    = coord.Vector3D.fromGeodetic(-10000, -10000, -10000),
+            timestamp   = datetime.datetime.now(),
+        )
+        self.meteor.flyRK4(10, 10)
+        self.sighting = sighting.PointSighting(sighting.Sighting(self.observer, self.meteor))
 
-    def testAdd(self):
-        self.assertEqual(self.a + self.b, coord.Vector3D(71, 71, 99))
+    def testSigmoidPlusInf(self):
+        self.sigmoidPlusInf = magnitude.MagnitudeDiscriminator('sigmoid', limit = math.inf, width = 3)
+        self.assertEqual(self.sigmoidPlusInf.function(self.sighting.magnitude), 1)
 
-    def testSub(self):
-        self.assertEqual(self.a - self.b, coord.Vector3D(43, 5, -1))
+    def testSigmoidMinusInf(self):
+        self.sigmoidMinusInf = magnitude.MagnitudeDiscriminator('sigmoid', limit = -math.inf, width = 1)
+        self.assertEqual(self.sigmoidMinusInf.function(self.sighting.magnitude), 0)
 
-    def testNorm(self):
-        self.assertEqual(self.a.norm(), math.sqrt(57*57 + 38*38 + 49*49))
-        
+    def testSigmoidCenter(self):
+        limit = random.uniform(-5, 5)
+        self.sigmoid = magnitude.MagnitudeDiscriminator('sigmoid', limit = limit, width = 6)
+        self.assertAlmostEqual(self.sigmoid.function(limit), 0.5, delta = 1e-10)
+
+    def testSigmoidDecreasing(self):
+        self.sigmoid = magnitude.MagnitudeDiscriminator('sigmoid', limit = random.uniform(-5, 5), width = random.uniform(1, 2))
+        for i in np.arange(-10, 10, 0.1):
+            self.assertGreater(self.sigmoid.function(i), self.sigmoid.function(i + 0.1))
+
+class CaseHistogram(unittest.TestCase):
+    def setUp(self):
+        self.histogram = FloatHistogram('test', 0, 10, 1)
+
+    def testHistogramOutOfRange(self):
+        try:
+            self.assertRaises(self.histogram.add(10.5), KeyError)
+        except:
+            pass
 
 if __name__ == '__main__':
     unittest.main()

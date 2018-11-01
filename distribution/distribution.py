@@ -1,8 +1,11 @@
-import math, random, numbers, logging
+import random
+import logging
 
-from utilities import colour as c, utilities as util
+from core import exceptions
+from utilities import colour as c, utilities as u
 
 log = logging.getLogger('root')
+
 
 class Distribution():
     def __init__(self, name, **kwargs):
@@ -10,20 +13,20 @@ class Distribution():
         self.params = kwargs
         try:
             self.sample = self.functions.get(name, self.default)(**kwargs)
-        except KeyError as e:
+        except KeyError:
             self.errorUnknown(name)
-            raise exceptions.ConfigurationError()        
-    
+            raise exceptions.ConfigurationError()
+
     @classmethod
     def fromConfig(cls, config):
         return cls(config.distribution, **config.parameters.toDict())
 
     @classmethod
-    def constant(self, *, value):
+    def constant(self, *, value) -> (lambda: float):
         return lambda: value
 
     @classmethod
-    def gauss(cls, *, mean = 0, sigma = 1):  
+    def gauss(cls, *, mean = 0, sigma = 1) -> (lambda: float):
         return lambda: random.gauss(mean, sigma)
 
     @classmethod
@@ -31,15 +34,17 @@ class Distribution():
         raise NotImplementedError("No default distribution defined")
 
     def logInfo(self):
-        log.info("{quantity:<27} distribution is {name:>20}{params}".format(
+        log.info("{quantity} distribution is {name}{params}".format(
             quantity    = c.param(self.quantity.capitalize()),
             name        = c.name(self.name),
-            params      = "" if self.params is None else " ({})".format(util.formatParameters(self.params)),
+            params      = "" if self.params is None else " ({})".format(u.formatParameters(self.params)),
         ))
         return self
 
     def warningDefault(self):
         log.warning("No {} distribution defined, defaulting to {}".format(c.name(self.quantity), c.name(self.default)))
+        return self
 
     def errorUnknown(self, name):
         log.error("Unknown {} distribution \"{}\"".format(self.quantity, name))
+        return self

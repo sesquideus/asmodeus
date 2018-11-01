@@ -1,12 +1,12 @@
-import logging, os, random, math
+import logging
+import math
 
-from utilities import colour as c
-from physics import coord
-from discriminator.discriminator import Discriminator
+from discriminator import base
 
 log = logging.getLogger('root')
 
-class AltitudeDiscriminator(Discriminator):
+
+class AltitudeDiscriminator(base.Discriminator):
     def __init__(self, name, **kwargs):
         self.property   = 'altitude'
         self.functions  = {
@@ -19,19 +19,15 @@ class AltitudeDiscriminator(Discriminator):
 
     @classmethod
     def step(cls, *, limit: float):
-        return lambda sighting: sighting.altitude > limit
+        return lambda sighting: int(sighting.altitude > limit)
 
     @classmethod
     def linear(cls, *, limit: float):
-        def fun(sighting):
-            if sighting.altitude < limit:
-                return False
-            else:
-                return random.random() < (sighting.altitude - limit) / (90 - limit)
+        return lambda sighting: 0 if sighting.altitude < limit else (sighting.altitude - limit) / (90 - limit)
 
     @classmethod
     def sinexp(cls, *, exponent: float):
-        return lambda sighting: random.random() < math.sin(math.radians(sighting.altitude))**exponent
+        return lambda sighting: math.sin(math.radians(sighting.altitude))**exponent
 
     def default(cls):
         return cls.all

@@ -1,17 +1,18 @@
-import numpy as np, multiprocessing as mp
-import datetime, yaml, sys, datetime, random, pprint, logging, os, io, dotmap
-import itertools, functools
+import numpy as np
+import logging
+import itertools
+import functools
+import os
 
 
-from core                       import histogram, dataset
+from core                       import histogram
 from physics                    import coord
-from models.frame               import Frame
 from models.sighting            import Sighting
 from models.sightingframe       import SightingFrame
 from utilities                  import colour as c, utilities as utils
-from discriminator.magnitude    import MagnitudeDiscriminator
 
 log = logging.getLogger('root')
+
 
 class Observer():
     def __init__(self, name, dataset, histogramSettings, **kwargs):
@@ -28,64 +29,87 @@ class Observer():
         self.visibleSightings   = []
 
         self.earthToAltAzMatrix = functools.reduce(np.dot, [np.fliplr(np.eye(3)), coord.rotMatrixY(-self.position.latitude()), coord.rotMatrixZ(-self.position.longitude())])
+        self.skyPlotDir         = self.dataset.path('plots', self.id)
 
     def observe(self, meteor):
-        log.debug("Observer {:<10} trying to see meteor {}".format(c.name(self.id), meteorFile))
+        log.debug("Observer {} trying to see meteor {}".format(c.name(self.id), meteor))
         return [SightingFrame(self, frame) for frame in meteor.frames]
 
-    # This observer's AltAz coordinates of an EarthLocation point
-    # point: EarthLocation
     def altAz(self, point: coord.Vector3D) -> coord.Vector3D:
+        """
+            Returns AltAz coordinates of an EarthLocation point as observed by this observer
+            point: EarthLocation
+        """
         diff = point - self.position
         return coord.Vector3D.fromNumpyVector(self.earthToAltAzMatrix @ diff.toNumpyVector())
-    
-    def skyChartTSV(self, filename):
-        with open(filename, 'w') as output:
-            print("# Timestamp                   Alt        Az           Dist       Speed          Bright    Mass     Colour", file = output)
-            for sighting in self.allSightings:
-                sighting.dumpTSV(output)
 
     def __str__(self):
-        return "Observer {id:<15} at {position}".format(
+        return "Observer {id} at {position}".format(
             id          = c.name(self.id),
             position    = self.position.strGeodetic(),
         )
-        
+
     def loadSightings(self):
-        self.allSightings = [Sighting.load(self.dataset.path('sightings', self.id, file)) for file in os.listdir(self.dataset.path('sightings', self.id))]
-        log.info("Sightings loaded ({})".format(c.num(len(self.allSightings))))
+        dir = self.dataset.path('sightings', self.id)
+        log.debug("Observer {}: loading sightings from {}".format(c.name(self.id), c.path(dir)))
+
+        self.allSightings = [Sighting.load(self.dataset.path('sightings', self.id, file)) for file in os.listdir(dir)]
+        log.info("Observer {}: {} sightings loaded".format(c.name(self.id), c.num(len(self.allSightings))))
         return self.allSightings
-        
-    def applyBias(self, *discriminators):
+
+    def setDiscriminators(self, discriminators):
+        self.discriminators = discriminators
+
+    def applyBias(self):
         for sighting in self.allSightings:
-            sighting.applyBias(*discriminators)
+            sighting.applyBias(*self.discriminators)
+            log.debug("Meteor was " + (c.ok("detected") if sighting.sighted else c.err("not detected")))
 
         self.visibleSightings = [s for s in self.allSightings if s.sighted]
-        log.info("Selection bias applied ({bc} discriminators), {sc} sightings survived".format(
-            bc      = c.num(len(discriminators)),
-            sc      = c.num("{:6d}".format(len(self.visibleSightings))),
+        log.info("Selection bias applied ({bc} discriminators), {sc} sightings survived ({pct})".format(
+            bc      = c.num(len(self.discriminators)),
+            sc      = c.num(len(self.visibleSightings)),
+            pct     = c.num("{:5.2f}%".format(100 * len(self.visibleSightings) / len(self.allSightings))),
         ))
 
         return self.visibleSightings
-       
-    def processSightings(self, *discriminators):
-        self.applyBias(*discriminators)
-        
-        #self.createSkyPlot()
+
+    def processSightings(self):
+        self.applyBias()
         self.createHistograms()
         self.saveHistograms()
 
-    def createSkyPlot(self):
-        for sighting in self.visibleSightings:
-            sighting.printSkyPlot(self.skyPlotFile, True)
-    
+    @classmethod
+    def skyPlotHeader(cls):
+        return "#                timestamp       t        s    alt       az      d      ele      v       as            m           F0           F      mag"
+
+    def createSkyPlot(self, streaks):
+        log.info("Creating {} sky plot for observer {}".format(c.param('streaks' if streaks else 'dots'), c.name(self.id)))
+        self.dataset.create('plots', self.id, exist_ok = True)
+
+        with open(self.dataset.path('plots', self.id, 'streaks.tsv' if streaks else 'dots.tsv'), 'a') as file:
+            if streaks:
+                for sighting in self.visibleSightings:
+                    print(self.skyPlotHeader(), file = file)
+                    sighting.printSkyPlot(fileName)
+            else:
+                print(self.skyPlotHeader(), file = file)
+                for sighting in self.visibleSightings:
+                    sighting.asPointSighting().printSkyPlot(fileName)
+
+    def plotSkyPlot(self):
+        log.info("Plotting sky for observer {}".format(c.name(self.id)))
+        
+        utils.buildGnuplotTemplate('chiSquare-{}.gp'.format(quantity), config.dataset.name, context, asmodeus.datasetPath('plots'))
+        log.info("Template {} finished, calling {}".format(c.name('chiSquare'), c.script('gnuplot')))
+        os.system('gnuplot {}'.format(self.dataset.path('plots', 'chiSquare-{}.gp'.format(quantity))))
+
     def createHistograms(self):
-        log.debug("Creating histograms for observer {name}, {count} sightings to process".format(
+        log.info("Creating histograms for observer {name}, {count} sightings to process".format(
             name        = c.name(self.id),
             count       = c.num(len(self.visibleSightings)),
         ))
 
-        data = []
         self.histograms = {}
 
         for stat, properties in self.histogramSettings.items():
@@ -99,37 +123,39 @@ class Observer():
                 try:
                     self.histograms[stat].add(getattr(sighting, stat))
                 except KeyError as e:
-                    log.warning(e)
+                    log.warning("Unknown property {} -- {}".format(stat, e))
 
         return self.histograms
 
     def saveHistograms(self):
-       # amos        = asmodeus.createAmosHistograms('amos.tsv')
-        for name, histogram in self.histograms.items():
-            histogram.normalize()
-            with open(self.dataset.path('histograms', self.id, '{}.tsv'.format(histogram.name)), 'w') as f:
-                histogram.print(f)
-                histogram.print()
+        # amos        = asmodeus.createAmosHistograms('amos.tsv')
+        log.debug("Saving histograms for observer {name}".format(name = c.name(self.id)))
+        self.dataset.create('histograms', self.id)
+
+        for name, hist in self.histograms.items():
+            hist.normalize()
+            with open(self.dataset.path('histograms', self.id, '{}.tsv'.format(hist.name)), 'w') as f:
+                hist.print(f)
         #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
 
     def multifit(self, quantity, settings, *fixedDiscriminators):
         if settings.repeat == 0:
-            log.info("Skipping {} multifit".format(colour(quantity, 'name')))
+            log.info("Skipping {} multifit".format(c.name(quantity)))
             return
 
-        log.info("Commencing {} multifit (average of {} repetitions)".format(colour(quantity, 'name'), colour(settings.repeat, 'num')))
-        
+        log.info("Commencing {} multifit (average of {} repetitions)".format(c.name(quantity), c.num(settings.repeat)))
+
         amos = asmodeus.createAmosHistograms('amos.tsv')
-        
+
         resultFile = asmodeus.datasetPath('plots', 'chiSquare-{}.tsv'.format(quantity))
         if os.path.exists(resultFile):
             os.remove(resultFile)
 
         current = 0
-        space = generateParameterSpace(**settings.parameters._asdict())
+        space = generateParameterSpace(**settings.parameters.toDict())
         for parameters in space:
             current += 1
-            
+
             chiSquare = 0
             for _ in itertools.repeat(None, settings.repeat):
                 testMagDis = discriminators.__getattribute__(quantity).function(settings.function, **parameters)
@@ -140,9 +166,9 @@ class Observer():
             chiSquare /= settings.repeat
 
             log.info("{current} / {total}: {params} | chi-square {chisq:8.6f}".format(
-                params      = ", ".join(["{parameter} = {value}".format(parameter = parameter, value = colour("{:6.3f}".format(value), 'param')) for parameter, value in sorted(parameters.items())]),
-                current     = colour("{:6d}".format(current), 'num'),
-                total       = colour("{:6d}".format(len(space)), 'num'),
+                params      = ", ".join(["{parameter} = {value}".format(parameter = parameter, value = c.param("{:6.3f}".format(value))) for parameter, value in sorted(parameters.items())]),
+                current     = c.num("{:6d}".format(current)),
+                total       = c.num("{:6d}".format(len(space))),
                 chisq       = chiSquare,
             ))
 

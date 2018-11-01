@@ -8,6 +8,9 @@ class Vector3D:
         self.y = y
         self.z = z
 
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y and self.z == other.z
+
     def __add__(self, other):
         if not isinstance(other, Vector3D):
             raise TypeError("Vector3D: cannot __add__ {}".format(type(other)))
@@ -95,7 +98,7 @@ class Vector3D:
         return self.norm() - 6371000
 
     @classmethod
-    def fromSpherical(self, lat, lon, r = 1):
+    def fromSpherical(cls, lat, lon, r = 1):
         return Vector3D(
             r * math.cos(math.radians(lat)) * math.cos(math.radians(lon)),
             r * math.cos(math.radians(lat)) * math.sin(math.radians(lon)),
@@ -103,11 +106,11 @@ class Vector3D:
         )
 
     @classmethod
-    def fromGeodetic(self, lat, lon, alt = 0):
+    def fromGeodetic(cls, lat, lon, alt = 0):
         return Vector3D.fromSpherical(lat, lon, alt + 6371000)
 
     @classmethod
-    def fromNumpyVector(self, npv):
+    def fromNumpyVector(cls, npv):
         return Vector3D(npv[0, 0], npv[1, 0], npv[2, 0])
 
     def toNumpyVector(self):
@@ -142,29 +145,29 @@ class Vector3D:
 def rotMatrixX(angle):
     c = np.cos(np.radians(angle))
     s = np.sin(np.radians(angle))
-    return np.matrix([
-        [1,  0,  0],
-        [0,  c, -s],
-        [0,  s,  c],
-    ])
+    return np.ndarray((3, 3), dtype = float, buffer = np.array([
+        1,  0,  0,
+        0,  c, -s,
+        0,  s,  c,
+    ]))
 
 def rotMatrixY(angle):
     c = np.cos(np.radians(angle))
     s = np.sin(np.radians(angle))
-    return np.matrix([
-        [c,  0, -s],
-        [0,  1,  0],
-        [s,  0,  c],
-    ])
+    return np.ndarray((3, 3), dtype = float, buffer = np.array([
+        c,  0, -s,
+        0,  1,  0,
+        s,  0,  c,
+    ]))
 
 def rotMatrixZ(angle):
     c = np.cos(np.radians(angle))
     s = np.sin(np.radians(angle))
-    return np.matrix([
-        [c, -s,  0],
-        [s,  c,  0],
-        [0,  0,  1],
-    ])
+    return np.ndarray((3, 3), dtype = float, buffer = np.array([
+        c, -s,  0,
+        s,  c,  0,
+        0,  0,  1,
+    ]))
 
 def obliquity():
     return math.radians(23.439)

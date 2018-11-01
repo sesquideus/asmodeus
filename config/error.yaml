@@ -2,7 +2,7 @@ mp:
     processes: 4
 
 dataset:
-    name: 'plys'
+    name: 'error'
     variant: 'pickle'
 
 observers:

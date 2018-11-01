@@ -1,22 +1,22 @@
-import math, random, sys, numbers, logging
+import random
+import logging
 import numpy as np
 
-from distribution.distribution  import Distribution
-from core                       import configuration
-from physics                    import coord
+from distribution import distribution
 
 log = logging.getLogger('root')
 
-class MassDistribution(Distribution):
+
+class MassDistribution(distribution.Distribution):
     def __init__(self, name, **kwargs):
         self.quantity = 'meteoroid mass'
         self.functions = {
-            'pareto':       self.pareto, 
+            'pareto':       self.pareto,
             'exponential':  self.exponential,
             'constant':     self.constant,
         }
         super().__init__(name, **kwargs)
-    
+
     @classmethod
     def pareto(cls, *, shape: float, minimum: float) -> (lambda: float):
         return lambda: (np.random.pareto(shape - 1) + 1) * minimum

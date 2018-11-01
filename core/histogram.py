@@ -1,9 +1,13 @@
-import math, numbers, sys, logging, datetime
+import math
+import sys
+import logging
+import datetime
 import numpy as np
 
 log = logging.getLogger('root')
 
-class Histogram: 
+
+class Histogram:
     def __init__(self, name, lower, upper):
         self.name       = name
         self.lower      = lower
@@ -46,7 +50,7 @@ class Histogram:
 
         return self
 
-    def print(self, file = sys.stdout): 
+    def print(self, file = sys.stdout):
         print("# Histogram \"{}\" ({} to {}, bin width {})".format(self.name, self.lower, self.upper, self.binWidth), file = file)
         for bin, count in enumerate(self.bins):
             print("{key}\t{value}".format(
@@ -76,7 +80,7 @@ class Histogram:
 
         if self.totalCount == 0 or other.totalCount == 0:
             return 2
-    
+
         chi2 = 0
 
         self.normalize()
@@ -94,12 +98,13 @@ class Histogram:
         if first.binWidth != second.binWidth or type(first) is not type(second):
             raise TypeError("Incompatible histograms")
 
+
 class TimeHistogram(Histogram):
     def __init__(self, name, lower, upper, binWidth = datetime.timedelta(seconds = 1)):
         self.binWidth   = datetime.timedelta(seconds = binWidth)
         super().__init__(name, lower, upper)
-    
-    def __str__(self, file = sys.stdout): 
+
+    def __str__(self, file = sys.stdout):
         print("# Histogram \"{}\" ({} to {}, bin width {})".format(self.name, self.lower, self.upper, self.binWidth), file = file)
         for bin, count in enumerate(self.bins):
             print("{key}\t{value:16.6f}".format(
@@ -111,6 +116,7 @@ class TimeHistogram(Histogram):
     def formatKey(cls, key):
         return key.isoformat()
 
+
 class FloatHistogram(Histogram):
     def __init__(self, name, lower, upper, binWidth = 1):
         self.binWidth   = binWidth
@@ -119,5 +125,3 @@ class FloatHistogram(Histogram):
     @classmethod
     def formatKey(cls, key):
         return "{key:12.6f}".format(key = key)
-
-

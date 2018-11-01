@@ -1,5 +1,4 @@
 import argparse, os, jinja2, itertools
-import namedtupled as nt
 import numpy as np
 
 from utilities import colour as c
@@ -17,10 +16,7 @@ class readableDir(argparse.Action):
 class writeableDir(argparse.Action):
     def __call__(self, parser, namespace, values, option_string = None):
         tryDir = values
-        try:
-            os.mkdir(tryDir)
-        except FileExistsError as e:
-            pass
+        os.mkdir(tryDir, exist_ok = True)
 
         if not os.path.isdir(tryDir):
             raise argparse.ArgumentTypeError("writeableDir: {0} is not a valid path".format(tryDir))
@@ -30,8 +26,7 @@ class writeableDir(argparse.Action):
             raise argparse.ArgumentTypeError("writeableDir: {0} is not a writeable directory".format(tryDir))
 
 def formatParameters(parameters):
-    formatted = ["{} = {}".format(c.param(name), value) for name, value in parameters.items()]
-    return ", ".join(formatted)
+    return ", ".join(["{} = {}".format(c.param(name), value) for name, value in parameters.items()])
 
 def jinjaEnv(directory):
     return jinja2.Environment(

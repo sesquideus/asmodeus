@@ -1,7 +1,11 @@
-import os, shutil, logging
+import os
+import shutil
+import logging
+
 from utilities import colour as c
 
 log = logging.getLogger('root')
+
 
 class Dataset():
     def __init__(self, name, observers):
@@ -27,18 +31,10 @@ class Dataset():
     def reset(self, *path):
         self.remove(*path)
         self.create(*path)
-    
-    def create(self, *path):
+
+    def create(self, *path, exist_ok = False):
         log.debug("Creating new dataset subdirectory {}".format(c.path(self.path(*path))))
-        os.makedirs(self.path(*path))
-
-        #os.makedirs(self.path('plots'), exist_ok = True)
-        #os.makedirs(self.path('histograms'), exist_ok = True)
-
-        #for observer in self.observers:
-        #    os.makedirs(self.path('histograms', observer), exist_ok = True)
-
-        #log.info("Created directory for dataset {}".format(c.path(self.name)))
+        os.makedirs(self.path(*path), exist_ok = exist_ok)
 
     def require(self, *path):
         if not os.path.isdir(self.path(*path)):

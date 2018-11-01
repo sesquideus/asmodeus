@@ -15,7 +15,7 @@ observers:
 integrator:
     name: 'rk4'
     fps: 20
-    spf: 10
+    spf: 1
 
 meteors:
     count:                      1

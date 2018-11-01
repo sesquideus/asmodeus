@@ -1,11 +1,10 @@
-import math, random, sys, numbers, logging
-
-from core import exceptions
-from distribution.distribution import Distribution
+import logging
+from distribution import distribution
 
 log = logging.getLogger('root')
 
-class DensityDistribution(Distribution):
+
+class DensityDistribution(distribution.Distribution):
     def __init__(self, name, **kwargs):
         self.quantity           = 'meteoroid density'
         self.functions          = {
@@ -15,11 +14,11 @@ class DensityDistribution(Distribution):
             'gauss':            self.gauss,
         }
         super().__init__(name, **kwargs)
-        
-    @classmethod
-    def asteroidal(cls, **kwargs):
-        return lambda: cls.gauss(3300, 50) 
 
     @classmethod
-    def iron(cls, **kwargs):
+    def asteroidal(cls, **kwargs) -> (lambda: float):
+        return lambda: cls.gauss(3300, 50)
+
+    @classmethod
+    def iron(cls, **kwargs) -> (lambda: float):
         return lambda: cls.gauss(7800, 30)

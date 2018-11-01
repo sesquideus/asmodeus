@@ -1,13 +1,15 @@
 #!/usr/bin/env python
+"""
+    Computes apparent positions and magnitudes for all observers as defined in the configuration file,
+    using generated meteors saved in dataset `meteors` directory
+    Requires: meteors
+    Outputs: sightings
+"""
 
-import datetime, random, pprint, os, shutil, logging, io, math
+from core import asmodeus, dataset, logger
+from physics import coord
+from utilities import colour as c, utilities as ut
 
-from core               import asmodeus, configuration, dataset, histogram, logger, exceptions
-from discriminator      import magnitude, altitude, angularSpeed
-from physics            import coord
-from utilities          import colour as c, utilities as ut
-
-from log import setupLog
 
 class AsmodeusPlot(asmodeus.Asmodeus):
     def __init__(self):
@@ -21,12 +23,28 @@ class AsmodeusPlot(asmodeus.Asmodeus):
         self.dataset.require('histograms')
 
     def plot(self):
-        for observer in self.observers:
-            observer.plot
+        if self.config.plot.targets.dots:
+            for observer in self.observers:
+                observer.plotSkyPlot()
+
+        if self.config.plot.targets.streaks:
+            for observer in self.observers:
+                observer.plotSkyPlot()
+
+
+if __name__ == "__main__":
+    log = logger.setupLog('root')
+    asmo = AsmodeusPlot()
+    asmo.plot()
+
+    log.info("Finished successfully")
+    log.info("---------------------")
+
+
+
 
 
 def main(argv):
-    observers = list(config.observers._asdict().keys())
     plotSky(observers)
     plotHistograms(observers)
 
@@ -117,7 +135,7 @@ def centroid(quantity, count):
     omega = sum([x[1] for x in data]) / count
     chisq = sum([x[2] for x in data]) / count
 
-    log.info("Minimum for limiting magnitude {}, omega {}, chi square is {}".format(
+    log.info("Minimum for limiting magnitude {}, width {}, chi square is {}".format(
         colour("{:.3f}".format(limmag), 'num'),
         colour("{:.3f}".format(omega), 'num'),
         colour("{:.6f}".format(chisq), 'num'),
@@ -133,9 +151,3 @@ def plotChiSquareAltitude(observers, quantity):
     log.info("Template {} finished, calling {}".format(colour('chiSquare', 'name'), colour('gnuplot', 'script')))
     os.system('gnuplot {}'.format(asmodeus.datasetPath('plots', 'chiSquare-{}.gp'.format(quantity))))
 
-
-if __name__ == "__main__":
-    log = setupLog('root')
-    config = asmodeus.initialize('plot')
-    main(sys.argv)
-    log.info("Finished successfully")
