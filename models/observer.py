@@ -51,7 +51,10 @@ class Observer():
 
     def loadSightings(self):
         dir = self.dataset.path('sightings', self.id)
-        log.debug("Observer {}: loading sightings from {}".format(c.name(self.id), c.path(dir)))
+        log.debug("Observer {obs}: loading sightings from {dir}".format(
+            obs         = c.name(self.id),
+            dir         = c.path(dir)),
+        )
 
         self.allSightings = [Sighting.load(self.dataset.path('sightings', self.id, file)) for file in os.listdir(dir)]
         log.info("Observer {}: {} sightings loaded".format(c.name(self.id), c.num(len(self.allSightings))))
@@ -66,8 +69,8 @@ class Observer():
             log.debug("Meteor was " + (c.ok("detected") if sighting.sighted else c.err("not detected")))
 
         self.visibleSightings = [s for s in self.allSightings if s.sighted]
-        log.info("Selection bias applied ({bc} discriminators), {sc} sightings survived ({pct})".format(
-            bc      = c.num(len(self.discriminators)),
+        log.info("Selection bias applied ({dc} discriminators), {sc} sightings survived ({pct})".format(
+            dc      = c.num(len(self.discriminators)),
             sc      = c.num(len(self.visibleSightings)),
             pct     = c.num("{:5.2f}%".format(100 * len(self.visibleSightings) / len(self.allSightings))),
         ))
@@ -84,25 +87,45 @@ class Observer():
         return "#                timestamp       t        s    alt       az      d      ele      v       as            m           F0           F      mag"
 
     def createSkyPlot(self, streaks):
-        log.info("Creating {} sky plot for observer {}".format(c.param('streaks' if streaks else 'dots'), c.name(self.id)))
+        log.info("Creating {target} sky plot for observer {obs}".format(
+            target      = c.param('streaks' if streaks else 'dots'),
+            obs         = c.name(self.id)),
+        )
         self.dataset.create('plots', self.id, exist_ok = True)
 
-        with open(self.dataset.path('plots', self.id, 'streaks.tsv' if streaks else 'dots.tsv'), 'a') as file:
-            if streaks:
-                for sighting in self.visibleSightings:
-                    print(self.skyPlotHeader(), file = file)
-                    sighting.printSkyPlot(fileName)
-            else:
-                print(self.skyPlotHeader(), file = file)
-                for sighting in self.visibleSightings:
-                    sighting.asPointSighting().printSkyPlot(fileName)
+        with open(self.dataset.path('plots', self.id, 'sky.tsv'), 'a') as file:
+            print(self.skyPlotHeader(), file = file)
+            for sighting in self.visibleSightings:
+                sighting.printSkyPlot(file.name)
 
-    def plotSkyPlot(self):
+    def plotSkyPlot(self, config):
         log.info("Plotting sky for observer {}".format(c.name(self.id)))
         
-        utils.buildGnuplotTemplate('chiSquare-{}.gp'.format(quantity), config.dataset.name, context, asmodeus.datasetPath('plots'))
-        log.info("Template {} finished, calling {}".format(c.name('chiSquare'), c.script('gnuplot')))
-        os.system('gnuplot {}'.format(self.dataset.path('plots', 'chiSquare-{}.gp'.format(quantity))))
+        context = {
+            'pixels':   config.pixels,
+            'dark':     config.dark,
+            'quantity': 'angularSpeed',
+            'log':      False,
+            'column':   9,
+            'palette': [
+                ( 0, '#0000C0'),
+                (15, '#00E000'),
+                (25, '#FFFF00'),
+                (35, '#FFFFFF'),
+            ],
+            'cblow':    0,
+            'cbhigh':   40,
+            'observer':     self.id,
+            'dataset':      self.dataset.name,
+        }
+
+        utils.renderTemplate('sky.gp', context, self.dataset.path('plots', self.id))
+
+        log.info("Template for {name} finished, calling {script}".format(
+            name    = c.name('chiSquare'),
+            script  = c.script('gnuplot'),
+        ))
+        os.system('gnuplot {}'.format(self.dataset.path('plots', self.id, 'sky.gp')))
 
     def createHistograms(self):
         log.info("Creating histograms for observer {name}, {count} sightings to process".format(
@@ -166,7 +189,10 @@ class Observer():
             chiSquare /= settings.repeat
 
             log.info("{current} / {total}: {params} | chi-square {chisq:8.6f}".format(
-                params      = ", ".join(["{parameter} = {value}".format(parameter = parameter, value = c.param("{:6.3f}".format(value))) for parameter, value in sorted(parameters.items())]),
+                params      = ", ".join(["{parameter} = {value}".format(
+                    parameter = parameter,
+                    value = c.param("{:6.3f}".format(value))
+                ) for parameter, value in sorted(parameters.items())]),
                 current     = c.num("{:6d}".format(current)),
                 total       = c.num("{:6d}".format(len(space))),
                 chisq       = chiSquare,

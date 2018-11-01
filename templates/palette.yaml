@@ -1,0 +1,71 @@
+angularSpeed:
+    0:          '#00FF00'
+    10:         '#0000FF'
+    20:         '#FF00FF'
+
+altitude:
+    0:          '#00FF00'
+    100000:     '#FF00FF'
+
+
+
+##    {% if quantity == 'angularSpeed' %}
+#        set cbrange [0:50]
+#        {% if dark %}
+#            set palette defined (0 "#000080", 15 "#00ff00", 25 "#ffff00", 35 "#ffffff", 40 "#ff00ff")
+#        {% else %}
+#            set palette defined (0 "#000040", 10 "#0040C0", 20 "#00E040", 25 "#FFC000", 35 "#C0C000", 40 "#ff00ff")
+#        {% endif %}
+#    {% endif %}
+#    
+#    {% if quantity == 'speed' %} 
+#        set cbrange [0:70000]
+#        {% if dark %}
+#            set palette defined (0 "#000000", 20000 "#0000ff", 30000 "#00ffff", 40000 "#00ff00", 50000 "#ffff00", 60000 "#ff0000", 70000 "#ff00ff")
+#        {% else %}
+#            set palette defined (0 "#000000", 20000 "#0000ff", 30000 "#00ffff", 40000 "#00ff00", 50000 "#ffff00", 60000 "#ff0000", 70000 "#ff00ff")
+#        {% endif %}
+#    {% endif %}
+#    
+#    {% if quantity == 'mass' %} 
+#        set cbrange [-6:3]
+#        {% if dark %}
+#            set palette defined (-6 "#0000ff", -4 "#00ffff", -3 "#00ff00", -2 "#ffff00", -1 "#ff0000", 0 "#ff00ff", 3 "#FFFFFF")
+#        {% else %}
+#            set palette defined (-6 "#0000C0", -4 "#00C0C0", -3 "#00C000", -2 "#FF7F00", -1 "#FF0000", 0 "#FF00FF", 3 "#FFFFFF")
+#        {% endif %}
+#    {% endif %}
+#
+#    {% if quantity == 'distance' %} 
+#        set cbrange [0:500000]
+#        set palette defined (0 "#ffffff", 80000 "#ff00ff", 160000 "#ff0000", 240000 "#ffff00", 320000 "#00ff00", 560000 "#00ffff", 1000000 "#0000ff")
+#    {% endif %}
+#
+#    {% if quantity == 'elevation' %} 
+#        set cbrange [0:150000]
+#        {% if dark %}
+#            set palette defined (0 "#ffffff", 50000 "#ff00ff", 70000 "#ff0000", 90000 "#ffff00", 110000 "#00ff00", 130000 "#00ffff", 150000 "#0000ff")
+#        {% else %}
+#            set palette defined (0 "#000000", 50000 "#202020", 70000 "#404040", 90000 "#808080", 110000 "#C0C0C0", 150000 "#FFFFFF")
+#        {% endif %}
+#    {% endif %}
+#
+#    {% if quantity == 'length' %} 
+#        set cbrange [0:250000]
+#        set palette defined (0 "#0000ff", 50000 "#00ffff", 100000 "#00ff00", 150000 "#ffff00", 200000 "#ff0000", 500000 "#ffffff")
+#    {% endif %}
+#
+#    {% if quantity == 'power' %} 
+#        set cbrange [0:8]
+#        set palette defined (0 "#000000", 2 "#000080", 4 "#ff0000", 6 "#ffff00", 8 "#FFFFFF")
+#    {% endif %}
+#
+    {% if quantity == 'sighted' %} 
+        set cbrange [0:1]
+        {% if dark %}
+            set palette defined (0 "#C00000", 1 "#FFFF00")
+        {% else %}
+            set palette defined (0 "#C0C0FF", 1 "#FF0000")
+        {% endif %}
+    {% endif %}
+

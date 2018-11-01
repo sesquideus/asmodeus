@@ -26,13 +26,11 @@ class AsmodeusSky(asmodeus.Asmodeus):
         for observer in self.observers:
             self.dataset.create('sightings', observer.id)
 
-    def render(self):
-        
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
-    asmo = AsmodeusObserve()
-    asmo.observe()
+    asmo = AsmodeusSky()
+    asmo.render()
 
     log.info("Finished successfully")
     log.info("---------------------")

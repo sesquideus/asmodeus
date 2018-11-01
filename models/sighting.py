@@ -51,6 +51,11 @@ class Sighting():
     def savePoint(self, filename):
         pickle.dump(PointSighting(self), io.FileIO(filename, 'wb'))
 
+    def applyBias(self, *discriminators):
+        point = PointSighting(self)
+        self.sighted = point.applyBias(*discriminators)
+        return self.sighted
+
     def __str__(self):
         return "<Sighting by {observer} at {timestamp}>".format(
             observer        = self.observer.id,

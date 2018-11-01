@@ -49,11 +49,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
             observer.loadSightings()
             observer.processSightings()
 
-            # if self.config.plot.targets.dots:
-            #    observer.createSkyPlot(False)
-
-            # if self.config.plot.targets.streaks:
-            #    observer.createSkyPlot(True)
+            observer.createSkyPlot(False)
 
         log.info("Finished in {:.6f} seconds".format(self.runTime()))
 

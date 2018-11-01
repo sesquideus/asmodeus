@@ -20,22 +20,27 @@ class AsmodeusPlot(asmodeus.Asmodeus):
     def configure(self):
         self.loadObservers()
         self.dataset.require('sightings')
-        self.dataset.require('histograms')
+        #self.dataset.require('histograms')
 
-    def plot(self):
-        if self.config.plot.targets.dots:
-            for observer in self.observers:
-                observer.plotSkyPlot()
+        #self.dataset.reset('plots')
+        for observer in self.observers:
+            self.dataset.create('plots', observer.id, exist_ok = True)
+        
+    def plotSky(self):
+        for observer in self.observers:
+            observer.plotSkyPlot(self.config.plot.sky)
 
-        if self.config.plot.targets.streaks:
-            for observer in self.observers:
-                observer.plotSkyPlot()
+    def plotHistograms(self):
+        for observer in self.observers:
+            pass
+            #observer.plotHistograms()
 
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
     asmo = AsmodeusPlot()
-    asmo.plot()
+    asmo.plotSky()
+    asmo.plotHistograms()
 
     log.info("Finished successfully")
     log.info("---------------------")
