@@ -8,3 +8,7 @@ datasets/%/meteors:
 datasets/%/sightings: \
 	datasets/$$*/meteors
 	./asmodeus-observe.py config/$*.yaml
+
+datasets/%/histograms: \
+	datasets/$$*/sightings
+	./asmodeus-analyze.py config/$*.yaml
