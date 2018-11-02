@@ -20,7 +20,6 @@ set format r ''
 set cbrange [{{ cblow }}:{{ cbhigh }}]
 set palette defined ({% for node in palette %}{{ node[0] }} "{{ node[1] }}"{% if not loop.last %},{% endif %}{% endfor %})
 
-
 set grid polar 15 ls 1
 
 set size square
@@ -29,5 +28,5 @@ set trange[0:360]
 
 set output "datasets/{{ dataset }}/plots/{{ observer }}/{{ quantity }}.png"
 plot 'datasets/{{ dataset }}/plots/{{ observer }}/sky.tsv' using ($5<270 ? $5+90 : $5-270) : (90-$4) : \
-({{ pixels }} / 40000.0 * ((log10($12*1e10 + 1))**2 * 6)): \
-({% if log %}log10{% endif %}(${{ column }})) with points pt 7 ps var palette
+    ({{ pixels }} / 40000.0 * (log10($12*1e10 + 1)**2) * 6) : \
+    ({% if log %}log10{% endif %}(${{ column }})) with points pt 7 ps var palette

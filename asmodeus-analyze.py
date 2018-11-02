@@ -49,7 +49,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
             observer.loadSightings()
             observer.processSightings()
 
-            observer.createSkyPlot(False)
+            observer.createSkyPlot()
 
         log.info("Finished in {:.6f} seconds".format(self.runTime()))
 

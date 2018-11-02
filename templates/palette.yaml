@@ -1,13 +1,23 @@
 angularSpeed:
-    0:          '#00FF00'
-    10:         '#0000FF'
+    0:          '#4040FF'
+    10:         '#00E000'
     20:         '#FF00FF'
+    35:         '#FF7FFF'
+    100:        '#FFFFFF'
 
 altitude:
-    0:          '#00FF00'
-    100000:     '#FF00FF'
+    0:          '#FF00FF'
+    25000:      '#FF0000'
+    50000:      '#FF8000'
+    75000:      '#FFFF00'
+    100000:     '#00FF00'
 
-
+speed:
+    0:          '#0000C0'
+    18000:      '#2020FF'
+    36000:      '#FF0000'
+    54000:      '#FFFF00'
+    72000:      '#FFFFFF'
 
 ##    {% if quantity == 'angularSpeed' %}
 #        set cbrange [0:50]
@@ -60,12 +70,3 @@ altitude:
 #        set palette defined (0 "#000000", 2 "#000080", 4 "#ff0000", 6 "#ffff00", 8 "#FFFFFF")
 #    {% endif %}
 #
-    {% if quantity == 'sighted' %} 
-        set cbrange [0:1]
-        {% if dark %}
-            set palette defined (0 "#C00000", 1 "#FFFF00")
-        {% else %}
-            set palette defined (0 "#C0C0FF", 1 "#FF0000")
-        {% endif %}
-    {% endif %}
-

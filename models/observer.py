@@ -72,7 +72,7 @@ class Observer():
         log.info("Selection bias applied ({dc} discriminators), {sc} sightings survived ({pct})".format(
             dc      = c.num(len(self.discriminators)),
             sc      = c.num(len(self.visibleSightings)),
-            pct     = c.num("{:5.2f}%".format(100 * len(self.visibleSightings) / len(self.allSightings))),
+            pct     = c.num("{:5.2f}%".format(100 * len(self.visibleSightings) / len(self.allSightings) if len(self.allSightings) > 0 else 0)),
         ))
 
         return self.visibleSightings
@@ -86,17 +86,14 @@ class Observer():
     def skyPlotHeader(cls):
         return "#                timestamp       t        s    alt       az      d      ele      v       as            m           F0           F      mag"
 
-    def createSkyPlot(self, streaks):
-        log.info("Creating {target} sky plot for observer {obs}".format(
-            target      = c.param('streaks' if streaks else 'dots'),
-            obs         = c.name(self.id)),
-        )
+    def createSkyPlot(self):
+        log.info("Creating a sky plot for observer {obs}".format(obs = c.name(self.id)))
         self.dataset.create('plots', self.id, exist_ok = True)
 
         with open(self.dataset.path('plots', self.id, 'sky.tsv'), 'a') as file:
             print(self.skyPlotHeader(), file = file)
             for sighting in self.visibleSightings:
-                sighting.printSkyPlot(file.name)
+                sighting.printToSkyPlot(file)
 
     def plotSkyPlot(self, config):
         log.info("Plotting sky for observer {}".format(c.name(self.id)))
@@ -144,7 +141,7 @@ class Observer():
         for sighting in self.visibleSightings:
             for stat in self.histogramSettings:
                 try:
-                    self.histograms[stat].add(getattr(sighting, stat))
+                    self.histograms[stat].add(getattr(sighting.asPoint(), stat))
                 except KeyError as e:
                     log.warning("Unknown property {} -- {}".format(stat, e))
 

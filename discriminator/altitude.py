@@ -17,17 +17,20 @@ class AltitudeDiscriminator(base.Discriminator):
         }
         super().__init__(name, **kwargs)
 
+    def apply(self, sighting):
+        return self.compute(sighting.altitude)
+
     @classmethod
     def step(cls, *, limit: float):
-        return lambda sighting: int(sighting.altitude > limit)
+        return lambda altitude: 0 if altitude < limit else 1
 
     @classmethod
     def linear(cls, *, limit: float):
-        return lambda sighting: 0 if sighting.altitude < limit else (sighting.altitude - limit) / (90 - limit)
+        return lambda altitude: 0 if altitude < limit else (altitude - limit) / (90 - limit)
 
     @classmethod
     def sinexp(cls, *, exponent: float):
-        return lambda sighting: math.sin(math.radians(sighting.altitude))**exponent
+        return lambda altitude: math.sin(math.radians(altitude))**exponent
 
     def default(cls):
         return cls.all

@@ -44,7 +44,31 @@ class CaseRadiometry(unittest.TestCase):
         self.assertEqual(radiometry.fluxDensity(4 * math.pi, 1), 1)
 
     def testApparentMagnitudeSun(self):
-        self.assertAlmostEqual(radiometry.apparentMagnitude(546.8), constants.apparentMagnitudeSun, delta = 0.001)
+        self.assertAlmostEqual(radiometry.apparentMagnitude(1370), constants.apparentMagnitudeSun, delta = 0.01)
+
+class CaseMeteor(unittest.TestCase):
+    def setUp(self):
+        self.dataset = dataset.Dataset('default', None)
+        self.observer = observer.Observer(
+            'default',
+            self.dataset,
+            None,
+            latitude    = 47,
+            longitude   = 18,
+            elevation   = 531,
+        )
+        self.meteor = meteor.Meteor(
+            mass        = 1,
+            density     = 800,
+            position    = coord.Vector3D.fromGeodetic(48, 17, 120000),
+            velocity    = -position / position.norm() * 50000,
+            timestamp   = datetime.datetime.now(),
+        )
+        self.meteor.flyRK4(10, 10)
+        self.sighting = sighting.PointSighting(sighting.Sighting(self.observer, self.meteor))
+
+    def testSimpleMeteor(self):
+        
 
 class CaseVector3D(unittest.TestCase):
     def setUp(self):

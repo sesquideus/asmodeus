@@ -44,6 +44,7 @@ def jinjaEnvironment(directory):
         loader = jinja2.FileSystemLoader(directory),
     )
 
+
 def renderTemplate(template, context, outputDirectory = None):
     print(
         jinjaEnvironment('templates').get_template(template).render(context),

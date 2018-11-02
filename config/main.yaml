@@ -5,7 +5,7 @@ dataset:
     name:                       'main'
 
 meteors:
-    count:                      100000
+    count:                      10000
     shape:
         dragCoefficient:        0.7                         # 0.6 for a spherical body
         shapeFactor:            1.21                        # 1.21 for a spherical body
@@ -20,16 +20,16 @@ meteors:
     mass:
         distribution:           'pareto'                    # Particle mass distribution. Possible values 'pareto', 'exponential' or a number
         parameters:
-            minimum:            0.000001                    # Minimum particle mass, in kg
+            minimum:            0.0000001                   # Minimum particle mass, in kg
             shape:              1.85                        # Shape of the distribution, corresponds to s-index (N(m) \propto m^-s)
     position:
         distribution:           'rectangle'                 # Name of the distribution, currently only 'rectangle'
         parameters:
             south:              45                          # Southern bound, degrees of latitude
             north:              53                          # Northern bound, degrees of latitude
-            west:               14                          # Western bound, degrees of longitude
-            east:               25                          # Eastern bound, degrees of longitude
-            elevation:          130000                      # Initial elevation of meteors, in m
+            west:               13                          # Western bound, degrees of longitude
+            east:               27                          # Eastern bound, degrees of longitude
+            elevation:          150000                      # Initial elevation of meteors, in m
     velocity:
         distribution:           'shower'                    # Currently only 'shower'
         parameters:
@@ -41,14 +41,14 @@ meteors:
         parameters:
             begin:              2016-08-11T19:00:00         # Beginning of the interval, ISO8601
             end:                2016-08-12T02:00:00         # End of the interval, ISO8601
-    integrator:                                             # Properties of the integrator
+    integrator:                                             
         name:                   'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
-        fps:                    10                          # Frames per second.
+        fps:                    20                          # Frames per second
         spf:                    1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time
 
 observations:
     streaks:                    False
-    minAltitude:                15
+    minAltitude:                0
     observers:
         teplicne:
             latitude:           48.68231
@@ -57,11 +57,10 @@ observations:
 
 bias:
     magnitude:
-        discriminator:          'all'                       # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
+        discriminator:          'all'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
         parameters:
-            fillFactor:         1                           # Fill factor, the maximum detection efficiency for m -> -infty
-            limit:              2.0                         # Limiting magnitude m0
-            width:              2                           # Width of the function
+            limit:              0.0                         # Limiting magnitude m0
+            width:              0.5                         # Width of the function
     angularSpeed:
         discriminator:          'all'                       # Angular speed detection efficiency profile, possible values 'flat' or 'linear'
         parameters:
@@ -69,7 +68,7 @@ bias:
 #            zero:               1
 #            slope:              -0.01
     altitude:
-        discriminator:          'sinexp'                    # Altitude detection efficiency profile, possible values 'step' or 'linear' or 'sinexp'
+        discriminator:          'all'                       # Altitude detection efficiency profile, possible values 'step' or 'linear' or 'sinexp'
         parameters:
             exponent:           0.4                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
 
@@ -100,7 +99,7 @@ statistics:                                                 # Histograms to be p
             bin:                15
             name:               'azimuth'
             xaxis:              'number'
-        magnitude:
+        apparentMagnitude:
             min:                -10
             max:                10
             bin:                0.5

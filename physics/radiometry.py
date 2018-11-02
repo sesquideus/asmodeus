@@ -19,7 +19,7 @@ def luminousEfficiency(speed: float) -> float:
 def fluxDensity(flux, distance):
     return flux / (4 * math.pi * distance**2)
 
-def absoluteMagnitude(flux):
+def absoluteMagnitude(flux: float) -> float:
     if flux < 1e-30:
         return math.inf
     return constants.absoluteMagnitudeOneWatt - 2.5 * math.log10(flux) 

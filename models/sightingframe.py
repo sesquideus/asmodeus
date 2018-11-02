@@ -25,7 +25,8 @@ class SightingFrame():
         attenuatedPower         = atmosphere.attenuate(self.frame.luminousPower, airMass)
         self.fluxDensity        = radiometry.fluxDensity(attenuatedPower, self.altAz.norm())
 
-        self.magnitude          = radiometry.apparentMagnitude(self.fluxDensity)
+        self.apparentMagnitude  = radiometry.apparentMagnitude(self.fluxDensity)
+        self.absoluteMagnitude  = self.frame.absoluteMagnitude
         self.sighted            = False
 
         log.debug("{timestamp} | {truePos}, {trueSpeed:7.0f} m/s | {altaz}, {angSpeed:6.3f}°/s | {mass:6.4e} kg, {fluxDensity:8.3e} W/m2, {magnitude:6.2f} m".format(
@@ -33,7 +34,7 @@ class SightingFrame():
             mass                = frame.mass,
             angSpeed            = self.angularSpeed,
             fluxDensity         = self.fluxDensity,
-            magnitude           = self.magnitude,
+            magnitude           = self.apparentMagnitude,
             altaz               = self.altAz.strSpherical(),
             truePos             = self.frame.position.strGeodetic(),
             trueSpeed           = self.frame.velocity.norm(),

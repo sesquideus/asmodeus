@@ -23,11 +23,11 @@ class Discriminator():
         except TypeError as e:
             log.warning(e)
 
-    def apply(self, sighting):
+    def compute(self, value):
         rnd = random.random()
-        prob = self.function(sighting)
-        log.debug("{name:<16}: random value {rnd}, probability {prob} ({comment})".format(
-            name    = self.property.capitalize(),
+        prob = self.function(value)
+        log.debug("{name}: random value {rnd}, probability {prob} ({comment})".format(
+            name    = c.param(self.property.capitalize()),
             rnd     = c.num('{:.6f}'.format(rnd)),
             prob    = c.num('{:.6f}'.format(prob)),
             comment = c.ok('accepted') if rnd < prob else c.err('rejected'),

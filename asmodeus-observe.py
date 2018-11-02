@@ -49,7 +49,7 @@ class AsmodeusObserve(asmodeus.Asmodeus):
                 observeMeteor, (
                     observer,
                     self.dataset.path('meteors', meteorFile),
-                    observer.horizon,
+                    self.config.observations.minAltitude,
                     self.dataset.path('sightings', observer.id, meteorFile),
                     self.config.observations.streaks,
                 )
@@ -74,9 +74,9 @@ def observeMeteor(observer, filename, minAlt, out, streaks):
     sighting = Sighting(observer, meteor)
     if sighting.brightestFrame.altAz.latitude() >= minAlt:
         sighting.save(out, streak = streaks)
-
-    return True
-
+        return True
+    else:
+        return False
 
 if __name__ == "__main__":
     log = logger.setupLog('root')

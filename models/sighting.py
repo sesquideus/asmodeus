@@ -34,10 +34,12 @@ class Sighting():
     def load(filename):
         return pickle.load(io.FileIO(filename, 'rb'))
 
-    def printSkyPlot(self):
-        with open(self.observer.skyPlotFile, 'a') as f:
-            for frame in self.frames:
-                print(frame.asTSV(), file = f)
+    def asPoint(self):
+        return PointSighting(self)
+
+    def printToSkyPlot(self, file):
+        for frame in self.frames:
+            print(frame.asTSV(), file = file)
 
     def save(self, filename, *, streak = False):
         if streak:
@@ -52,8 +54,7 @@ class Sighting():
         pickle.dump(PointSighting(self), io.FileIO(filename, 'wb'))
 
     def applyBias(self, *discriminators):
-        point = PointSighting(self)
-        self.sighted = point.applyBias(*discriminators)
+        self.sighted = self.asPoint().applyBias(*discriminators)
         return self.sighted
 
     def __str__(self):
@@ -78,13 +79,17 @@ class PointSighting():
         self.mass               = sighting.brightestFrame.frame.mass
         self.luminousPower      = sighting.brightestFrame.frame.luminousPower
         self.fluxDensity        = sighting.brightestFrame.fluxDensity
-        self.magnitude          = sighting.brightestFrame.magnitude
+        self.absoluteMagnitude  = sighting.brightestFrame.frame.absoluteMagnitude
+        self.apparentMagnitude  = sighting.brightestFrame.apparentMagnitude
+
+    def asPoint(self):
+        return self
 
     def asTSV(self):
         return "{timestamp}\t{lifeTime:6.3f}\t{trackLength:7.0f}\t" \
             "{altitude:6.3f}\t{azimuth:7.3f}\t{distance:6.0f}\t" \
             "{elevation:7.0f}\t{speed:6.0f}\t{angularSpeed:7.3f}\t" \
-            "{initialMass:12.6e}\t{luminousPower:9.3e}\t{fluxDensity:9.3e}\t{magnitude:6.2f}\t{sighted}".format(
+            "{initialMass:12.6e}\t{luminousPower:9.3e}\t{fluxDensity:9.3e}\t{absMag:6.2f}\t{appMag:6.2f}".format(
                 timestamp           = self.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
                 lifeTime            = self.lifeTime,
                 trackLength         = self.trackLength,
@@ -98,14 +103,13 @@ class PointSighting():
                 mass                = self.mass,
                 luminousPower       = self.luminousPower,
                 fluxDensity         = self.fluxDensity,
-                magnitude           = self.magnitude,
-                sighted             = int(self.sighted),
+                absMag              = self.absoluteMagnitude,
+                appMag              = self.apparentMagnitude,
             )
 
     def applyBias(self, *discriminators):
         self.sighted            = all(map(lambda dis: dis.apply(self), discriminators))
         return self.sighted
 
-    def printSkyPlot(self, filename):
-        with open(filename, 'a') as f:
-            print(self.asTSV(), file = f)
+    def printToSkyPlot(self, file):
+        print(self.asTSV(), file = file)

@@ -8,9 +8,6 @@
 from core               import asmodeus, logger
 from utilities          import colour as c
 
-from models.meteor import Meteor
-from models.sighting import Sighting
-
 
 class AsmodeusSky(asmodeus.Asmodeus):
     def __init__(self):

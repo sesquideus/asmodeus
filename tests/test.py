@@ -11,26 +11,7 @@ from discriminator import magnitude
 
 
 class CaseDiscriminator(unittest.TestCase):
-    def setUp(self):
-        self.dataset = dataset.Dataset('default', None)
-        self.observer = observer.Observer(
-            'default',
-            self.dataset,
-            None,
-            latitude    = 47,
-            longitude   = 18,
-            elevation   = 531,
-        )
-        self.meteor = meteor.Meteor(
-            mass        = 1,
-            density     = 800,
-            position    = coord.Vector3D.fromGeodetic(48, 17, 120000),
-            velocity    = coord.Vector3D.fromGeodetic(-10000, -10000, -10000),
-            timestamp   = datetime.datetime.now(),
-        )
-        self.meteor.flyRK4(10, 10)
-        self.sighting = sighting.PointSighting(sighting.Sighting(self.observer, self.meteor))
-
+    
     def testSigmoidPlusInf(self):
         self.sigmoidPlusInf = magnitude.MagnitudeDiscriminator('sigmoid', limit = math.inf, width = 3)
         self.assertEqual(self.sigmoidPlusInf.function(self.sighting.magnitude), 1)
