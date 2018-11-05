@@ -54,7 +54,7 @@ class SightingFrame():
             'mass'              : self.frame.mass,
             'luminousPower'     : self.frame.luminousPower,
             'fluxDensity'       : self.fluxDensity,
-            'magnitude'         : self.magnitude,
+            'magnitude'         : self.apparentMagnitude,
         }
 
     def asTSV(self):
@@ -74,7 +74,7 @@ class SightingFrame():
                 mass                = self.frame.mass,
                 luminousPower       = self.frame.luminousPower,
                 fluxDensity         = self.fluxDensity,
-                magnitude           = self.magnitude,
+                magnitude           = self.apparentMagnitude,
             )
 
     def save(self):
