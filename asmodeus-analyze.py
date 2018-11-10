@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import sys
+
 from core               import asmodeus, logger, exceptions
 from discriminator      import magnitude, altitude, angularSpeed
 from utilities          import colour as c
@@ -24,9 +26,16 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
     def configure(self):
         self.loadObservers()
 
-        self.dataset.require('sightings')
-        self.dataset.reset('histograms')
-        self.dataset.reset('plots')
+        try:
+            self.dataset.require('sightings')
+            self.dataset.reset('histograms')
+            self.dataset.reset('plots')
+        except FileNotFoundError as e:
+            log.error("Could not load {s} -- did you run {obs}?".format(
+                s   = c.path(self.dataset.path('sightings')),
+                obs = c.script('asmodeus-observe'),
+            ))
+            raise exceptions.PrerequisiteError()
 
         try:
             bias = self.config.bias
@@ -56,6 +65,10 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
-    asmo = AsmodeusAnalyze()
-    asmo.analyze()
-    log.info("---------------------")
+    try:
+        asmo = AsmodeusAnalyze()
+        asmo.analyze()
+        log.info("---------------------")
+    except exceptions.PrerequisiteError:
+        log.critical("Missing prerequisites, aborting")
+        sys.exit(-1)

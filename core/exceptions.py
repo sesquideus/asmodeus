@@ -3,3 +3,6 @@ class ConfigurationError(Exception):
 
 class OverwriteError(Exception):
     pass
+
+class PrerequisiteError(Exception):
+    pass

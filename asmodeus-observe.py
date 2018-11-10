@@ -6,9 +6,10 @@
     Outputs: sightings
 """
 
+import sys
 import multiprocessing as mp
 
-from core               import asmodeus, logger
+from core               import asmodeus, logger, exceptions
 from utilities          import colour as c
 
 from models.meteor import Meteor
@@ -33,9 +34,21 @@ class AsmodeusObserve(asmodeus.Asmodeus):
 
     def configure(self):
         self.loadObservers()
-        self.dataset.require('meteors')
 
-        self.dataset.reset('sightings')
+        try:
+            self.dataset.require('meteors')
+        except FileNotFoundError as e:
+            log.error("Could not load {s} -- did you run {gen}?".format(
+                s   = c.path(self.dataset.path('meteors')),
+                gen = c.script('asmodeus-generate'),
+            ))
+            raise exceptions.PrerequisiteError()
+
+        if self.dataset.exists('sightings') and not self.config.overwrite:
+            raise exceptions.OverwriteError(c.path(self.dataset.path('sightings')))
+        else:
+            self.dataset.reset('sightings')
+
         for observer in self.observers:
             self.dataset.create('sightings', observer.id)
 
@@ -57,7 +70,7 @@ class AsmodeusObserve(asmodeus.Asmodeus):
         ]
         out = [result.get() for result in results]
 
-        log.info("{num} observations were processed in {time} seconds ({rate} meteors per second)".format(
+        log.info("{num} observations were processed in {time} seconds ({rate} sightings per second)".format(
             num     = c.num(len(out)),
             time    = c.num("{:.6f}".format(self.runTime())),
             rate    = c.num("{:.3f}".format(len(out) / self.runTime())),
@@ -80,6 +93,15 @@ def observeMeteor(observer, filename, minAlt, out, streaks):
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
-    asmo = AsmodeusObserve()
-    asmo.observe()
-    log.info("---------------------")
+    try:
+        asmo = AsmodeusObserve()
+        asmo.observe()
+    except exceptions.ConfigurationError as e:
+        log.critical("Configuration error \"{}\", terminating".format(e))
+        sys.exit(-1)
+    except exceptions.OverwriteError as e:
+        log.critical("Target directory {} already exists, terminating".format(e))
+        sys.exit(-1)
+    except exceptions.PrerequisiteError:
+        log.critical("Missing prerequisites, aborting")
+        sys.exit(-1)

@@ -26,7 +26,7 @@ def critical(what):
 
 
 def path(what):
-    return colour(what, Fore.BLUE)
+    return colour(what, Fore.LIGHTRED_EX)
 
 
 def name(what):

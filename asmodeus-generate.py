@@ -5,6 +5,7 @@
 
 import multiprocessing as mp
 import random
+import sys
 import yaml
 import datetime
 
@@ -50,6 +51,11 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
 
         return self
 
+    def run(self):
+        self.generate()
+        self.process()
+        self.finalize()
+
     def reportStatus(self):
         log.info("{name} output to dataset {ds} ({dsdir})".format(
             name            = c.script('asmodeus-generate'),
@@ -66,7 +72,6 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             percent         = c.num("{:5.2f}%".format(100 * len(self.meteors) / self.config.meteors.count)),
             mass            = c.num("{:6f} kg".format(sum(map(lambda x: x.mass, self.meteors)))),
         ))
-        return self
 
     def createMeteor(self):
         timestamp           = self.temporalDistribution.sample()
@@ -110,13 +115,11 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         for result in results:
             result.get()
 
-        return self
-
     def finalize(self):
         yaml.dump({
             'count':        len(self.meteors),
             'generated':    datetime.datetime.now().isoformat(),
-        }, open(self.dataset.path('meteors', 'meta.yaml'), 'w'), default_flow_style = False)
+        }, open(self.dataset.path('meteors.yaml'), 'w'), default_flow_style = False)
 
         log.info("{num} meteors were generated in {time} seconds ({rate} meteors per second) and saved to {dir}".format(
             num     = c.num(len(self.meteors)),
@@ -124,8 +127,6 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             rate    = c.num("{:.3f}".format(len(self.meteors) / self.runTime())),
             dir     = c.path(self.dataset.path('meteors')),
         ))
-
-        return self
 
 
 def simulate(meteor, fps, spf, dataset):
@@ -137,9 +138,12 @@ if __name__ == "__main__":
     log = logger.setupLog('root')
     try:
         asmo = AsmodeusGenerate()
-        asmo.generate().process().finalize()
-        log.info("---------------------")
+        asmo.run()
     except exceptions.ConfigurationError as e:
         log.critical("Configuration error \"{}\", terminating".format(e))
+        sys.exit(-1)
     except exceptions.OverwriteError as e:
         log.critical("Target directory {} already exists, terminating".format(e))
+        sys.exit(-1)
+    finally:
+        log.info("---------------------")
