@@ -1,12 +1,18 @@
 MAKEFLAGS += --no-builtin-rules
 
+.SECONDARY:
 .SECONDEXPANSION:
 
-datasets/%/meteors:
+datasets/%/meteors: datasets/%/meteors/meta.yaml;
+
+datasets/%/meteors/meta.yaml:
 	./asmodeus-generate.py config/$*.yaml
 
 datasets/%/sightings: \
 	datasets/$$*/meteors
+	./asmodeus-observe.py config/$*.yaml
+
+datasets/%/sightings/meta.yaml:
 	./asmodeus-observe.py config/$*.yaml
 
 datasets/%/histograms: \

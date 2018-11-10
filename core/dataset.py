@@ -15,6 +15,12 @@ class Dataset():
     def path(self, *args):
         return Dataset.staticPath(self.name, *args)
 
+    def root(self):
+        return self.path()
+
+    def exists(self, *path):
+        return os.path.exists(self.path(*path))
+    
     def remove(self, *path):
         directory = self.path(*path)
 

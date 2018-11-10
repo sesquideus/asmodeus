@@ -5,6 +5,8 @@
 
 import multiprocessing as mp
 import random
+import yaml
+import datetime
 
 from core           import asmodeus, logger, exceptions
 from physics        import coord
@@ -30,8 +32,11 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.config.meteors.count = self.args.count
 
     def configure(self):
-        self.dataset.reset()
-        self.dataset.create('meteors')
+        if self.dataset.exists('meteors') and not self.config.overwrite:
+            raise exceptions.OverwriteError(c.path(self.dataset.path('meteors')))
+        else:
+            self.dataset.reset()
+            self.dataset.create('meteors')
 
         try:
             meteors = self.config.meteors
@@ -44,6 +49,13 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             raise exceptions.ConfigurationError
 
         return self
+
+    def reportStatus(self):
+        log.info("{name} output to dataset {ds} ({dsdir})".format(
+            name            = c.script('asmodeus-generate'),
+            ds              = c.name(self.config.dataset),
+            dsdir           = c.path(self.config.dataset.root),
+        ))
 
     def generate(self):
         log.info("About to generate {} meteoroids using {} processes".format(c.num(self.config.meteors.count), c.num(self.config.mp.processes)))
@@ -101,6 +113,11 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         return self
 
     def finalize(self):
+        yaml.dump({
+            'count':        len(self.meteors),
+            'generated':    datetime.datetime.now().isoformat(),
+        }, open(self.dataset.path('meteors', 'meta.yaml'), 'w'), default_flow_style = False)
+
         log.info("{num} meteors were generated in {time} seconds ({rate} meteors per second) and saved to {dir}".format(
             num     = c.num(len(self.meteors)),
             time    = c.num("{:.6f}".format(self.runTime())),
@@ -123,4 +140,6 @@ if __name__ == "__main__":
         asmo.generate().process().finalize()
         log.info("---------------------")
     except exceptions.ConfigurationError as e:
-        log.critical(c.err("Terminating due to a configuration error: ", e))
+        log.critical("Configuration error \"{}\", terminating".format(e))
+    except exceptions.OverwriteError as e:
+        log.critical("Target directory {} already exists, terminating".format(e))

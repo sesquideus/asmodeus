@@ -17,27 +17,29 @@ class Asmodeus():
         self.createArgparser()
         self.args = self.argparser.parse_args()
 
-        self.loadConfig()
+        self.config = configuration.load(self.args.config)
+        self.config.dataset.name = os.path.splitext(os.path.basename(self.args.config.name))[0]
         self.overrideConfig()
 
         self.dataset = dataset.Dataset(self.config.dataset.name, self.config.observers)
 
     def createArgparser(self):
         self.argparser = argparse.ArgumentParser(description = "All-Sky Meteor Observation and Detection Efficiency Simulator")
-        self.argparser.add_argument('config',               type = argparse.FileType('r'))
-        self.argparser.add_argument('-d', '--debug',        action = 'store_true')
-        self.argparser.add_argument('-p', '--processes',    type = int)
-        self.argparser.add_argument('-D', '--dataset',      type = str)
-        self.argparser.add_argument('-l', '--logfile',      type = argparse.FileType('w'))
-
-    def loadConfig(self):
-        self.config = configuration.load(self.args.config)
+        self.argparser.add_argument('config',                   type = argparse.FileType('r'))
+        self.argparser.add_argument('-d', '--debug',            action = 'store_true')
+        self.argparser.add_argument('-p', '--processes',        type = int)
+        self.argparser.add_argument('-D', '--dataset',          type = str)
+        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
+        self.argparser.add_argument('-l', '--logfile',          type = argparse.FileType('w'))
 
     def overrideConfig(self):
         log.setLevel(logging.DEBUG if self.args.debug else logging.INFO)
-
         if self.args.debug:
             log.warning("Debug output is {}".format(c.over('active')))
+
+        if self.args.overwrite:
+            log.warning("Dataset overwrite {}".format(c.over('enabled')))
+            self.config.overwrite = True
 
         if self.args.logfile:
             log.addHandler(logging.FileHandler(self.args.logfile.name))
@@ -50,8 +52,6 @@ class Asmodeus():
         if self.args.dataset:
             self.overrideWarning('dataset', self.config.dataset.name, self.args.dataset)
             self.config.dataset.name = self.args.dataset
-
-        self.config.dataset.path = os.path.join('datasets', self.config.dataset.name)
 
     def markTime(self):
         self.startTime = time.time()

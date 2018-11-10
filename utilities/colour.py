@@ -13,7 +13,15 @@ def num(what):
     return colour(what, Fore.CYAN)
 
 
+def warn(what):
+    return colour(what, Fore.YELLOW)
+
+
 def err(what):
+    return colour(what, Fore.RED)
+
+
+def critical(what):
     return colour(what, Fore.RED)
 
 
@@ -35,3 +43,11 @@ def script(what):
 
 def param(what):
     return colour(what, Fore.LIGHTBLUE_EX)
+
+
+def debug(what):
+    return colour(what, Fore.LIGHTBLACK_EX)
+
+
+def none(what):
+    return colour(what, Fore.WHITE)

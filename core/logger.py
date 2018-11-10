@@ -1,8 +1,25 @@
 import logging
+from utilities import colour as c
+
+
+class AsmodeusFormatter(logging.Formatter):
+    def __init__(self):
+        logging.Formatter.__init__(self, '{asctime}.{msecs:.0f} [{levelname}] {message}', "%H:%M:%S", '{')
+
+    def format(self, record):
+        record.levelname = {
+            'DEBUG':    c.debug,
+            'INFO':     c.none,
+            'WARNING':  c.warn,
+            'ERROR':    c.err,
+            'CRITICAL': c.critical,
+        }[record.levelname](record.levelname[:3])
+
+        return logging.Formatter.format(self, record)
 
 
 def setupLog(name, **kwargs):
-    formatter = logging.Formatter('%(asctime)s.%(msecs)03d [%(levelname)s]: %(message)s', "%H:%M:%S")
+    formatter = AsmodeusFormatter()
 
     output = kwargs.get('output', None)
     if type(output) == str:
