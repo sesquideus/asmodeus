@@ -143,7 +143,10 @@ class Observer():
                 try:
                     self.histograms[stat].add(getattr(sighting.asPoint(), stat))
                 except KeyError as e:
-                    log.warning("Unknown property {} -- {}".format(stat, e))
+                    log.warning("Unknown property {prop} -- {err}".format(
+                        prop    = c.param(stat),
+                        err     = e,
+                    ))
 
         return self.histograms
 
