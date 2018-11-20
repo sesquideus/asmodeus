@@ -140,7 +140,8 @@ if __name__ == "__main__":
         asmo = AsmodeusGenerate()
         asmo.run()
     except exceptions.ConfigurationError as e:
-        log.critical("Configuration error \"{}\", terminating".format(e))
+        log.critical(e)
+        log.critical("Configuration error, terminating")
         sys.exit(-1)
     except exceptions.OverwriteError as e:
         log.critical("Target directory {} already exists, terminating".format(e))

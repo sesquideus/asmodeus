@@ -11,20 +11,19 @@ observers:
         longitude: 19.8575
         altitude: 692
     
-integrator:                                                 # Properties of the integrator
-    name: 'rk4'                                             # Integrator to be used. Allowed values are 'rk4' and 'euler'.
-    fps: 15                                                 # Frames per second.
-    spf: 5                                                  # Steps per frame. Higher values mean more precise trajectories
-
 meteors:
-    count:                      100000
+    count:                      1000
     shape:
         dragCoefficient:        0.6                         # 0.6 for a spherical body
         shapeFactor:            1.21                        # 1.21 for a spherical body
     material:
         heatTransfer:           0.5                         # Heat transfer coefficient, default 0.5
         ablationHeat:           6000000                     # Specific enthalpy of vaporization, in J/kg
-        density:                'cometary'                  # Density profile (see configuration/density.py). Possible values 'cometary', 'asteroid', 'iron', or a number (kg/m3)
+        density:
+            distribution:       'gauss'                     # Density profile (see configuration/density.py). Possible values 'cometary', 'asteroid', 'iron', or a number (kg/m3)
+            parameters:
+                mean:           620
+                sigma:          10
     mass:
         distribution:           'pareto'                    # Particle mass distribution. Possible values 'pareto' or a number
         parameters:
@@ -45,8 +44,15 @@ meteors:
             east:               27                          # Eastern bound, degrees of longitude
             elevation:          130000                      # Initial elevation of meteors, in m
     time:
-        begin:                  2016-08-11T19:00:00         # Beginning of the interval, ISO8601
-        end:                    2016-08-12T02:00:00         # End of the interval, ISO8601
+        distribution:           'uniform'
+        parameters:
+            begin:              2016-08-11T19:00:00         # Beginning of the interval, ISO8601
+            end:                2016-08-12T02:00:00         # End of the interval, ISO8601
+    integrator:                                             # Properties of the integrator
+        name: 'rk4'                                         # Integrator to be used. Allowed values are 'rk4' and 'euler'.
+        fps: 15                                             # Frames per second.
+        spf: 5                                              # Steps per frame. Higher values mean more precise trajectories
+
 
 bias:
     magnitude:

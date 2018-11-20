@@ -12,7 +12,7 @@ def load(configFile):
         config = yaml.load(configFile)
     except FileNotFoundError as e:
         log.error("Could not load configuration file {}: {}".format(configFile, e))
-    return dotmap.DotMap(config)
+    return dotmap.DotMap(config, _dynamic = False)
 
 
 def applyOverridesObserve(args, config):

@@ -1,5 +1,6 @@
 import random
 import logging
+import dotmap
 
 from core import exceptions
 from utilities import colour as c, utilities as u
@@ -19,7 +20,17 @@ class Distribution():
 
     @classmethod
     def fromConfig(cls, config):
-        return cls(config.distribution, **config.parameters.toDict())
+        try:
+            return cls(config.distribution, **config.parameters.toDict())
+        except KeyError:
+            log.error("{cfg} is not a valid configuration option for {name}".format(
+                cfg     = c.param(config),
+                name    = c.name(cls.__name__)
+            ))
+            log.error("Expected distribution name \"distribution: 'string'\" and a dictionary of parameters")
+            raise exceptions.ConfigurationError("Could not initialize {name}".format(
+                name    = c.name(cls.__name__)
+            ))
 
     @classmethod
     def constant(self, *, value) -> (lambda: float):
