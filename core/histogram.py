@@ -8,7 +8,7 @@ log = logging.getLogger('root')
 
 
 class Histogram:
-    def __init__(self, name, lower, upper):
+    def __init__(self, lower, upper, *, name = '<unnamed>'):
         self.name       = name
         self.lower      = lower
         self.upper      = upper
@@ -118,9 +118,9 @@ class TimeHistogram(Histogram):
 
 
 class FloatHistogram(Histogram):
-    def __init__(self, name, lower, upper, binWidth = 1):
+    def __init__(self, lower, upper, binWidth = 1, *, name = '<unnamed>'):
         self.binWidth   = binWidth
-        super().__init__(name, lower, upper)
+        super().__init__(lower, upper, name = name)
 
     @classmethod
     def formatKey(cls, key):

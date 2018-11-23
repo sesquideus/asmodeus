@@ -14,6 +14,8 @@ astropy = "*"
 dill = "*"
 scipy = "*"
 "flake8" = "*"
+nose = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.5"
