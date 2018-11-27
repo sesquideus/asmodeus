@@ -63,28 +63,28 @@ class Observer():
     def setDiscriminators(self, discriminators):
         self.discriminators = discriminators
 
-    def applyBias(self):
+    def applyBias(self, *discriminators):
         for sighting in self.allSightings:
-            sighting.applyBias(*self.discriminators)
+            sighting.applyBias()
             log.debug("Meteor was " + (c.ok("detected") if sighting.sighted else c.err("not detected")))
 
         self.visibleSightings = [s for s in self.allSightings if s.sighted]
         log.info("Selection bias applied ({dc} discriminators), {sc} sightings survived ({pct})".format(
-            dc      = c.num(len(self.discriminators)),
+            dc      = c.num(len(discriminators)),
             sc      = c.num(len(self.visibleSightings)),
             pct     = c.num("{:5.2f}%".format(100 * len(self.visibleSightings) / len(self.allSightings) if len(self.allSightings) > 0 else 0)),
         ))
 
         return self.visibleSightings
 
-    def processSightings(self):
-        self.applyBias()
+    def analyzeSightings(self):
+        self.applyBias(*self.discriminators)
         self.createHistograms()
         self.saveHistograms()
 
     @classmethod
     def skyPlotHeader(cls):
-        return "#                timestamp       t        s    alt       az      d      ele      v       as            m           F0           F      mag"
+        return "#                timestamp       t        s    alt       az      d      ele      v       as            m           F0           F   appmag  absmag"
 
     def createSkyPlot(self):
         log.info("Creating a sky plot for observer {obs}".format(obs = c.name(self.id)))
@@ -101,9 +101,9 @@ class Observer():
         context = {
             'pixels':   config.pixels,
             'dark':     config.dark,
-            'quantity': 'angularSpeed',
+            'quantity': 'absoluteMagnitude',
             'log':      False,
-            'column':   9,
+            'column':   14,
             'palette': [
                 ( 0, '#0000C0'),
                 (15, '#00E000'),
@@ -112,8 +112,8 @@ class Observer():
             ],
             'cblow':    0,
             'cbhigh':   40,
-            'observer':     self.id,
-            'dataset':      self.dataset.name,
+            'observer': self.id,
+            'dataset':  self.dataset.name,
         }
 
         utils.renderTemplate('sky.gp', context, self.dataset.path('plots', self.id))
@@ -136,14 +136,14 @@ class Observer():
             self.histograms[stat] = {
                 'number':   histogram.FloatHistogram,
                 'time':     histogram.TimeHistogram,
-            }.get(properties.xaxis, 'number')(stat, properties.min, properties.max, properties.bin)
+            }.get(properties.xaxis, 'number')(properties.min, properties.max, properties.bin, name = stat)
 
         for sighting in self.visibleSightings:
             for stat in self.histogramSettings:
                 try:
                     self.histograms[stat].add(getattr(sighting.asPoint(), stat))
                 except KeyError as e:
-                    log.warning("Unknown property {prop} -- {err}".format(
+                    log.warning("Error in {prop}: {err}".format(
                         prop    = c.param(stat),
                         err     = e,
                     ))
@@ -161,13 +161,30 @@ class Observer():
                 hist.print(f)
         #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
 
+    def minimize(self, settings):
+        log.info("Employing {method} method, {rep} evaluation repetitions".format(
+            method      = c.name(settings.method),
+            rep         = c.num(settings.repeat),
+        ))
+        self.minimizeExhaustive(settings)                                                                      
+
+    def minimizeExhaustive(self, settings):
+        for key, quantity in settings.quantities.items():
+            log.info("Using {qua} DPF function {fun}".format(
+                qua     = c.param(key),
+                fun     = c.name(quantity.function),
+            ))
+            for key, parameter in quantity.parameters.items():
+                log.info("    Varying {param} from {min} to {max}, step size {step}".format(
+                    param   = c.param(key),
+                    min     = c.num(parameter.min),
+                    max     = c.num(parameter.max),
+                    step    = c.num(parameter.step),
+                ))
+
+
+
     def multifit(self, quantity, settings, *fixedDiscriminators):
-        if settings.repeat == 0:
-            log.info("Skipping {} multifit".format(c.name(quantity)))
-            return
-
-        log.info("Commencing {} multifit (average of {} repetitions)".format(c.name(quantity), c.num(settings.repeat)))
-
         amos = asmodeus.createAmosHistograms('amos.tsv')
 
         resultFile = asmodeus.datasetPath('plots', 'chiSquare-{}.tsv'.format(quantity))

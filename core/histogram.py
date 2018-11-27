@@ -100,9 +100,9 @@ class Histogram:
 
 
 class TimeHistogram(Histogram):
-    def __init__(self, name, lower, upper, binWidth = datetime.timedelta(seconds = 1)):
+    def __init__(self, lower, upper, binWidth = datetime.timedelta(seconds = 1), *, name = '<unnamed>'):
         self.binWidth   = datetime.timedelta(seconds = binWidth)
-        super().__init__(name, lower, upper)
+        super().__init__(lower, upper, name = name)
 
     def __str__(self, file = sys.stdout):
         print("# Histogram \"{}\" ({} to {}, bin width {})".format(self.name, self.lower, self.upper, self.binWidth), file = file)

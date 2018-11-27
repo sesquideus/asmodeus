@@ -14,14 +14,15 @@ log = logging.getLogger('root')
 
 class Asmodeus():
     def __init__(self):
+        log.info("Initializing {}".format(c.script("asmodeus-{}".format(self.name))))
         self.createArgparser()
         self.args = self.argparser.parse_args()
 
         self.config = configuration.load(self.args.config)
-        self.config.dataset.name = os.path.splitext(os.path.basename(self.args.config.name))[0]
         self.overrideConfig()
 
-        self.dataset = dataset.Dataset(self.config.dataset.name, self.config.observers)
+        self.dataset = dataset.Dataset(os.path.splitext(os.path.basename(self.args.config.name))[0], self.config.observations.observers)
+        self.configure()
 
     def createArgparser(self):
         self.argparser = argparse.ArgumentParser(description = "All-Sky Meteor Observation and Detection Efficiency Simulator")
@@ -40,6 +41,8 @@ class Asmodeus():
         if self.args.overwrite:
             log.warning("Dataset overwrite {}".format(c.over('enabled')))
             self.config.overwrite = True
+        else:
+            self.config.overwrite = False
 
         if self.args.logfile:
             log.addHandler(logging.FileHandler(self.args.logfile.name))
@@ -76,14 +79,6 @@ class Asmodeus():
         ))
 
 # Old crap below
-
-
-def buildGnuplotTemplate(template, dataset, context, outputDirectory = None):
-    print(
-        jinjaEnv('templates').get_template(template).render(context),
-        file = sys.stdout if outputDirectory is None else open(os.path.join(outputDirectory, template), 'w')
-    )
-
 
 def createAmosHistograms(file):
     h = config.statistics.histograms

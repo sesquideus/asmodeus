@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 """
+    Asmodeus, script 1: generate
     Generates a set of meteoroids and simulates their atmospheric entry.
+    Requires: nothing
+    Outputs: meteors
 """
 
 import multiprocessing as mp
@@ -18,9 +21,8 @@ from models.meteor  import Meteor
 
 class AsmodeusGenerate(asmodeus.Asmodeus):
     def __init__(self):
-        log.info("Initializing {}".format(c.script("asmodeus-generate")))
+        self.name = 'generate'
         super().__init__()
-        self.configure()
 
     def createArgparser(self):
         super().createArgparser()

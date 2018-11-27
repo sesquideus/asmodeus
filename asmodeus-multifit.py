@@ -1,42 +1,69 @@
 #!/usr/bin/env python
+"""
+    Asmodeus, script 4: multiparametric fitting procedure
 
-import numpy as np
+    Computes apparent positions and magnitudes for all observers as defined in the configuration file,
+    using generated meteors saved in dataset `meteors` directory
+    Requires: sightings
+    Outputs: multiparametric fits
+"""
+
+import sys
+import argparse
 import multiprocessing as mp
-import datetime, argparse, yaml, sys, datetime, random, pprint, os, logging, itertools
 
-import asmodeus, configuration, models, log
-import discriminators.magnitude, discriminators.altitude, discriminators.angularSpeed
+from core               import asmodeus, logger, exceptions
+from utilities          import colour as c
+
 from models.meteor import Meteor
-from models.observer import Observer
 from models.sighting import Sighting
-from models.sightingframe import SightingFrame
 
-from histogram import Histogram
-from utils import colour, formatParameters 
-from log import setupLog
 
-def main(argv):
-    log.info("Magnitude detection efficiency profile is {} ({})".format(colour(config.bias.magnitude.function, 'name'), formatParameters(config.bias.magnitude.parameters)))
-    log.info("Altitude detection efficiency profile is {} ({})".format(colour(config.bias.altitude.function, 'name'), formatParameters(config.bias.altitude.parameters)))
-    log.info("Angular speed detection efficiency profile is {} ({})".format(colour(config.bias.angularSpeed.function, 'name'), formatParameters(config.bias.angularSpeed.parameters)))
-
-    for observer in observers:
-        observer.loadSightings()
-        observer.multifit('magnitude', config.multifit.magnitude, altDis, aspDis)
-        observer.multifit('altitude', config.multifit.altitude, magDis, aspDis)
+class AsmodeusMultifit(asmodeus.Asmodeus):
+    def __init__(self):
+        self.name = 'multifit'
+        super().__init__()
     
-    log.info("Finished in {:.6f} seconds".format(asmodeus.runTime()))
+    def createArgparser(self):
+        super().createArgparser()
+        self.argparser.add_argument('-c', '--compare', type = argparse.FileType('r'))
+
+    def overrideConfig(self):
+        super().overrideConfig()
+        if (self.args.compare):
+            self.overrideWarning('compare', self.config.multifit.compare, self.args.compare)
+            self.config.multifit.compare = True
+
+    def configure(self):
+        self.loadObservers()
+
+        try:
+            self.dataset.require('sightings')
+        except FileNotFoundError as e:
+            log.error("Could not load {s} -- did you run {obs}?".format(
+                s   = c.path(self.dataset.path('sightings')),
+                obs = c.script('asmodeus-observe'),
+            ))
+            raise exceptions.PrerequisiteError('Could not load sightings')
+ 
+    def multifit(self):
+        self.markTime()
+        for observer in self.observers:
+            observer.loadSightings()
+            observer.minimize(self.config.multifit)
+
 
 if __name__ == "__main__":
-    log         = log.setupLog('root')
-    config      = asmodeus.initialize('analyze')
-    observers   = asmodeus.loadObservers()
-    amos        = asmodeus.createAmosHistograms('amos.tsv')
-
-    magDis      = discriminators.magnitude.function(config.bias.magnitude.function, **config.bias.magnitude.parameters._asdict())
-    altDis      = discriminators.altitude.function(config.bias.altitude.function, **config.bias.altitude.parameters._asdict())
-    aspDis      = discriminators.angularSpeed.function(config.bias.angularSpeed.function, **config.bias.angularSpeed.parameters._asdict())
-
-    main(sys.argv)
-    log.info("Finished successfully")
-    log.info("---------------------")
+    log         = logger.setupLog('root')
+    try:
+        asmo = AsmodeusMultifit()
+        asmo.multifit()
+    except exceptions.ConfigurationError as e:
+        log.critical("Configuration error \"{}\", terminating".format(e))
+        sys.exit(-1)
+    except exceptions.OverwriteError as e:
+        log.critical("Target directory {} already exists, terminating".format(e))
+        sys.exit(-1)
+    except exceptions.PrerequisiteError:
+        log.critical("Missing prerequisites, aborting")
+        sys.exit(-1)

@@ -55,13 +55,15 @@ class SightingFrame():
             'luminousPower'     : self.frame.luminousPower,
             'fluxDensity'       : self.fluxDensity,
             'magnitude'         : self.apparentMagnitude,
+            'magnitude'         : self.absoluteMagnitude,
         }
 
     def asTSV(self):
         return "{timestamp}\t{lifeTime:6.3f}\t{trackLength:7.0f}\t" \
             "{altitude:6.3f}\t{azimuth:7.3f}\t{distance:6.0f}\t" \
             "{elevation:7.0f}\t{speed:6.0f}\t{angularSpeed:7.3f}\t" \
-            "{mass:12.6e}\t{luminousPower:9.3e}\t{fluxDensity:9.3e}\t{magnitude:6.2f}".format(
+            "{mass:12.6e}\t{luminousPower:9.3e}\t{fluxDensity:9.3e}\t" \
+            "{appmag:6.2f}\t{absmag:6.2f}".format(
                 timestamp           = self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
                 lifeTime            = self.frame.lifeTime,
                 trackLength         = self.frame.trackLength,
@@ -74,7 +76,8 @@ class SightingFrame():
                 mass                = self.frame.mass,
                 luminousPower       = self.frame.luminousPower,
                 fluxDensity         = self.fluxDensity,
-                magnitude           = self.apparentMagnitude,
+                appmag              = self.apparentMagnitude,
+                absmag              = self.absoluteMagnitude,
             )
 
     def save(self):

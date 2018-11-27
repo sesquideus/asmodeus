@@ -9,9 +9,8 @@ from utilities          import colour as c
 
 class AsmodeusAnalyze(asmodeus.Asmodeus):
     def __init__(self):
-        log.info("Initializing {}".format(c.script("asmodeus-analyze")))
+        self.name = 'analyze'
         super().__init__()
-        self.configure()
 
     def createArgparser(self):
         super().createArgparser()
@@ -56,8 +55,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
         for observer in self.observers:
             observer.setDiscriminators(self.discriminators)
             observer.loadSightings()
-            observer.processSightings()
-
+            observer.analyzeSightings()
             observer.createSkyPlot()
 
         log.info("Finished in {:.6f} seconds".format(self.runTime()))

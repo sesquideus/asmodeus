@@ -13,9 +13,8 @@ from utilities import colour as c, utilities as ut
 
 class AsmodeusPlot(asmodeus.Asmodeus):
     def __init__(self):
-        log.info("Initializing {}".format(c.script("asmodeus-plot")))
+        self.name = 'plot'
         super().__init__() 
-        self.configure()
 
     def configure(self):
         self.loadObservers()

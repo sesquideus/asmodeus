@@ -58,7 +58,7 @@ observations:
 
 bias:
     magnitude:
-        discriminator:          'all'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
+        discriminator:          'all'                       # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
         parameters:
             limit:              0.0                         # Limiting magnitude m0
             width:              0.5                         # Width of the function
@@ -93,25 +93,25 @@ statistics:                                                 # Histograms to be p
             max:                90
             bin:                5
             name:               'altitude'
-            xaxis:              'number'
+            xaxis:              number
         azimuth:
             min:                0
             max:                360
             bin:                15
             name:               'azimuth'
-            xaxis:              'number'
+            xaxis:              number
         apparentMagnitude:
             min:                -10
             max:                10
             bin:                0.5
             name:               'apparent magnitude'
-            xaxis:              'number'
+            xaxis:              number
         angularSpeed:
             min:                0
             max:                40
             bin:                1
             name:               'angular speed'
-            xaxis:              'number'
+            xaxis:              number
         timestamp:
             min:                2016-08-11T19:00:00
             max:                2016-08-12T02:00:00
@@ -120,24 +120,31 @@ statistics:                                                 # Histograms to be p
             xaxis:              time
 
 multifit:                                                   # Exhaustive search of the parameter space
-    magnitude:
-        repeat:                 0
-        function:               'sigmoid'
-        method:                 'exhaustive'                # Exhaustive or random or simanneal
-        parameters:
-            limit:
-                min:            -6
-                max:            6
-                step:           0.5
-            omega:
-                min:            0.1
-                max:            3.0
-                step:           0.1
-    altitude:
-        repeat:                 0
-        function:               'powersine'
-        parameters:
-            exponent:
-                min:            0.00
-                max:            2.0
-                step:           0.01
+    method:                     exhaustive
+    repeat:                     0
+    quantities:
+        magnitude:
+            function:           sigmoid
+            parameters:
+                limit:
+                    min:        -6
+                    max:        6
+                    step:       0.5
+                width:
+                    min:        0.05
+                    max:        1
+                    step:       0.05
+        altitude:
+            function:           powersine
+            parameters:
+                exponent:
+                    min:        -1.00
+                    max:        2.00
+                    step:       0.1
+        angularSpeed:
+            function:           power
+            parameters:
+                exponent:
+                    min:        0.5
+                    max:        1.5
+                    step:       0.1

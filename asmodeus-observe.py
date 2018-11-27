@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """
+    Asmodeus, script 2: observe
+
     Computes apparent positions and magnitudes for all observers as defined in the configuration file,
-    using generated meteors saved in dataset `meteors` directory
+    using generated meteors saved in specified dataset's `meteors` subdirectory
     Requires: meteors
     Outputs: sightings
 """
@@ -18,9 +20,8 @@ from models.sighting import Sighting
 
 class AsmodeusObserve(asmodeus.Asmodeus):
     def __init__(self):
-        log.info("Initializing {}".format(c.script("asmodeus-observe")))
+        self.name = 'observe'
         super().__init__()
-        self.configure()
     
     def createArgparser(self):
         super().createArgparser()
@@ -100,7 +101,7 @@ if __name__ == "__main__":
         log.critical("Configuration error \"{}\", terminating".format(e))
         sys.exit(-1)
     except exceptions.OverwriteError as e:
-        log.critical("Target directory {} already exists, terminating".format(e))
+        log.critical("Target directory {} already exists, terminating (use --overwrite)".format(e))
         sys.exit(-1)
     except exceptions.PrerequisiteError:
         log.critical("Missing prerequisites, aborting")

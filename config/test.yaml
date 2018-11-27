@@ -1,10 +1,6 @@
 mp:
     processes: 4
 
-dataset:
-    name: 'test'
-    variant: 'pickle'
-
 observers:
     teplicne:
         latitude: 48.68231
@@ -53,6 +49,14 @@ meteors:
         fps: 15                                             # Frames per second.
         spf: 5                                              # Steps per frame. Higher values mean more precise trajectories
 
+observations:
+    streaks:                    True
+    minAltitude:                0
+    observers:
+        teplicne:
+            latitude:           48.68231
+            longitude:          19.8575
+            altitude:           692
 
 bias:
     magnitude:

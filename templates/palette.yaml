@@ -19,6 +19,15 @@ speed:
     54000:      '#FFFF00'
     72000:      '#FFFFFF'
 
+absMag:
+    -50:        '#FFFFFF'
+    -10:        '#FFFFFF'
+    -5:         '#FFFF00'
+    0:          '#00FF00'
+    2:          '#0080FF'
+    4:          '#0000FF'
+    6:          '#FF0000'
+
 ##    {% if quantity == 'angularSpeed' %}
 #        set cbrange [0:50]
 #        {% if dark %}
