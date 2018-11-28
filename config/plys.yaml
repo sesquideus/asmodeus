@@ -2,7 +2,7 @@ mp:
     processes:                  4
 
 meteors:
-    count:                      50
+    count:                      1000
     shape:
         dragCoefficient:        0.7                         # 0.6 for a spherical body
         shapeFactor:            1.21                        # 1.21 for a spherical body
@@ -44,7 +44,7 @@ meteors:
         spf:                    1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time
 
 observations:
-    streaks:                    True
+    streaks:                    False
     minAltitude:                0
     observers:
         teplicne:
@@ -112,7 +112,7 @@ statistics:                                                 # Histograms to be p
             name:               'time'
             xaxis:              time
 
-multifit:                                                   # Exhaustive search of the parameter space
+optimize:                                                   # Exhaustive search of the parameter space
     method:                     exhaustive
     repeat:                     1
     quantities:

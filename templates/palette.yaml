@@ -1,9 +1,14 @@
 angularSpeed:
-    0:          '#4040FF'
-    10:         '#00E000'
-    20:         '#FF00FF'
-    35:         '#FF7FFF'
-    100:        '#FFFFFF'
+    log:    False
+    palette:
+        low:    0
+        high: 100
+        stops:
+            0:          '#4040FF'
+            10:         '#00E000'
+            20:         '#FF00FF'
+            35:         '#FF7FFF'
+            100:        '#FFFFFF'
 
 altitude:
     0:          '#FF00FF'
@@ -29,7 +34,7 @@ absMag:
     6:          '#FF0000'
 
 ##    {% if quantity == 'angularSpeed' %}
-#        set cbrange [0:50]
+#        set cbrange [low:high]
 #        {% if dark %}
 #            set palette defined (0 "#000080", 15 "#00ff00", 25 "#ffff00", 35 "#ffffff", 40 "#ff00ff")
 #        {% else %}

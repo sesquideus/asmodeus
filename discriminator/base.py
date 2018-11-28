@@ -50,7 +50,7 @@ class Discriminator():
         raise KeyError("No default discriminator defined")
 
     def logInfo(self):
-        log.info("{quantity} discriminator is {name}{params}".format(
+        log.info("    {quantity} discriminator is {name}{params}".format(
             quantity    = c.param(self.property.capitalize()),
             name        = c.name(self.name),
             params      = "" if self.params is None else " ({})".format(util.formatParameters(self.params)),

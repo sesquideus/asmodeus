@@ -3,6 +3,7 @@ import logging
 import itertools
 import functools
 import os
+import matplotlib.pyplot as pp
 
 
 from core                       import histogram
@@ -97,7 +98,30 @@ class Observer():
 
     def plotSkyPlot(self, config):
         log.info("Plotting sky for observer {}".format(c.name(self.id)))
-        
+
+        np.random.seed(19680801)
+
+#        for sighting in self.sightings:
+
+        N = 150
+        r = 90 * np.random.rand(N)
+        theta = 2 * np.pi * np.random.rand(N)
+        area = 20 * np.random.pareto(1, N)
+        colors = theta
+
+        print(r)
+        print(theta)
+
+        fig = pp.figure(figsize = (5, 5), dpi = 300)
+        ax = fig.add_subplot(111, projection = 'polar')
+        cx = ax.scatter(theta, r, c=colors, s=area, cmap='hsv', alpha=0.75)
+               
+        ax.set_theta_zero_location('N', offset=0)
+        ax.set_ylim(0, 90)
+        ax.axes.xaxis.set_ticklabels([])
+        ax.axes.yaxis.set_ticklabels([])
+        pp.savefig(self.dataset.path('plots', self.id, 'sky.png'), bbox_inches = 'tight')
+        """ 
         context = {
             'pixels':   config.pixels,
             'dark':     config.dark,
@@ -123,6 +147,7 @@ class Observer():
             script  = c.script('gnuplot'),
         ))
         os.system('gnuplot {}'.format(self.dataset.path('plots', self.id, 'sky.gp')))
+        """
 
     def createHistograms(self):
         log.info("Creating histograms for observer {name}, {count} sightings to process".format(
@@ -143,7 +168,7 @@ class Observer():
                 try:
                     self.histograms[stat].add(getattr(sighting.asPoint(), stat))
                 except KeyError as e:
-                    log.warning("Error in {prop}: {err}".format(
+                    log.warning("{prop} out of range: {err}".format(
                         prop    = c.param(stat),
                         err     = e,
                     ))
@@ -162,9 +187,10 @@ class Observer():
         #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
 
     def minimize(self, settings):
-        log.info("Employing {method} method, {rep} evaluation repetitions".format(
+        log.info("Employing {method} method, {rep} evaluation repetition{s}".format(
             method      = c.name(settings.method),
             rep         = c.num(settings.repeat),
+            s           = '' if settings.repeat == 1 else 's',
         ))
         self.minimizeExhaustive(settings)                                                                      
 

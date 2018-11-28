@@ -16,6 +16,7 @@ scipy = "*"
 "flake8" = "*"
 nose = "*"
 coverage = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.5"

@@ -19,9 +19,9 @@ from models.meteor import Meteor
 from models.sighting import Sighting
 
 
-class AsmodeusMultifit(asmodeus.Asmodeus):
+class AsmodeusOptimize(asmodeus.Asmodeus):
     def __init__(self):
-        self.name = 'multifit'
+        self.name = 'optimize'
         super().__init__()
     
     def createArgparser(self):
@@ -31,8 +31,8 @@ class AsmodeusMultifit(asmodeus.Asmodeus):
     def overrideConfig(self):
         super().overrideConfig()
         if (self.args.compare):
-            self.overrideWarning('compare', self.config.multifit.compare, self.args.compare)
-            self.config.multifit.compare = True
+            self.overrideWarning('compare', self.config.optimize.compare, self.args.compare)
+            self.config.optimize.compare = True
 
     def configure(self):
         self.loadObservers()
@@ -46,18 +46,18 @@ class AsmodeusMultifit(asmodeus.Asmodeus):
             ))
             raise exceptions.PrerequisiteError('Could not load sightings')
  
-    def multifit(self):
+    def optimize(self):
         self.markTime()
         for observer in self.observers:
             observer.loadSightings()
-            observer.minimize(self.config.multifit)
+            observer.minimize(self.config.optimize)
 
 
 if __name__ == "__main__":
     log         = logger.setupLog('root')
     try:
-        asmo = AsmodeusMultifit()
-        asmo.multifit()
+        asmo = AsmodeusOptimize()
+        asmo.optimize()
     except exceptions.ConfigurationError as e:
         log.critical("Configuration error \"{}\", terminating".format(e))
         sys.exit(-1)

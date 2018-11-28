@@ -44,11 +44,15 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
                 angularSpeed.AngularSpeedDiscriminator.fromConfig(bias.angularSpeed),
             ]
 
+            log.info("Discriminators loaded:")
             for disc in self.discriminators:
                 disc.logInfo()
 
         except AttributeError as e:
             raise exceptions.ConfigurationError(e)
+
+    def run(self):
+        self.analyze()
 
     def analyze(self):
         self.markTime()
@@ -58,15 +62,11 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
             observer.analyzeSightings()
             observer.createSkyPlot()
 
+    def finalize(self):
         log.info("Finished in {:.6f} seconds".format(self.runTime()))
 
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
-    try:
-        asmo = AsmodeusAnalyze()
-        asmo.analyze()
-        log.info("---------------------")
-    except exceptions.PrerequisiteError:
-        log.critical("Missing prerequisites, aborting")
-        sys.exit(-1)
+    asmo = AsmodeusAnalyze()
+    asmo.run()

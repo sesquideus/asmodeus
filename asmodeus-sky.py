@@ -18,7 +18,6 @@ class AsmodeusSky(asmodeus.Asmodeus):
     def configure(self):
         self.loadObservers()
         self.dataset.require('meteors')
-
         self.dataset.reset('sightings')
         for observer in self.observers:
             self.dataset.create('sightings', observer.id)

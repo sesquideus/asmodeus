@@ -53,6 +53,10 @@ class AsmodeusObserve(asmodeus.Asmodeus):
         for observer in self.observers:
             self.dataset.create('sightings', observer.id)
 
+    def run(self):
+        self.observe()
+        self.finalize()
+
     def observe(self):
         self.markTime()
         pool        = mp.Pool(processes = self.config.mp.processes)
@@ -70,17 +74,19 @@ class AsmodeusObserve(asmodeus.Asmodeus):
             ) for meteorFile in meteorFiles for observer in self.observers
         ]
         out = [result.get() for result in results]
+        self.count = len(out)
 
+    def finalize(self):
         log.info("{num} observations were processed in {time} seconds ({rate} sightings per second)".format(
-            num     = c.num(len(out)),
+            num     = c.num(self.count),
             time    = c.num("{:.6f}".format(self.runTime())),
-            rate    = c.num("{:.3f}".format(len(out) / self.runTime())),
+            rate    = c.num("{:.3f}".format(self.count / self.runTime())),
         ))
         log.info("Observations were saved as {target} to {dir}".format(
             target  = c.over('streaks' if self.config.observations.streaks else 'points'),
             dir     = c.path(self.dataset.path('sightings')),
         ))
-
+        
 
 def observeMeteor(observer, filename, minAlt, out, streaks):
     meteor = Meteor.load(filename)
@@ -92,17 +98,9 @@ def observeMeteor(observer, filename, minAlt, out, streaks):
     else:
         return False
 
+
 if __name__ == "__main__":
     log = logger.setupLog('root')
-    try:
-        asmo = AsmodeusObserve()
-        asmo.observe()
-    except exceptions.ConfigurationError as e:
-        log.critical("Configuration error \"{}\", terminating".format(e))
-        sys.exit(-1)
-    except exceptions.OverwriteError as e:
-        log.critical("Target directory {} already exists, terminating (use --overwrite)".format(e))
-        sys.exit(-1)
-    except exceptions.PrerequisiteError:
-        log.critical("Missing prerequisites, aborting")
-        sys.exit(-1)
+    asmo = AsmodeusObserve()
+    asmo.run()
+

@@ -4,7 +4,7 @@ import sys
 import logging
 import time
 
-from core import configuration, dataset
+from core import configuration, dataset, exceptions
 from utilities import colour as c
 
 from models.observer import Observer
@@ -18,11 +18,25 @@ class Asmodeus():
         self.createArgparser()
         self.args = self.argparser.parse_args()
 
-        self.config = configuration.load(self.args.config)
-        self.overrideConfig()
+        try:
+            self.config = configuration.load(self.args.config)
+            self.overrideConfig()
 
-        self.dataset = dataset.Dataset(os.path.splitext(os.path.basename(self.args.config.name))[0], self.config.observations.observers)
-        self.configure()
+            self.dataset = dataset.Dataset(os.path.splitext(os.path.basename(self.args.config.name))[0], self.config.observations.observers)
+            self.configure()
+        except exceptions.ConfigurationError as e:
+            log.critical("Configuration error \"{}\", terminating".format(e))
+            sys.exit(-1)
+        except exceptions.OverwriteError as e:
+            log.critical("Target directory {} already exists, terminating (use --overwrite)".format(e))
+            sys.exit(-1)
+        except exceptions.PrerequisiteError:
+            log.critical("Missing prerequisites, aborting")
+            sys.exit(-1)
+
+    def __del__(self):
+        log.info("{} finished successfully".format(c.script("asmodeus-{}".format(self.name))))
+        log.info("-" * 50)
 
     def createArgparser(self):
         self.argparser = argparse.ArgumentParser(description = "All-Sky Meteor Observation and Detection Efficiency Simulator")

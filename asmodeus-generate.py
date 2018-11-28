@@ -142,15 +142,5 @@ def simulate(meteor, fps, spf, dataset):
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
-    try:
-        asmo = AsmodeusGenerate()
-        asmo.run()
-    except exceptions.ConfigurationError as e:
-        log.critical(e)
-        log.critical("Configuration error, terminating")
-        sys.exit(-1)
-    except exceptions.OverwriteError as e:
-        log.critical("Target directory {} already exists, terminating".format(e))
-        sys.exit(-1)
-    finally:
-        log.info("---------------------")
+    asmo = AsmodeusGenerate()
+    asmo.run()
