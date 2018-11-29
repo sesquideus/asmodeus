@@ -45,7 +45,7 @@ class Distribution():
         raise NotImplementedError("No default distribution defined")
 
     def logInfo(self):
-        log.info("{quantity} distribution is {name}{params}".format(
+        log.info("  {quantity} distribution is {name}{params}".format(
             quantity    = c.param(self.quantity.capitalize()),
             name        = c.name(self.name),
             params      = "" if self.params is None else " ({})".format(u.formatParameters(self.params)),

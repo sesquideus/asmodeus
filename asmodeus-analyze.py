@@ -27,8 +27,8 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
 
         try:
             self.dataset.require('sightings')
-            self.dataset.reset('histograms')
             self.dataset.reset('plots')
+            self.dataset.reset('histograms')
         except FileNotFoundError as e:
             log.error("Could not load {s} -- did you run {obs}?".format(
                 s   = c.path(self.dataset.path('sightings')),
@@ -53,6 +53,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
 
     def run(self):
         self.analyze()
+        self.plotSky()
 
     def analyze(self):
         self.markTime()
@@ -60,7 +61,11 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
             observer.setDiscriminators(self.discriminators)
             observer.loadSightings()
             observer.analyzeSightings()
-            observer.createSkyPlot()
+
+    def plotSky(self):
+        for observer in self.observers:
+            observer.printTSV()
+            observer.plotSkyPlot(self.config.plot.sky)
 
     def finalize(self):
         log.info("Finished in {:.6f} seconds".format(self.runTime()))

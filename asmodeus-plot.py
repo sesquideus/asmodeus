@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 """
-    Computes apparent positions and magnitudes for all observers as defined in the configuration file,
-    using generated meteors saved in dataset `meteors` directory
-    Requires: meteors
-    Outputs: sightings
+    Renders sky plkots and histograms using matplotlib
+    Requires: analyses
+    Outputs: plots
 """
 
 from core import asmodeus, dataset, logger
@@ -19,32 +18,30 @@ class AsmodeusPlot(asmodeus.Asmodeus):
     def configure(self):
         self.loadObservers()
         self.dataset.require('sightings')
-        #self.dataset.require('histograms')
+        self.dataset.require('histograms')
 
-        #self.dataset.reset('plots')
-        for observer in self.observers:
-            self.dataset.create('plots', observer.id, exist_ok = True)
+        self.dataset.reset('plots')
+        self.dataset.reset('histograms')
+
+    def run(self):
+        self.plotSky()
+        self.plotHistograms()
         
-    def plotSky(self):
-        for observer in self.observers:
-            observer.plotSkyPlot(self.config.plot.sky)
-
     def plotHistograms(self):
         for observer in self.observers:
-            pass
-            #observer.plotHistograms()
+            observer.plotHistograms()
 
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
     asmo = AsmodeusPlot()
-    asmo.plotSky()
-    asmo.plotHistograms()
-
-    log.info("Finished successfully")
-    log.info("---------------------")
+    asmo.run()
 
 
+
+
+
+#### Old crap below
 
 
 

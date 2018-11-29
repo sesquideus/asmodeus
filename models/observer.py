@@ -3,6 +3,7 @@ import logging
 import itertools
 import functools
 import os
+import math
 import matplotlib.pyplot as pp
 
 
@@ -87,67 +88,51 @@ class Observer():
     def skyPlotHeader(cls):
         return "#                timestamp       t        s    alt       az      d      ele      v       as            m           F0           F   appmag  absmag"
 
-    def createSkyPlot(self):
-        log.info("Creating a sky plot for observer {obs}".format(obs = c.name(self.id)))
-        self.dataset.create('plots', self.id, exist_ok = True)
+    def printTSV(self):
+        filename = self.dataset.path('tsv', self.id, 'sky.tsv')
+        log.info("Saving a TSV file for observer {obs} ({name})".format(
+            obs     = c.name(self.id),
+            name    = filename,
+        ))
+        
+        self.dataset.create('tsv', self.id, exist_ok = True)
 
-        with open(self.dataset.path('plots', self.id, 'sky.tsv'), 'a') as file:
+        with open(filename, 'w') as file:
             print(self.skyPlotHeader(), file = file)
             for sighting in self.visibleSightings:
-                sighting.printToSkyPlot(file)
+                sighting.printTSV(file)
 
     def plotSkyPlot(self, config):
         log.info("Plotting sky for observer {}".format(c.name(self.id)))
+        self.dataset.create('plots', self.id)
 
-        np.random.seed(19680801)
+#        if config.observations.streaks:
+        dots = [point.asDotMap() for sighting in self.visibleSightings for point in sighting.frames]
+ #       else:
+  #          dots = self.visibleSightings
 
-#        for sighting in self.sightings:
+        azimuths    = np.array([math.radians(sighting.azimuth) for sighting in dots])
+        altitudes   = np.array([90 - sighting.altitude for sighting in dots])
+        colours     = np.array([math.log10(sighting.luminousPower) for sighting in dots])
+        sizes       = np.array([0.02 * (math.log10(sighting.fluxDensity * 1e12 + 1))**4 for sighting in dots])
 
-        N = 150
-        r = 90 * np.random.rand(N)
-        theta = 2 * np.pi * np.random.rand(N)
-        area = 20 * np.random.pareto(1, N)
-        colors = theta
-
-        print(r)
-        print(theta)
-
-        fig = pp.figure(figsize = (5, 5), dpi = 300)
+        fig = pp.figure(figsize = (5, 5), dpi = 300, facecolor  = 'black')
         ax = fig.add_subplot(111, projection = 'polar')
-        cx = ax.scatter(theta, r, c=colors, s=area, cmap='hsv', alpha=0.75)
+        cx = ax.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'hot', alpha = 1, linewidths = 0)
                
         ax.set_theta_zero_location('N', offset=0)
-        ax.set_ylim(0, 90)
-        ax.axes.xaxis.set_ticklabels([])
+        ax.set_ylim(0, 90.5)
+        ax.set_facecolor('black')
+        ax.axes.xaxis.set_ticks(np.linspace(0, 2*np.pi, 20))
+        #ax.axes.xaxis.set_ticklabels([])
         ax.axes.yaxis.set_ticklabels([])
-        pp.savefig(self.dataset.path('plots', self.id, 'sky.png'), bbox_inches = 'tight')
-        """ 
-        context = {
-            'pixels':   config.pixels,
-            'dark':     config.dark,
-            'quantity': 'absoluteMagnitude',
-            'log':      False,
-            'column':   14,
-            'palette': [
-                ( 0, '#0000C0'),
-                (15, '#00E000'),
-                (25, '#FFFF00'),
-                (35, '#FFFFFF'),
-            ],
-            'cblow':    0,
-            'cbhigh':   40,
-            'observer': self.id,
-            'dataset':  self.dataset.name,
-        }
-
-        utils.renderTemplate('sky.gp', context, self.dataset.path('plots', self.id))
-
-        log.info("Template for {name} finished, calling {script}".format(
-            name    = c.name('chiSquare'),
-            script  = c.script('gnuplot'),
-        ))
-        os.system('gnuplot {}'.format(self.dataset.path('plots', self.id, 'sky.gp')))
-        """
+        ax.axes.yaxis.set_ticks(np.linspace(0, 90, 7))
+        ax.grid(linewidth = 0.2, color = 'white')
+        pp.savefig(
+            self.dataset.path('plots', self.id, 'sky.png'),
+            bbox_inches = 'tight',
+            facecolor = 'black',
+        )
 
     def createHistograms(self):
         log.info("Creating histograms for observer {name}, {count} sightings to process".format(
@@ -185,6 +170,9 @@ class Observer():
             with open(self.dataset.path('histograms', self.id, '{}.tsv'.format(hist.name)), 'w') as f:
                 hist.print(f)
         #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
+
+    def plotHistograms(self):
+        pass
 
     def minimize(self, settings):
         log.info("Employing {method} method, {rep} evaluation repetition{s}".format(

@@ -17,6 +17,7 @@ class Asmodeus():
         log.info("Initializing {}".format(c.script("asmodeus-{}".format(self.name))))
         self.createArgparser()
         self.args = self.argparser.parse_args()
+        self.ok = True
 
         try:
             self.config = configuration.load(self.args.config)
@@ -26,16 +27,20 @@ class Asmodeus():
             self.configure()
         except exceptions.ConfigurationError as e:
             log.critical("Configuration error \"{}\", terminating".format(e))
+            self.ok = False
             sys.exit(-1)
         except exceptions.OverwriteError as e:
             log.critical("Target directory {} already exists, terminating (use --overwrite)".format(e))
+            self.ok = False
             sys.exit(-1)
         except exceptions.PrerequisiteError:
             log.critical("Missing prerequisites, aborting")
+            self.ok = False
             sys.exit(-1)
 
     def __del__(self):
-        log.info("{} finished successfully".format(c.script("asmodeus-{}".format(self.name))))
+        if self.ok:
+            log.info("{} finished successfully".format(c.script("asmodeus-{}".format(self.name))))
         log.info("-" * 50)
 
     def createArgparser(self):

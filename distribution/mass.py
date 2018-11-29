@@ -26,8 +26,8 @@ class MassDistribution(base.Distribution):
         return lambda: np.random.exponential(shape)
 
     @classmethod
-    def constant(cls, *, mass: float) -> (lambda: float):
-        return lambda: mass
+    def constant(cls, *, value: float) -> (lambda: float):
+        return lambda: value
 
     @classmethod
     def power(cls, *, shape: float, minimum: float) -> (lambda: float):
