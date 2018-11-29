@@ -59,6 +59,7 @@ class AsmodeusObserve(asmodeus.Asmodeus):
 
     def observe(self):
         self.markTime()
+        log.info("Calculating observations...")
         pool        = mp.Pool(processes = self.config.mp.processes)
         meteorFiles = self.dataset.list('meteors')
 
@@ -73,6 +74,11 @@ class AsmodeusObserve(asmodeus.Asmodeus):
                 )
             ) for meteorFile in meteorFiles for observer in self.observers
         ]
+
+        #while not results._number_left > 0:
+        #    print(results._number_left)
+        #    time.sleep(10)
+
         out = [result.get() for result in results]
         self.count = len(out)
 

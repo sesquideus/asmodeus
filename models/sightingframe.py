@@ -2,6 +2,7 @@ import math
 import logging
 import copy
 import pickle
+import dotmap
 
 from physics import atmosphere, radiometry
 
@@ -57,6 +58,9 @@ class SightingFrame():
             'magnitude'         : self.apparentMagnitude,
             'magnitude'         : self.absoluteMagnitude,
         }
+
+    def asDotMap(self):
+        return dotmap.DotMap(self.asDict())
 
     def asTSV(self):
         return "{timestamp}\t{lifeTime:6.3f}\t{trackLength:7.0f}\t" \

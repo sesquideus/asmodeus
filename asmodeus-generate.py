@@ -42,6 +42,8 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.dataset.create('meteors')
 
         try:
+            log.info("Configuring meteoroid property distributions")
+
             meteors = self.config.meteors
             self.massDistribution       = mass.MassDistribution.fromConfig(meteors.mass).logInfo()
             self.positionDistribution   = position.PositionDistribution.fromConfig(meteors.position).logInfo()

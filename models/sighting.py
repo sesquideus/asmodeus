@@ -37,7 +37,7 @@ class Sighting():
     def asPoint(self):
         return PointSighting(self)
 
-    def printToSkyPlot(self, file):
+    def printTSV(self, file):
         for frame in self.frames:
             print(frame.asTSV(), file = file)
 
@@ -111,5 +111,5 @@ class PointSighting():
         self.sighted            = all(map(lambda dis: dis.apply(self), discriminators))
         return self.sighted
 
-    def printToSkyPlot(self, file):
+    def printTSV(self, file):
         print(self.asTSV(), file = file)
