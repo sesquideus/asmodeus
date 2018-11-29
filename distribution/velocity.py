@@ -1,13 +1,13 @@
 import logging
 import math
 
-from distribution import distribution
+from distribution import base
 from physics import coord
 
 log = logging.getLogger('root')
 
 
-class VelocityDistribution(distribution.Distribution):
+class VelocityDistribution(base.Distribution):
     def __init__(self, name, **kwargs):
         self.quantity = 'initial velocity'
         self.functions = {

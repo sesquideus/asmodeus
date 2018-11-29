@@ -2,12 +2,12 @@ import random
 import logging
 import datetime
 
-from distribution.distribution import Distribution
+from distribution import base
 
 log = logging.getLogger('root')
 
 
-class TimeDistribution(Distribution):
+class TimeDistribution(base.Distribution):
     def __init__(self, name, **kwargs):
         self.quantity = 'temporal'
         self.functions = {
