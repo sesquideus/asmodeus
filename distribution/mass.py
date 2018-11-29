@@ -2,12 +2,12 @@ import random
 import logging
 import numpy as np
 
-from distribution import distribution
+from distribution import base
 
 log = logging.getLogger('root')
 
 
-class MassDistribution(distribution.Distribution):
+class MassDistribution(base.Distribution):
     def __init__(self, name, **kwargs):
         self.quantity = 'meteoroid mass'
         self.functions = {

@@ -1,10 +1,10 @@
 import logging
-from distribution import distribution
+from distribution import base
 
 log = logging.getLogger('root')
 
 
-class DensityDistribution(distribution.Distribution):
+class DensityDistribution(base.Distribution):
     def __init__(self, name, **kwargs):
         self.quantity           = 'meteoroid density'
         self.functions          = {

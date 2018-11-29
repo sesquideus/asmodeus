@@ -2,13 +2,13 @@ import logging
 import random
 import math
 
-from distribution import distribution
+from distribution import base
 from physics import coord
 
 log = logging.getLogger('root')
 
 
-class PositionDistribution(distribution.Distribution):
+class PositionDistribution(base.Distribution):
     def __init__(self, name, **kwargs):
         self.quantity = 'initial position'
         self.functions = {
