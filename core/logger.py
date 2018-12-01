@@ -4,7 +4,7 @@ from utilities import colour as c
 
 class AsmodeusFormatter(logging.Formatter):
     def __init__(self):
-        logging.Formatter.__init__(self, '{asctime}.{msecs:03.0f} [{levelname}] {message}', "%H:%M:%S", '{')
+        super().__init__('{asctime}.{msecs:03.0f} [{levelname}] {message}', "%H:%M:%S", '{')
 
     def format(self, record):
         record.levelname = {

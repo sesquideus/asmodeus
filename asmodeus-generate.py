@@ -7,6 +7,7 @@
 """
 
 import multiprocessing as mp
+import time
 import random
 import sys
 import yaml
@@ -14,7 +15,13 @@ import datetime
 
 from core           import asmodeus, logger, exceptions
 from physics        import coord
-from distribution   import position, velocity, mass, density, time
+
+from distribution.position  import PositionDistribution
+from distribution.velocity  import VelocityDistribution
+from distribution.mass      import MassDistribution
+from distribution.density   import DensityDistribution
+from distribution.time      import TimeDistribution
+
 from utilities      import colour as c
 from models.meteor  import Meteor
 
@@ -45,11 +52,11 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             log.info("Configuring meteoroid property distributions")
 
             meteors = self.config.meteors
-            self.massDistribution       = mass.MassDistribution.fromConfig(meteors.mass).logInfo()
-            self.positionDistribution   = position.PositionDistribution.fromConfig(meteors.position).logInfo()
-            self.velocityDistribution   = velocity.VelocityDistribution.fromConfig(meteors.velocity).logInfo()
-            self.densityDistribution    = density.DensityDistribution.fromConfig(meteors.material.density).logInfo()
-            self.temporalDistribution   = time.TimeDistribution.fromConfig(meteors.time).logInfo()
+            self.massDistribution       = MassDistribution.fromConfig(meteors.mass).logInfo()
+            self.positionDistribution   = PositionDistribution.fromConfig(meteors.position).logInfo()
+            self.velocityDistribution   = VelocityDistribution.fromConfig(meteors.velocity).logInfo()
+            self.densityDistribution    = DensityDistribution.fromConfig(meteors.material.density).logInfo()
+            self.temporalDistribution   = TimeDistribution.fromConfig(meteors.time).logInfo()
         
             log.info("Output will be written to dataset {ds} ({dsdir})".format(
                 ds              = c.name(self.dataset.name),
@@ -114,14 +121,33 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
     def process(self):
         self.markTime()
         pool = mp.Pool(processes = self.config.mp.processes)
-        results = [
-            pool.apply_async(
-                simulate, (meteor, self.config.meteors.integrator.fps, self.config.meteors.integrator.spf, self.dataset.name)
-            ) for meteor in self.meteors
-        ]
+        manager     = mp.Manager()
+        queue       = manager.Queue()
 
-        for result in results:
-            result.get()
+        args = [(
+            queue,
+            meteor,
+            self.config.meteors.integrator.fps,
+            self.config.meteors.integrator.spf,
+            self.dataset.name
+        ) for meteor in self.meteors]
+        total = len(args)
+
+        results = pool.map_async(simulate, args)
+        
+        while True:
+            if results.ready():
+                break
+            else:
+                log.info("Simulating meteors: {count} of {total} ({perc})".format(
+                    count       = c.num("{:6d}".format(queue.qsize())),
+                    total       = c.num("{:6d}".format(total)),
+                    perc        = c.num("{:5.2f}%".format(queue.qsize() / total * 100)),
+                ))
+                time.sleep(1)
+
+        out = results.get()
+        self.count = len(out)
 
     def finalize(self):
         yaml.dump({
@@ -137,7 +163,9 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         ))
 
 
-def simulate(meteor, fps, spf, dataset):
+def simulate(args):
+    queue, meteor, fps, spf, dataset = args
+    queue.put(1)
     meteor.flyRK4(fps, spf)
     meteor.save(dataset)
 

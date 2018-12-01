@@ -18,7 +18,7 @@ meteors:
         distribution:           'pareto'                    # Particle mass distribution. Possible values 'pareto', 'exponential' or a number
         parameters:
             minimum:            0.000001                    # Minimum particle mass, in kg
-            shape:              1.55                        # Shape of the distribution, corresponds to s-index (N(m) \propto m^-s)
+            shape:              2.05                        # Shape of the distribution, corresponds to s-index (N(m) \propto m^-s)
     position:
         distribution:           'rectangle'                 # Name of the distribution, currently only 'rectangle'
         parameters:
@@ -94,9 +94,9 @@ statistics:                                                 # Histograms to be p
             name:               'azimuth'
             xaxis:              'number'
         apparentMagnitude:
-            min:                -10
-            max:                10
-            bin:                0.5
+            min:                -12
+            max:                12
+            bin:                0.25
             name:               'apparent magnitude'
             xaxis:              'number'
         angularSpeed:

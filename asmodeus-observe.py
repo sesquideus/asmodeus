@@ -8,6 +8,7 @@
     Outputs: sightings
 """
 
+import time
 import sys
 import multiprocessing as mp
 
@@ -59,27 +60,35 @@ class AsmodeusObserve(asmodeus.Asmodeus):
 
     def observe(self):
         self.markTime()
-        log.info("Calculating observations...")
         pool        = mp.Pool(processes = self.config.mp.processes)
+        manager     = mp.Manager()
+        queue       = manager.Queue()
         meteorFiles = self.dataset.list('meteors')
 
-        results = [
-            pool.apply_async(
-                observeMeteor, (
-                    observer,
-                    self.dataset.path('meteors', meteorFile),
-                    self.config.observations.minAltitude,
-                    self.dataset.path('sightings', observer.id, meteorFile),
-                    self.config.observations.streaks,
-                )
-            ) for meteorFile in meteorFiles for observer in self.observers
-        ]
+        args = [(
+            queue,
+            observer,
+            self.dataset.path('meteors', meteorFile),
+            self.config.observations.minAltitude,
+            self.dataset.path('sightings', observer.id, meteorFile),
+            self.config.observations.streaks,
+        ) for meteorFile in meteorFiles for observer in self.observers]
+        total = len(args)
 
-        #while not results._number_left > 0:
-        #    print(results._number_left)
-        #    time.sleep(10)
+        results = pool.map_async(observeMeteor, args)
+        
+        while True:
+            if results.ready():
+                break
+            else:
+                log.info("Calculating observations: {count} of {total} ({perc})".format(
+                    count       = c.num("{:6d}".format(queue.qsize())),
+                    total       = c.num("{:6d}".format(total)),
+                    perc        = c.num("{:5.2f}%".format(queue.qsize() / total * 100)),
+                ))
+                time.sleep(1)
 
-        out = [result.get() for result in results]
+        out = results.get()
         self.count = len(out)
 
     def finalize(self):
@@ -94,16 +103,17 @@ class AsmodeusObserve(asmodeus.Asmodeus):
         ))
         
 
-def observeMeteor(observer, filename, minAlt, out, streaks):
-    meteor = Meteor.load(filename)
+def observeMeteor(args):
+    queue, observer, filename, minAlt, out, streaks = args
 
+    queue.put(1)
+    meteor = Meteor.load(filename)
     sighting = Sighting(observer, meteor)
     if sighting.brightestFrame.altAz.latitude() >= minAlt:
         sighting.save(out, streak = streaks)
         return True
     else:
         return False
-
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
