@@ -16,7 +16,7 @@ class Discriminator():
         self.name   = name
         self.params = kwargs
         try:
-            self.function = self.functions.get(name, self.default)(**kwargs)
+            self.function = self.functions[name](**kwargs)
         except KeyError as e:
             self.errorUnknown(e)
             raise exceptions.ConfigurationError()
@@ -45,9 +45,8 @@ class Discriminator():
     def all(self, **kwargs) -> (lambda float: float):
         return lambda _: 1
 
-    @classmethod
     def default(self, **kwargs):
-        raise KeyError("No default discriminator defined")
+        raise KeyError("No default discriminator defined for {}".format(self.property))
 
     def logInfo(self):
         log.info("    {quantity} discriminator is {name}{params}".format(

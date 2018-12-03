@@ -17,6 +17,7 @@ scipy = "*"
 nose = "*"
 coverage = "*"
 matplotlib = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.5"

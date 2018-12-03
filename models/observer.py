@@ -113,7 +113,7 @@ class Observer():
 
         azimuths    = np.array([math.radians(sighting.azimuth) for sighting in dots])
         altitudes   = np.array([90 - sighting.altitude for sighting in dots])
-        colours     = np.array([math.log10(sighting.luminousPower) for sighting in dots])
+        colours     = np.array([math.log10(sighting.luminousPower) if sighting.luminousPower > 1e-12 else -12 for sighting in dots])
         sizes       = np.array([0.02 * (math.log10(sighting.fluxDensity * 1e12 + 1))**4 for sighting in dots])
 
         fig = pp.figure(figsize = (5, 5), dpi = 300, facecolor  = 'black')
@@ -123,7 +123,7 @@ class Observer():
         ax.set_theta_zero_location('N', offset=0)
         ax.set_ylim(0, 90.5)
         ax.set_facecolor('black')
-        ax.axes.xaxis.set_ticks(np.linspace(0, 2*np.pi, 20))
+        ax.axes.xaxis.set_ticks(np.linspace(0, 2*np.pi, 25))
         #ax.axes.xaxis.set_ticklabels([])
         ax.axes.yaxis.set_ticklabels([])
         ax.axes.yaxis.set_ticks(np.linspace(0, 90, 7))
