@@ -133,7 +133,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         ) for meteor in self.meteors]
         total = len(args)
 
-        results = pool.map_async(simulate, args)
+        results = pool.map_async(simulate, args, 100)
         
         while True:
             if results.ready():
