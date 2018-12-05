@@ -133,7 +133,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         ) for meteor in self.meteors]
         total = len(args)
 
-        results = pool.map_async(simulate, args, 100)
+        results = pool.map_async(simulate, args, 20)
         
         while True:
             if results.ready():
@@ -144,7 +144,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
                     total       = c.num("{:6d}".format(total)),
                     perc        = c.num("{:5.2f}%".format(queue.qsize() / total * 100)),
                 ))
-                time.sleep(1)
+                time.sleep(0.25)
 
         out = results.get()
         self.count = len(out)
