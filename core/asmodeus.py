@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import multiprocessing as mp
 import logging
 import time
 
@@ -96,6 +97,28 @@ class Asmodeus():
             old         = c.over(old),
             new         = c.over(new),
         ))
+
+    def parallel(self, function, args, *, action, period = 1):
+        pool = mp.Pool(processes = self.config.mp.processes)
+        manager = mp.Manager()
+        queue = manager.Queue()
+        total = len(args)
+
+        results = pool.map_async(function, args, 20)
+        
+        while True:
+            if results.ready():
+                break
+            else:
+                log.info("{action}: {count} of {total} ({perc})".format(
+                    action      = action,
+                    count       = c.num("{:6d}".format(queue.qsize())),
+                    total       = c.num("{:6d}".format(total)),
+                    perc        = c.num("{:5.2f}%".format(queue.qsize() / total * 100)),
+                ))
+                time.sleep(period)
+
+        return results.get()
 
 # Old crap below
 

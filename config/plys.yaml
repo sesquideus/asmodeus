@@ -4,7 +4,7 @@ mp:
 meteors:
     count:                      1000
     shape:
-        dragCoefficient:        0.7                         # 0.6 for a spherical body
+        dragCoefficient:        0.5                         # 0.6 for a spherical body
         shapeFactor:            1.21                        # 1.21 for a spherical body
     material:
         density:                
@@ -44,7 +44,7 @@ meteors:
         spf:                    1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time
 
 observations:
-    streaks:                    True
+    streaks:                    False
     minAltitude:                0
     observers:
         teplicne:

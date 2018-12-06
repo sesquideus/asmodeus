@@ -127,7 +127,7 @@ class Observer():
         #ax.axes.xaxis.set_ticklabels([])
         ax.axes.yaxis.set_ticklabels([])
         ax.axes.yaxis.set_ticks(np.linspace(0, 90, 7))
-        ax.grid(linewidth = 0.2, color = 'white')
+        ax.grid(linewidth = 0.1, color = 'white')
         pp.savefig(
             self.dataset.path('plots', self.id, 'sky.png'),
             bbox_inches = 'tight',
