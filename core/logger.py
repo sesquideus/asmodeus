@@ -1,10 +1,11 @@
 import logging
+import time
 from utilities import colour as c
 
 
 class AsmodeusFormatter(logging.Formatter):
     def __init__(self):
-        super().__init__('{asctime}.{msecs:03.0f} [{levelname}] {message}', "%H:%M:%S", '{')
+        super().__init__('{asctime} [{levelname}] {message}', "%H:%M:%S", '{')
 
     def format(self, record):
         record.levelname = {
@@ -15,7 +16,11 @@ class AsmodeusFormatter(logging.Formatter):
             'CRITICAL': c.critical,
         }[record.levelname](record.levelname[:3])
 
-        return logging.Formatter.format(self, record)
+        return super().format(record)
+
+    def formatTime(self, record, format):
+        ct = self.converter(record.created)
+        return "{}.{:03d}".format(time.strftime("%H:%M:%S", ct), int(record.msecs))
 
 
 def setupLog(name, **kwargs):

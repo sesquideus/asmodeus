@@ -144,7 +144,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
                     total       = c.num("{:6d}".format(total)),
                     perc        = c.num("{:5.2f}%".format(queue.qsize() / total * 100)),
                 ))
-                time.sleep(0.25)
+                time.sleep(1)
 
         out = results.get()
         self.count = len(out)

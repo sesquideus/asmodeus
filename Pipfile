@@ -18,6 +18,7 @@ nose = "*"
 coverage = "*"
 matplotlib = "*"
 tqdm = "*"
+numba = "*"
 
 [requires]
 python_version = "3.5"
