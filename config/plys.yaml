@@ -17,7 +17,7 @@ meteors:
     mass:
         distribution:           'pareto'                    # Particle mass distribution. Possible values 'pareto', 'exponential' or a number
         parameters:
-            minimum:            0.000001                    # Minimum particle mass, in kg
+            minimum:            0.000005                    # Minimum particle mass, in kg
             shape:              2.00                        # Shape of the distribution, corresponds to s-index (N(m) \propto m^-s)
     position:
         distribution:           'rectangle'                 # Name of the distribution, currently only 'rectangle'
@@ -54,10 +54,10 @@ observations:
 
 bias:
     magnitude:
-        discriminator:          'all'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
+        discriminator:          'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
         parameters:
-            limit:              1.0                         # Limiting magnitude m0
-            width:              0.5                         # Width of the function
+            limit:              0.5                         # Limiting magnitude m0
+            width:              0.35                        # Width of the function
     angularSpeed:
         discriminator:          'all'                       # Angular speed detection efficiency profile, possible values 'flat' or 'linear'
         parameters:

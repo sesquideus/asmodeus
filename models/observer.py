@@ -65,14 +65,14 @@ class Observer():
     def setDiscriminators(self, discriminators):
         self.discriminators = discriminators
 
-    def applyBias(self, *discriminators):
+    def applyBias(self):
         for sighting in self.allSightings:
-            sighting.applyBias()
+            sighting.applyBias(*self.discriminators)
             log.debug("Meteor was " + (c.ok("detected") if sighting.sighted else c.err("not detected")))
 
         self.visibleSightings = [s for s in self.allSightings if s.sighted]
         log.info("Selection bias applied ({dc} discriminators), {sc} sightings survived ({pct})".format(
-            dc      = c.num(len(discriminators)),
+            dc      = c.num(len(self.discriminators)),
             sc      = c.num(len(self.visibleSightings)),
             pct     = c.num("{:5.2f}%".format(100 * len(self.visibleSightings) / len(self.allSightings) if len(self.allSightings) > 0 else 0)),
         ))
@@ -80,7 +80,7 @@ class Observer():
         return self.visibleSightings
 
     def analyzeSightings(self):
-        self.applyBias(*self.discriminators)
+        self.applyBias()
         self.createHistograms()
         self.saveHistograms()
 
@@ -114,7 +114,7 @@ class Observer():
         azimuths    = np.array([math.radians(sighting.azimuth) for sighting in dots])
         altitudes   = np.array([90 - sighting.altitude for sighting in dots])
         colours     = np.array([math.log10(sighting.luminousPower) if sighting.luminousPower > 1e-12 else -12 for sighting in dots])
-        sizes       = np.array([0.02 * (math.log10(sighting.fluxDensity * 1e12 + 1))**4 for sighting in dots])
+        sizes       = np.array([0.01 * (math.log10(sighting.fluxDensity * 1e12 + 1))**4 for sighting in dots])
 
         fig = pp.figure(figsize = (5, 5), dpi = 300, facecolor  = 'black')
         ax = fig.add_subplot(111, projection = 'polar')
