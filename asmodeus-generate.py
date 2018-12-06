@@ -120,34 +120,15 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
 
     def process(self):
         self.markTime()
-        pool = mp.Pool(processes = self.config.mp.processes)
-        manager     = mp.Manager()
-        queue       = manager.Queue()
-
         args = [(
-            queue,
             meteor,
             self.config.meteors.integrator.fps,
             self.config.meteors.integrator.spf,
             self.dataset.name
         ) for meteor in self.meteors]
-        total = len(args)
-
-        results = pool.map_async(simulate, args, 20)
         
-        while True:
-            if results.ready():
-                break
-            else:
-                log.info("Simulating meteors: {count} of {total} ({perc})".format(
-                    count       = c.num("{:6d}".format(queue.qsize())),
-                    total       = c.num("{:6d}".format(total)),
-                    perc        = c.num("{:5.2f}%".format(queue.qsize() / total * 100)),
-                ))
-                time.sleep(1)
-
-        out = results.get()
-        self.count = len(out)
+        result = self.parallel(simulate, args, action = "Simulating meteors")
+        self.count = len(result)
 
     def finalize(self):
         yaml.dump({

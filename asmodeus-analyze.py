@@ -65,7 +65,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
     def plotSky(self):
         for observer in self.observers:
             observer.printTSV()
-            observer.plotSkyPlot(self.config.plot.sky)
+            observer.plotSkyPlot(self.config)
 
     def finalize(self):
         log.info("Finished in {:.6f} seconds".format(self.runTime()))

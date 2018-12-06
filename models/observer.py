@@ -106,10 +106,10 @@ class Observer():
         log.info("Plotting sky for observer {}".format(c.name(self.id)))
         self.dataset.create('plots', self.id)
 
-#        if config.observations.streaks:
-        dots = [point.asDotMap() for sighting in self.visibleSightings for point in sighting.frames]
- #       else:
-  #          dots = self.visibleSightings
+        if config.observations.streaks:
+            dots = [point.asDotMap() for sighting in self.visibleSightings for point in sighting.frames]
+        else:
+            dots = self.visibleSightings
 
         azimuths    = np.array([math.radians(sighting.azimuth) for sighting in dots])
         altitudes   = np.array([90 - sighting.altitude for sighting in dots])

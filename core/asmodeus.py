@@ -104,7 +104,7 @@ class Asmodeus():
         queue = manager.Queue()
         total = len(args)
 
-        results = pool.map_async(function, args, 20)
+        results = pool.map_async(function, [(queue,) + x for x in args], 20)
         
         while True:
             if results.ready():
