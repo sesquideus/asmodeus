@@ -86,7 +86,7 @@ class Observer():
 
     @classmethod
     def skyPlotHeader(cls):
-        return "#                timestamp       t        s    alt       az      d      ele      v       as            m           F0           F   appmag  absmag"
+        return "#                timestamp       t        s    alt       az      d      ele      v       as            m           F0           F   absmag  appmag"
 
     def printTSV(self):
         filename = self.dataset.path('tsv', self.id, 'sky.tsv')

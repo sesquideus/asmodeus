@@ -55,8 +55,8 @@ class SightingFrame():
             'mass'              : self.frame.mass,
             'luminousPower'     : self.frame.luminousPower,
             'fluxDensity'       : self.fluxDensity,
-            'magnitude'         : self.apparentMagnitude,
-            'magnitude'         : self.absoluteMagnitude,
+            'apparentMagnitude' : self.apparentMagnitude,
+            'absoluteMagnitude' : self.absoluteMagnitude,
         }
 
     def asDotMap(self):
