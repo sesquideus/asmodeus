@@ -43,9 +43,7 @@ class SightingFrame():
 
     def asDict(self):
         return {
-            'timestamp'         : self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
-            'lifeTime'          : self.frame.lifeTime,
-            'trackLength'       : self.frame.trackLength,
+            'timestamp'         : self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f"),
             'altitude'          : self.altAz.latitude(),
             'azimuth'           : self.altAz.longitude(),
             'distance'          : self.altAz.norm(),

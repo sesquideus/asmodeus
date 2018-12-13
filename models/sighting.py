@@ -2,6 +2,9 @@ import logging
 import pickle
 import io
 
+import numpy as np
+import pandas as pd
+
 from models.sightingframe import SightingFrame
 
 log = logging.getLogger('root')
@@ -20,19 +23,33 @@ class Sighting():
         self.lastFrame          = None
         self.sighted            = None
 
-        for frame in meteor.frames:
-            currentFrame = SightingFrame(self.observer, frame)
-            self.frames.append(currentFrame)
+        self.frames = [SightingFrame(self.observer, meteorFrame) for meteorFrame in self.meteor.frames]
+    
+        self.first          = self.frames[0]
+        self.last           = self.frames[-1]
+        self.brightest      = None
+        self.firstVisible   = None
+        self.lastVisible    = None
 
-            if self.firstFrame is None:
-                self.firstFrame = currentFrame
-            if self.brightestFrame is None or currentFrame.fluxDensity > self.brightestFrame.fluxDensity:
-                self.brightestFrame = currentFrame
-            self.lastFrame = currentFrame
+        for frame in self.frames:
+            if self.brightest is None or self.brightest.apparentMagnitude < frame.apparentMagnitude:
+                self.brightest = frame
+            if frame.apparentMagnitude < 4:
+                if self.firstVisible is None:
+                    self.firstVisible = frame
+                self.lastVisible = frame
 
     @staticmethod
     def load(filename):
         return pickle.load(io.FileIO(filename, 'rb'))
+
+    def asDict(self):
+        return {
+            'id':               self.id,
+            'timestamp':        self.brightest.frame.timestamp,
+            'simulationTime':   (self.last.timestamp - self.first.timestamp).total_seconds(),
+            'lightTime':        (self.lastVisible.timestamp - self.firstVisible.timestamp).total_seconds(),
+        }
 
     def asPoint(self):
         return PointSighting(self)
@@ -100,7 +117,6 @@ class PointSighting():
                 speed               = self.speed,
                 angularSpeed        = self.angularSpeed,
                 initialMass         = self.initialMass,
-                mass                = self.mass,
                 luminousPower       = self.luminousPower,
                 fluxDensity         = self.fluxDensity,
                 absMag              = self.absoluteMagnitude,

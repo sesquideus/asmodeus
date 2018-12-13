@@ -19,7 +19,7 @@ class Histogram:
     def bin(self, value):
         b = int(math.floor(self.binCount * (value - self.lower) / (self.upper - self.lower)))
         if b < 0 or b >= self.binCount:
-            raise KeyError("Value {value} out of range ({lower} - {upper})".format(
+            raise KeyError("Value {value} outside permissible range ({lower} - {upper})".format(
                 value   = value,
                 lower   = self.lower,
                 upper   = self.upper,

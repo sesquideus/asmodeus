@@ -43,8 +43,6 @@ class Meteor:
         self.ablationHeat       = kwargs.get('ablationHeat',    8e6)
 
         self.luminousPower      = 0
-        self.trackLength        = 0
-        self.lifeTime           = 0
 
         self.id                 = self.timestamp.strftime("%Y%m%d-%H%M%S-%f")
         self.frames             = []
@@ -53,6 +51,14 @@ class Meteor:
 
     @staticmethod
     def load(filename):
+        return Meteor.loadPickle(filename)
+
+    @staticmethod
+    def loadPickle(filename):
+        return pickle.load(io.FileIO(filename, 'rb'))
+
+    @staticmethod
+    def loadHDF5(filename):
         return pickle.load(io.FileIO(filename, 'rb'))
 
     def __str__(self):
@@ -67,6 +73,9 @@ class Meteor:
                 density         = self.density,
                 ablationHeat    = self.ablationHeat,
             )
+
+    def saveHDF5(self, dataset):
+        pass        
 
     def save(self, dataset):
         fileIO = io.FileIO(os.path.join('datasets', dataset, 'meteors', '{}.{}'.format(self.id, 'pickle')), 'wb')
@@ -145,8 +154,6 @@ class Meteor:
 
             frame += 1
 
-            self.trackLength += self.velocity.norm() * dt
-            self.lifeTime += dt
             self.timestamp += datetime.timedelta(seconds = dt)
 
             self.position += drdt * dt

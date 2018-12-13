@@ -1,11 +1,12 @@
-import numpy as np
 import logging
 import itertools
 import functools
 import os
 import math
-import matplotlib.pyplot as pp
 
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as pp
 
 from core                       import histogram
 from physics                    import coord
@@ -169,10 +170,17 @@ class Observer():
             hist.normalize()
             with open(self.dataset.path('histograms', self.id, '{}.tsv'.format(hist.name)), 'w') as f:
                 hist.print(f)
+
+
         #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
 
     def plotHistograms(self):
-        pass
+        self.histogram
+
+        fig = pp.bar(
+            self.histogram.keys
+        )
+
 
     def minimize(self, settings):
         log.info("Employing {method} method, {rep} evaluation repetition{s}".format(

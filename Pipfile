@@ -19,6 +19,7 @@ coverage = "*"
 matplotlib = "*"
 tqdm = "*"
 numba = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.5"
