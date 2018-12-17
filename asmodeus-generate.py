@@ -11,6 +11,7 @@ import time
 import random
 import sys
 import yaml
+import numba
 import datetime
 
 from core           import asmodeus, logger, exceptions

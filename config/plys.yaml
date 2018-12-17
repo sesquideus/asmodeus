@@ -64,7 +64,7 @@ bias:
     altitude:
         discriminator:          'sinexp'                       # Altitude detection efficiency profile, possible values 'step' or 'linear' or 'sinexp'
         parameters:
-            exponent:           0.1                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
+            exponent:           0.0                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
 
 plot:
     sky:
@@ -105,12 +105,12 @@ statistics:                                                 # Histograms to be p
             bin:                1
             name:               'angular speed'
             xaxis:              'number'
-        timestamp:
-            min:                2016-08-11T19:00:00
-            max:                2016-08-12T02:00:00
-            bin:                600
-            name:               'time'
-            xaxis:              time
+#        timestamp:
+#            min:                2016-08-11T19:00:00
+#            max:                2016-08-12T02:00:00
+#            bin:                600
+#            name:               'time'
+#            xaxis:              time
 
 optimize:                                                   # Exhaustive search of the parameter space
     method:                     exhaustive

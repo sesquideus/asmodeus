@@ -28,16 +28,16 @@ class Sighting():
         self.first          = self.frames[0]
         self.last           = self.frames[-1]
         self.brightest      = None
-        self.firstVisible   = None
-        self.lastVisible    = None
+        #self.firstVisible   = None
+        #self.lastVisible    = None
 
         for frame in self.frames:
-            if self.brightest is None or self.brightest.apparentMagnitude < frame.apparentMagnitude:
+            if self.brightest is None or self.brightest.apparentMagnitude > frame.apparentMagnitude:
                 self.brightest = frame
-            if frame.apparentMagnitude < 4:
-                if self.firstVisible is None:
-                    self.firstVisible = frame
-                self.lastVisible = frame
+            #if frame.apparentMagnitude < 4:
+            #    if self.firstVisible is None:
+            #        self.firstVisible = frame
+            #    self.lastVisible = frame
 
     @staticmethod
     def load(filename):
@@ -83,33 +83,33 @@ class Sighting():
 class PointSighting():
     def __init__(self, sighting):
         self.id                 = sighting.id
-        self.timestamp          = sighting.brightestFrame.frame.timestamp
-        self.lifeTime           = sighting.lastFrame.frame.lifeTime
-        self.trackLength        = sighting.lastFrame.frame.trackLength
-        self.altitude           = sighting.brightestFrame.altAz.latitude()
-        self.azimuth            = sighting.brightestFrame.altAz.longitude()
-        self.distance           = sighting.brightestFrame.altAz.norm()
-        self.elevation          = sighting.brightestFrame.frame.position.elevation()
-        self.speed              = sighting.brightestFrame.frame.speed
-        self.angularSpeed       = sighting.brightestFrame.angularSpeed
-        self.initialMass        = sighting.firstFrame.frame.mass
-        self.mass               = sighting.brightestFrame.frame.mass
-        self.luminousPower      = sighting.brightestFrame.frame.luminousPower
-        self.fluxDensity        = sighting.brightestFrame.fluxDensity
-        self.absoluteMagnitude  = sighting.brightestFrame.frame.absoluteMagnitude
-        self.apparentMagnitude  = sighting.brightestFrame.apparentMagnitude
+        self.timestamp          = sighting.brightest.frame.timestamp
+        self.altitude           = sighting.brightest.altAz.latitude()
+        self.azimuth            = sighting.brightest.altAz.longitude()
+        self.distance           = sighting.brightest.altAz.norm()
+        self.elevation          = sighting.brightest.frame.position.elevation()
+        self.speed              = sighting.brightest.frame.speed
+        self.angularSpeed       = sighting.brightest.angularSpeed
+        self.initialMass        = sighting.first.frame.mass
+        self.mass               = sighting.brightest.frame.mass
+        self.luminousPower      = sighting.brightest.frame.luminousPower
+        self.fluxDensity        = sighting.brightest.fluxDensity
+        self.absoluteMagnitude  = sighting.brightest.frame.absoluteMagnitude
+        self.apparentMagnitude  = sighting.brightest.apparentMagnitude
 
     def asPoint(self):
         return self
 
     def asTSV(self):
-        return "{timestamp}\t{lifeTime:6.3f}\t{trackLength:7.0f}\t" \
-            "{altitude:6.3f}\t{azimuth:7.3f}\t{distance:6.0f}\t" \
-            "{elevation:7.0f}\t{speed:6.0f}\t{angularSpeed:7.3f}\t" \
+        return "{timestamp}\t" \
+            "{altitude:6.3f}\t" \
+            "{azimuth:7.3f}\t" \
+            "{distance:6.0f}\t" \
+            "{elevation:7.0f}\t" \
+            "{speed:6.0f}\t" \
+            "{angularSpeed:7.3f}\t" \
             "{initialMass:12.6e}\t{luminousPower:9.3e}\t{fluxDensity:9.3e}\t{absMag:6.2f}\t{appMag:6.2f}".format(
                 timestamp           = self.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
-                lifeTime            = self.lifeTime,
-                trackLength         = self.trackLength,
                 altitude            = self.altitude,
                 azimuth             = self.azimuth,
                 distance            = self.distance,

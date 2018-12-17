@@ -110,11 +110,11 @@ def observeMeteor(args):
     queue.put(1)
     meteor = Meteor.load(filename)
     sighting = Sighting(observer, meteor)
-#    if sighting.brightest.altAz.latitude() >= minAlt:
-#        sighting.save(out, streak = streaks)
-#        return True
-#    else:
-#        return False
+    if sighting.brightest.altAz.latitude() >= minAlt:
+        sighting.save(out, streak = streaks)
+        return True
+    else:
+        return False
 
 if __name__ == "__main__":
     log = logger.setupLog('root')

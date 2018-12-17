@@ -3,6 +3,8 @@ import logging
 import math
 import io
 import os
+import numpy as np
+import numba
 import pickle
 
 import models.frame
@@ -30,7 +32,7 @@ class Meteor:
     def __init__(self, **kwargs):
         self.mass               = kwargs.get('mass',            1)
         self.density            = kwargs.get('density',         800)
-        self.radius             = (3 * self.mass / (self.density * math.pi * 4))**(1 / 3)
+        self.radius             = (3 * self.mass / (self.density * np.pi * 4))**(1 / 3)
 
         self.position           = kwargs.get('position',        coord.Vector3D.fromGeodetic(48, 17, 120000))
         self.velocity           = kwargs.get('velocity',        coord.Vector3D(0, 0, 0))
@@ -55,10 +57,6 @@ class Meteor:
 
     @staticmethod
     def loadPickle(filename):
-        return pickle.load(io.FileIO(filename, 'rb'))
-
-    @staticmethod
-    def loadHDF5(filename):
         return pickle.load(io.FileIO(filename, 'rb'))
 
     def __str__(self):
@@ -174,7 +172,7 @@ class Meteor:
                 self.fate = "Flew away"
                 break
 
-            if self.velocity.norm() < 2500:
+            if self.velocity.norm() < 2000:
                 log.debug("Survived with final mass {:12.6f} kg".format(self.mass))
                 self.fate = "Meteorite"
                 break

@@ -5,7 +5,7 @@ import os
 import math
 
 import numpy as np
-import pandas as pd
+import scipy.stats
 import matplotlib.pyplot as pp
 
 from core                       import histogram
@@ -35,7 +35,11 @@ class Observer():
         self.skyPlotDir         = self.dataset.path('plots', self.id)
 
     def observe(self, meteor):
-        log.debug("Observer {} trying to see meteor {}".format(c.name(self.id), meteor))
+        log.debug("Observer {obs} trying to see meteor {} ({} recorded frames)".format(
+            obs = c.name(self.id),
+            met = c.name(meteor),
+            nf  = c.num(len(meteor.frames))
+        ))
         return [SightingFrame(self, frame) for frame in meteor.frames]
 
     def altAz(self, point: coord.Vector3D) -> coord.Vector3D:
@@ -63,6 +67,9 @@ class Observer():
         log.info("Observer {}: {} sightings loaded".format(c.name(self.id), c.num(len(self.allSightings))))
         return self.allSightings
 
+    def loadSightingsDataframe(self):
+        pass
+
     def setDiscriminators(self, discriminators):
         self.discriminators = discriminators
 
@@ -84,10 +91,11 @@ class Observer():
         self.applyBias()
         self.createHistograms()
         self.saveHistograms()
+        self.kde()
 
     @classmethod
     def skyPlotHeader(cls):
-        return "#                timestamp       t        s    alt       az      d      ele      v       as            m           F0           F   absmag  appmag"
+        return "#                timestamp     alt       az      d      ele      v       as            m           F0           F   absmag  appmag"
 
     def printTSV(self):
         filename = self.dataset.path('tsv', self.id, 'sky.tsv')
@@ -161,6 +169,26 @@ class Observer():
 
         return self.histograms
 
+    def kde(self):
+        log.info("Creating Kernel Density Estimates for observer {name}, {count} sightings to process".format(
+            name        = c.name(self.id),
+            count       = c.num(len(self.visibleSightings)),
+        ))
+
+        stats = {}
+        for stat, prop in self.histogramSettings.items():
+            stats[stat] = [getattr(sighting.asPoint(), stat) for sighting in self.visibleSightings]
+            kernel = scipy.stats.gaussian_kde(stats[stat])
+
+            figure = pp.figure(figsize = (5, 4), dpi = 300)
+            axes = figure.add_subplot(111)
+
+            count = prop.bin * 10
+            density = (prop.max - prop.min) / prop.bin * 10
+            space = np.linspace(prop.min, prop.max, density)
+            axes.plot(space, np.cumsum(kernel.evaluate(space)) * count)
+            pp.savefig(self.dataset.path('histograms', self.id, '{}-kde.png'.format(stat)))
+
     def saveHistograms(self):
         # amos        = asmodeus.createAmosHistograms('amos.tsv')
         log.debug("Saving histograms for observer {name}".format(name = c.name(self.id)))
@@ -170,6 +198,8 @@ class Observer():
             hist.normalize()
             with open(self.dataset.path('histograms', self.id, '{}.tsv'.format(hist.name)), 'w') as f:
                 hist.print(f)
+            with open(self.dataset.path('histograms', self.id, '{}.png'.format(hist.name)), 'w') as f:
+                hist.render(f.name)
 
 
         #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
