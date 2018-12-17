@@ -93,13 +93,13 @@ statistics:                                                 # Histograms to be p
             bin:                15
             name:               'azimuth'
             xaxis:              'number'
-        apparentMagnitude:
+        appMag:
             min:                -12
             max:                12
             bin:                0.25
             name:               'apparent magnitude'
             xaxis:              'number'
-        angularSpeed:
+        angSpeed:
             min:                0
             max:                40
             bin:                1

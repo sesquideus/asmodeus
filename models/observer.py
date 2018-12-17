@@ -6,11 +6,12 @@ import math
 
 import numpy as np
 import scipy.stats
+import pandas as pd
 import matplotlib.pyplot as pp
 
 from core                       import histogram
 from physics                    import coord
-from models.sighting            import Sighting
+from models.sighting            import Sighting, PointSighting
 from models.sightingframe       import SightingFrame
 from utilities                  import colour as c, utilities as utils
 
@@ -31,8 +32,11 @@ class Observer():
         self.allSightings       = []
         self.visibleSightings   = []
 
-        self.earthToAltAzMatrix = functools.reduce(np.dot, [np.fliplr(np.eye(3)), coord.rotMatrixY(-self.position.latitude()), coord.rotMatrixZ(-self.position.longitude())])
-        self.skyPlotDir         = self.dataset.path('plots', self.id)
+        self.earthToAltAzMatrix = functools.reduce(np.dot, [
+                                    np.fliplr(np.eye(3)),
+                                    coord.rotMatrixY(-self.position.latitude()),
+                                    coord.rotMatrixZ(-self.position.longitude()),
+                                ])
 
     def observe(self, meteor):
         log.debug("Observer {obs} trying to see meteor {} ({} recorded frames)".format(
@@ -56,7 +60,7 @@ class Observer():
             position    = self.position.strGeodetic(),
         )
 
-    def loadSightings(self):
+    def loadSightingsPickle(self):
         dir = self.dataset.path('sightings', self.id)
         log.debug("Observer {obs}: loading sightings from {dir}".format(
             obs         = c.name(self.id),
@@ -64,14 +68,36 @@ class Observer():
         )
 
         self.allSightings = [Sighting.load(self.dataset.path('sightings', self.id, file)) for file in os.listdir(dir)]
-        log.info("Observer {}: {} sightings loaded".format(c.name(self.id), c.num(len(self.allSightings))))
+        log.info("Observer {obs}: {num} sightings loaded".format(
+            obs         = c.name(self.id),
+            num         = c.num(len(self.allSightings))
+        ))
         return self.allSightings
 
-    def loadSightingsDataframe(self):
+    def loadSightingsTSV(self):
         pass
+
+
+    def loadSightingsDataFrame(self):
+        dicts = {}
+        for sf in os.listdir(self.dataset.path('sightings', self.id)):
+            sighting = Sighting.load(self.dataset.path('sightings', self.id, sf))
+            dicts[sighting.id] = sighting.asDict()
+
+        self.dataframe = pd.DataFrame.from_dict(
+            dicts,
+            orient = 'index',
+            columns = PointSighting.columns
+        )
 
     def setDiscriminators(self, discriminators):
         self.discriminators = discriminators
+        print(self.discriminators)
+
+        def bf(row):
+            return all([self.discriminators[0].compute(row['appMag']), self.discriminators[1].compute(row['altitude']), self.discriminators[2].compute(row['angSpeed'])])
+
+        self.biasFunction = bf
 
     def applyBias(self):
         for sighting in self.allSightings:
@@ -87,10 +113,13 @@ class Observer():
 
         return self.visibleSightings
 
+    def applyBiasDataframe(self):
+        self.dataframe['visible'] = self.dataframe.apply(self.biasFunction, axis = 1)
+
     def analyzeSightings(self):
-        self.applyBias()
-        self.createHistograms()
-        self.saveHistograms()
+        self.applyBiasDataframe()
+#        self.createHistograms()
+#        self.saveHistograms()
         self.kde()
 
     @classmethod
@@ -169,25 +198,44 @@ class Observer():
 
         return self.histograms
 
-    def kde(self):
-        log.info("Creating Kernel Density Estimates for observer {name}, {count} sightings to process".format(
+    def histograms(self):
+        log.info("Creating histograms for observer {name}, {count} sightings to process".format(
             name        = c.name(self.id),
             count       = c.num(len(self.visibleSightings)),
         ))
 
-        stats = {}
         for stat, prop in self.histogramSettings.items():
-            stats[stat] = [getattr(sighting.asPoint(), stat) for sighting in self.visibleSightings]
-            kernel = scipy.stats.gaussian_kde(stats[stat])
+            pass
 
-            figure = pp.figure(figsize = (5, 4), dpi = 300)
-            axes = figure.add_subplot(111)
+    def kde(self):
+        log.info("Creating KDEs for observer {name}, {count} sightings to process".format(
+            name        = c.name(self.id),
+            count       = c.num(len(self.visibleSightings)),
+        ))
+        self.dataset.create('histograms', self.id, exist_ok = True)
 
-            count = prop.bin * 10
-            density = (prop.max - prop.min) / prop.bin * 10
-            space = np.linspace(prop.min, prop.max, density)
-            axes.plot(space, np.cumsum(kernel.evaluate(space)) * count)
-            pp.savefig(self.dataset.path('histograms', self.id, '{}-kde.png'.format(stat)))
+        print(self.dataframe[self.dataframe['visible']])
+        stats = {}
+        for stat, prop in self.histogramSettings.items():       
+#            data = [getattr(sighting.asPoint(), stat) for sighting in self.visibleSightings]
+            kernel = scipy.stats.gaussian_kde(self.dataframe[self.dataframe['visible']][stat])
+
+            density = prop.bin / 10
+            count = (prop.max - prop.min) / density
+            space = np.linspace(prop.min, prop.max, count)
+
+            
+            figure = pp.figure(figsize = (8, 4), dpi = 300)
+            sub = figure.add_subplot(111)
+
+            pdf = kernel.evaluate(space)
+            cdf = np.cumsum(pdf) * density
+
+            sub.fill_between(space, 0, pdf, alpha = 0.5)
+            sub.grid(linewidth = 0.2, linestyle = ':')
+            sub.plot(space, cdf)
+
+            pp.savefig(self.dataset.path('histograms', self.id, '{}-kde.png'.format(stat)), bbox_inches = 'tight')
 
     def saveHistograms(self):
         # amos        = asmodeus.createAmosHistograms('amos.tsv')

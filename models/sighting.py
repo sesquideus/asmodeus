@@ -81,14 +81,32 @@ class Sighting():
         )
 
 class PointSighting():
+    columns = [
+        'id',
+        'timestamp',
+        'altitude',
+        'azimuth',
+        'distance',
+        'elevation',
+        'speed',
+        'angSpeed',
+        'initMass',
+        'lumPower',
+        'fluxDensity',
+        'absMag',
+        'appMag',
+    ]
+
+
     def __init__(self, sighting):
         self.id                 = sighting.id
         self.timestamp          = sighting.brightest.frame.timestamp
         self.altitude           = sighting.brightest.altAz.latitude()
         self.azimuth            = sighting.brightest.altAz.longitude()
         self.distance           = sighting.brightest.altAz.norm()
-        self.elevation          = sighting.brightest.frame.position.elevation()
-        self.speed              = sighting.brightest.frame.speed
+        self.position           = sighting.brightest.frame.position
+        self.velocity           = sighting.brightest.frame.velocity
+        self.velocityInf        = sighting.first.frame.velocity
         self.angularSpeed       = sighting.brightest.angularSpeed
         self.initialMass        = sighting.first.frame.mass
         self.mass               = sighting.brightest.frame.mass
@@ -108,13 +126,17 @@ class PointSighting():
             "{elevation:7.0f}\t" \
             "{speed:6.0f}\t" \
             "{angularSpeed:7.3f}\t" \
-            "{initialMass:12.6e}\t{luminousPower:9.3e}\t{fluxDensity:9.3e}\t{absMag:6.2f}\t{appMag:6.2f}".format(
+            "{initialMass:12.6e}\t" \
+            "{luminousPower:9.3e}\t" \
+            "{fluxDensity:9.3e}\t" \
+            "{absMag:6.2f}\t" \
+            "{appMag:6.2f}".format(
                 timestamp           = self.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
                 altitude            = self.altitude,
                 azimuth             = self.azimuth,
                 distance            = self.distance,
-                elevation           = self.elevation,
-                speed               = self.speed,
+                elevation           = self.position.elevation(),
+                speed               = self.velocity.norm(),
                 angularSpeed        = self.angularSpeed,
                 initialMass         = self.initialMass,
                 luminousPower       = self.luminousPower,
@@ -122,6 +144,23 @@ class PointSighting():
                 absMag              = self.absoluteMagnitude,
                 appMag              = self.apparentMagnitude,
             )
+
+    def asDict(self):
+        return {
+            'id':           self.id,
+            'timestamp':    self.timestamp,
+            'altitude':     self.altitude,
+            'azimuth':      self.azimuth,
+            'distance':     self.distance,
+            'elevation':    self.position.elevation(),
+            'speed':        self.velocity.norm(),
+            'angSpeed':     self.angularSpeed,
+            'initMass':     self.initialMass,
+            'lumPower':     self.luminousPower,
+            'fluxDensity':  self.fluxDensity,
+            'absMag':       self.absoluteMagnitude,
+            'appMag':       self.apparentMagnitude,
+        }
 
     def applyBias(self, *discriminators):
         self.sighted            = all(map(lambda dis: dis.apply(self), discriminators))
