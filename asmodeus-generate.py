@@ -59,10 +59,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.densityDistribution    = DensityDistribution.fromConfig(meteors.material.density).logInfo()
             self.temporalDistribution   = TimeDistribution.fromConfig(meteors.time).logInfo()
         
-            log.info("Output will be written to dataset {ds} ({dsdir})".format(
-                ds              = c.name(self.dataset.name),
-                dsdir           = c.path(self.dataset.root()),
-            ))
+            log.info(f"Output will be written to dataset {c.name(self.dataset.name)} ({c.path(self.dataset.root())})")
 
         except AttributeError:
             raise exceptions.ConfigurationError()
@@ -75,12 +72,10 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         self.finalize()
 
     def generate(self):
-        log.info("Generating {num} meteoroids using {proc} processes at {fps} frames per second, with {spf} steps per frame".format(
-            num             = c.num(self.config.meteors.count),
-            proc            = c.num(self.config.mp.processes),
-            fps             = c.num(self.config.meteors.integrator.fps),
-            spf             = c.num(self.config.meteors.integrator.spf),
-        ))
+        log.info(f"Generating {c.num(self.config.meteors.count)} meteoroids "
+            f"using {c.num(self.config.mp.processes)} processes "
+            f"at {c.num(self.config.meteors.integrator.fps)} frames per second, "
+            f"with {c.num(self.config.meteors.integrator.spf)} steps per frame")
 
         self.meteors = [meteor for meteor in [self.createMeteor() for _ in range(0, self.config.meteors.count)] if meteor is not None]
         log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass}".format(

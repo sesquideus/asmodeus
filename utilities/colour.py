@@ -13,6 +13,10 @@ def num(what):
     return colour(what, Fore.CYAN)
 
 
+def act(what):
+    return colour(what, Fore.YELLOW)
+
+
 def warn(what):
     return colour(what, Fore.YELLOW)
 
