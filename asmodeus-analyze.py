@@ -8,9 +8,7 @@ from utilities          import colour as c
 
 
 class AsmodeusAnalyze(asmodeus.Asmodeus):
-    def __init__(self):
-        self.name = 'analyze'
-        super().__init__()
+    name = 'analyze'
 
     def createArgparser(self):
         super().createArgparser()
@@ -18,7 +16,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
 
     def overrideConfig(self):
         super().overrideConfig()
-        if (self.args.sky_plots):
+        if self.args.sky_plots:
             self.overrideWarning('sky plots', self.config.plot.sky.enabled, self.args.sky_plots)
             self.config.plot.sky.enable = True
 
@@ -72,7 +70,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
             observer.plotSkyPlot(self.config)
 
     def finalize(self):
-        log.info("Finished in {:.6f} seconds".format(self.runTime()))
+        log.info(f"Finished in {self.runTime():.6f} seconds")
 
 
 if __name__ == "__main__":

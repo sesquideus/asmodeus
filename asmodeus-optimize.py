@@ -20,9 +20,7 @@ from models.sighting import Sighting
 
 
 class AsmodeusOptimize(asmodeus.Asmodeus):
-    def __init__(self):
-        self.name = 'optimize'
-        super().__init__()
+    name = 'optimize'
     
     def createArgparser(self):
         super().createArgparser()
@@ -30,7 +28,7 @@ class AsmodeusOptimize(asmodeus.Asmodeus):
 
     def overrideConfig(self):
         super().overrideConfig()
-        if (self.args.compare):
+        if self.args.compare:
             self.overrideWarning('compare', self.config.optimize.compare, self.args.compare)
             self.config.optimize.compare = True
 

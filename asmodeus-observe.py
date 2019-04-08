@@ -20,9 +20,7 @@ from models.sighting import Sighting
 
 
 class AsmodeusObserve(asmodeus.Asmodeus):
-    def __init__(self):
-        self.name = 'observe'
-        super().__init__()
+    name = 'observe'
     
     def createArgparser(self):
         super().createArgparser()
@@ -30,7 +28,7 @@ class AsmodeusObserve(asmodeus.Asmodeus):
 
     def overrideConfig(self):
         super().overrideConfig()
-        if (self.args.streaks):
+        if self.args.streaks:
             self.overrideWarning('streaks', self.config.observations.streaks, self.args.streaks)
             self.config.observations.streaks = True
 

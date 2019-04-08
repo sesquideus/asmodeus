@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
     Asmodeus, script 1: generate
+
     Generates a set of meteoroids and simulates their atmospheric entry.
     Requires: nothing
     Outputs: meteors
@@ -28,9 +29,7 @@ from models.meteor  import Meteor
 
 
 class AsmodeusGenerate(asmodeus.Asmodeus):
-    def __init__(self):
-        self.name = 'generate'
-        super().__init__()
+    name = 'generate'
 
     def createArgparser(self):
         super().createArgparser()
@@ -38,7 +37,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
 
     def overrideConfig(self):
         super().overrideConfig()
-        if (self.args.count):
+        if self.args.count:
             self.overrideWarning('count', self.config.meteors.count, self.args.count)
             self.config.meteors.count = self.args.count
 
