@@ -2,6 +2,7 @@ import yaml
 import dotmap
 import logging
 
+from core import exceptions
 from utilities import colour as c
 
 log = logging.getLogger('root')
@@ -9,9 +10,11 @@ log = logging.getLogger('root')
 
 def load(configFile):
     try:
-        config = yaml.load(configFile)
+        config = yaml.safe_load(configFile)
     except FileNotFoundError as e:
         log.error("Could not load configuration file {}: {}".format(configFile, e))
+        raise exceptions.CommandLineError()
+
     return dotmap.DotMap(config, _dynamic = False)
 
 

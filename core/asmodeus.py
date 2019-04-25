@@ -15,10 +15,10 @@ log = logging.getLogger('root')
 
 class Asmodeus():
     def __init__(self):
+        self.ok = True
         log.info("Initializing {}".format(c.script("asmodeus-{}".format(self.name))))
         self.createArgparser()
         self.args = self.argparser.parse_args()
-        self.ok = True
 
         try:
             self.config = configuration.load(self.args.config)
@@ -26,12 +26,16 @@ class Asmodeus():
 
             self.dataset = dataset.Dataset(os.path.splitext(os.path.basename(self.args.config.name))[0], self.config.observations.observers)
             self.configure()
+        except exceptions.CommandLineError as e:
+            log.critical("Incorrect command line arguments")
+            self.ok = False
+            sys.exit(-1)
         except exceptions.ConfigurationError as e:
-            log.critical("Configuration error \"{}\", terminating".format(e))
+            log.critical(f"Configuration error \"{e}\", terminating")
             self.ok = False
             sys.exit(-1)
         except exceptions.OverwriteError as e:
-            log.critical("Target directory {} already exists, terminating (use --overwrite)".format(e))
+            log.critical(f"Target directory {e} already exists, terminating (use --overwrite)")
             self.ok = False
             sys.exit(-1)
         except exceptions.PrerequisiteError:
@@ -41,7 +45,9 @@ class Asmodeus():
 
     def __del__(self):
         if self.ok:
-            log.info("{} finished successfully".format(c.script("asmodeus-{}".format(self.name))))
+            log.info("{} finished successfully".format(c.script(f"asmodeus-{self.name}")))
+        else:
+            log.critical("{} aborted".format(c.script(f"asmodeus-{self.name}")))
         log.info("-" * 50)
 
     def createArgparser(self):
@@ -56,17 +62,17 @@ class Asmodeus():
     def overrideConfig(self):
         log.setLevel(logging.DEBUG if self.args.debug else logging.INFO)
         if self.args.debug:
-            log.warning("Debug output is {}".format(c.over('active')))
+            log.warning(f"Debug output is {c.over('active')}")
 
         if self.args.overwrite:
-            log.warning("Dataset overwrite {}".format(c.over('enabled')))
+            log.warning(f"Dataset overwrite {c.over('enabled')}")
             self.config.overwrite = True
         else:
             self.config.overwrite = False
 
         if self.args.logfile:
             log.addHandler(logging.FileHandler(self.args.logfile.name))
-            log.warning("Added log output {}".format(c.over(self.args.logfile.name)))
+            log.warning(f"Added log output {c.over(self.args.logfile.name)}")
 
         if self.args.processes:
             self.overrideWarning('process count', self.config.mp.processes, self.args.processes)
@@ -87,16 +93,16 @@ class Asmodeus():
         for oid, obs in self.config.observations.observers.items():
             self.observers.append(Observer(oid, self.dataset, self.config.statistics.histograms, **obs.toDict()))
 
-        log.info("Loaded {} observer{}:".format(len(self.observers), 's' if len(self.observers) > 1 else ''))
+        log.info("Loaded {count} observer{s}:".format(
+            count   = len(self.observers),
+            s       = 's' if len(self.observers) > 1 else ''
+        ))
+
         for o in self.observers:
             log.info("    {}".format(o))
 
     def overrideWarning(self, parameter, old, new):
-        log.warning("Overriding {parameter} ({old} -> {new})".format(
-            parameter   = c.param(parameter),
-            old         = c.over(old),
-            new         = c.over(new),
-        ))
+        log.warning(f"Overriding {c.param(parameter)} ({c.over(old)} -> {c.over(new)})")
 
     def parallel(self, function, args, *, action, period = 1):
         pool = mp.Pool(processes = self.config.mp.processes)
@@ -112,9 +118,9 @@ class Asmodeus():
             else:
                 log.info("{action}: {count} of {total} ({perc})".format(
                     action      = action,
-                    count       = c.num("{:6d}".format(queue.qsize())),
-                    total       = c.num("{:6d}".format(total)),
-                    perc        = c.num("{:5.2f}%".format(queue.qsize() / total * 100)),
+                    count       = c.num(f"{queue.qsize():6d}"),
+                    total       = c.num(f"{total:6d}"),
+                    perc        = c.num(f"{queue.qsize() / total * 100:5.2f}%"),
                 ))
                 time.sleep(period)
 

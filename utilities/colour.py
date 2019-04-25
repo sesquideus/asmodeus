@@ -2,7 +2,7 @@ from colorama import Fore, Style
 
 
 def colour(what, how):
-    return "{}{}{}".format(how, what, Style.RESET_ALL)
+    return f"{how}{what}{Style.RESET_ALL}"
 
 
 def ok(what):

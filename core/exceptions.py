@@ -6,3 +6,6 @@ class OverwriteError(Exception):
 
 class PrerequisiteError(Exception):
     pass
+
+class CommandLineError(Exception):
+    pass
