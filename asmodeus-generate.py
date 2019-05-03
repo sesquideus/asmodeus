@@ -15,8 +15,8 @@ import yaml
 import numba
 import datetime
 
-from core           import asmodeus, logger, exceptions
-from physics        import coord
+from core                   import asmodeus, logger, exceptions
+from physics                import coord
 
 from distribution.position  import PositionDistribution
 from distribution.velocity  import VelocityDistribution
@@ -24,8 +24,8 @@ from distribution.mass      import MassDistribution
 from distribution.density   import DensityDistribution
 from distribution.time      import TimeDistribution
 
-from utilities      import colour as c
-from models.meteor  import Meteor
+from utilities              import colour as c
+from models.meteor          import Meteor
 
 
 class AsmodeusGenerate(asmodeus.Asmodeus):
