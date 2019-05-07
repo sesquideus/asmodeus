@@ -8,12 +8,14 @@ log = logging.getLogger('root')
 
 
 class TimeDistribution(base.Distribution):
+    quantity = 'temporal'
+
     def __init__(self, name, **kwargs):
-        self.quantity = 'temporal'
         self.functions = {
-            'uniform':      self.uniform,
+            'uniform':      self.__class__.uniform,
         }
         super().__init__(name, **kwargs)
 
-    def uniform(self, *, begin, end):
+    @classmethod
+    def uniform(cls, *, begin, end):
         return lambda: begin + datetime.timedelta(seconds = random.uniform(0, (end - begin).total_seconds()))

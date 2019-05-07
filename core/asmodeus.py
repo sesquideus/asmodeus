@@ -15,7 +15,7 @@ log = logging.getLogger('root')
 
 class Asmodeus():
     def __init__(self):
-        self.ok = True
+        self.ok = False
         log.info("Initializing {}".format(c.script("asmodeus-{}".format(self.name))))
         self.createArgparser()
         self.args = self.argparser.parse_args()
@@ -28,19 +28,15 @@ class Asmodeus():
             self.configure()
         except exceptions.CommandLineError as e:
             log.critical("Incorrect command line arguments")
-            self.ok = False
             sys.exit(-1)
         except exceptions.ConfigurationError as e:
             log.critical(f"Configuration error \"{e}\", terminating")
-            self.ok = False
             sys.exit(-1)
         except exceptions.OverwriteError as e:
             log.critical(f"Target directory {e} already exists, terminating (use --overwrite)")
-            self.ok = False
             sys.exit(-1)
         except exceptions.PrerequisiteError:
             log.critical("Missing prerequisites, aborting")
-            self.ok = False
             sys.exit(-1)
 
     def __del__(self):
@@ -110,7 +106,7 @@ class Asmodeus():
         queue = manager.Queue()
         total = len(args)
 
-        results = pool.map_async(function, [(queue,) + x for x in args], 20)
+        results = pool.map_async(function, [(queue, *x) for x in args], 20)
         
         while True:
             if results.ready():

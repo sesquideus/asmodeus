@@ -92,7 +92,6 @@ class Observer():
 
     def setDiscriminators(self, discriminators):
         self.discriminators = discriminators
-        print(self.discriminators)
 
         def bf(row):
             return all([self.discriminators[0].compute(row['appMag']), self.discriminators[1].compute(row['altitude']), self.discriminators[2].compute(row['angSpeed'])])
@@ -214,7 +213,7 @@ class Observer():
         ))
         self.dataset.create('histograms', self.id, exist_ok = True)
 
-        print(self.dataframe[self.dataframe['visible']])
+        #print(self.dataframe[self.dataframe['visible']])
         stats = {}
         for stat, prop in self.histogramSettings.items():       
 #            data = [getattr(sighting.asPoint(), stat) for sighting in self.visibleSightings]
@@ -233,9 +232,11 @@ class Observer():
 
             sub.fill_between(space, 0, pdf, alpha = 0.5)
             sub.grid(linewidth = 0.2, linestyle = ':')
-            sub.plot(space, cdf)
+            #sub.plot(space, cdf)
 
             pp.savefig(self.dataset.path('histograms', self.id, '{}-kde.png'.format(stat)), bbox_inches = 'tight')
+
+            log.info(f"Created a KDE for {c.param(stat)}")
 
     def saveHistograms(self):
         # amos        = asmodeus.createAmosHistograms('amos.tsv')
@@ -251,14 +252,6 @@ class Observer():
 
 
         #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
-
-    def plotHistograms(self):
-        self.histogram
-
-        fig = pp.bar(
-            self.histogram.keys
-        )
-
 
     def minimize(self, settings):
         log.info("Employing {method} method, {rep} evaluation repetition{s}".format(

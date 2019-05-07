@@ -58,13 +58,12 @@ class AsmodeusObserve(asmodeus.Asmodeus):
 
     def observe(self):
         self.markTime()
-        log.info("Calculating observations...")
         pool        = mp.Pool(processes = self.config.mp.processes)
         manager     = mp.Manager()
         queue       = manager.Queue()
         meteorFiles = self.dataset.list('meteors')
 
-        args = [(
+        argList = [(
             queue,
             observer,
             self.dataset.path('meteors', meteorFile),
@@ -72,20 +71,18 @@ class AsmodeusObserve(asmodeus.Asmodeus):
             self.dataset.path('sightings', observer.id, meteorFile),
             self.config.observations.streaks,
         ) for meteorFile in meteorFiles for observer in self.observers]
-        total = len(args)
+        total = len(argList)
+        log.info(f"Calculating {c.num(total)} observations using {c.num(self.config.mp.processes)} processes")
 
-        results = pool.map_async(observeMeteor, args)
+        results = pool.map_async(observeMeteor, argList, 50)
         
-        while True:
-            if results.ready():
-                break
-            else:
-                log.info("Calculating observations: {count} of {total} ({perc})".format(
-                    count       = c.num("{:6d}".format(queue.qsize())),
-                    total       = c.num("{:6d}".format(total)),
-                    perc        = c.num("{:5.2f}%".format(queue.qsize() / total * 100)),
-                ))
-                time.sleep(1)
+        while not results.ready():
+            log.info("Calculating observations: {count} of {total} ({perc})".format(
+                count       = c.num("{:6d}".format(queue.qsize())),
+                total       = c.num("{:6d}".format(total)),
+                perc        = c.num("{:5.2f}%".format(100 * queue.qsize() / total)),
+            ))
+            time.sleep(1)
 
         out = results.get()
         self.count = len(out)
@@ -100,6 +97,7 @@ class AsmodeusObserve(asmodeus.Asmodeus):
             target  = c.over('streaks' if self.config.observations.streaks else 'points'),
             dir     = c.path(self.dataset.path('sightings')),
         ))
+        self.ok = True
         
 
 def observeMeteor(args):

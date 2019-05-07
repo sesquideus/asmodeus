@@ -60,8 +60,8 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
         
             log.info(f"Output will be written to dataset {c.name(self.dataset.name)} ({c.path(self.dataset.root())})")
 
-        except AttributeError:
-            raise exceptions.ConfigurationError()
+        except AttributeError as e:
+            raise exceptions.ConfigurationError(e)
 
         return self
 
@@ -133,10 +133,11 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
 
         log.info("{num} meteors were generated in {time} seconds ({rate} meteors per second) and saved to {dir}".format(
             num     = c.num(len(self.meteors)),
-            time    = c.num("{:.6f}".format(self.runTime())),
-            rate    = c.num("{:.3f}".format(len(self.meteors) / self.runTime())),
+            time    = c.num(f"{self.runTime():.6f}"),
+            rate    = c.num(f"{len(self.meteors) / self.runTime():.3f}"),
             dir     = c.path(self.dataset.path('meteors')),
         ))
+        self.ok = True
 
 
 def simulate(args):

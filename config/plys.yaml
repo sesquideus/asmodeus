@@ -52,19 +52,26 @@ observations:
             longitude:          19.8575
             altitude:           692
 
-bias:
-    magnitude:
-        discriminator:          'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
-        parameters:
-            limit:              0.5                         # Limiting magnitude m0
-            width:              0.35                        # Width of the function
-    angularSpeed:
-        discriminator:          'all'                       # Angular speed detection efficiency profile, possible values 'flat' or 'linear'
-        parameters:
+biasFunctions:
+    magnitude:   
+        sigmoid: &sigmoid
+            discriminator:      'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
+            parameters:                        
+                limit:          0.5                         # Limiting magnitude m0
+                width:          0.35                        # Width of the function
+        all: &all
+            discriminator:      'all'                       # Angular speed detection efficiency profile, possible values 'flat' or 'linear'
+            parameters:
     altitude:
-        discriminator:          'sinexp'                       # Altitude detection efficiency profile, possible values 'step' or 'linear' or 'sinexp'
-        parameters:
-            exponent:           0.0                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
+        sinexp: &sinexp
+            discriminator:      'sinexp'                    # Altitude detection efficiency profile, possible values 'step' or 'linear' or 'sinexp'
+            parameters:
+                exponent:       0.0                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
+
+bias:
+    magnitude: *all
+    angularSpeed: *all
+    altitude: *all
 
 plot:
     sky:

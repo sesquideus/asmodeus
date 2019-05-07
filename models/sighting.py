@@ -97,7 +97,6 @@ class PointSighting():
         'appMag',
     ]
 
-
     def __init__(self, sighting):
         self.id                 = sighting.id
         self.timestamp          = sighting.brightest.frame.timestamp

@@ -9,8 +9,8 @@ log = logging.getLogger('root')
 
 class Discriminator():
     """
-    A discriminator is a function (sighting -> boolean), representing
-    a stochastic process that decides whether a certain sighting will or will not be recorded by the device
+    A discriminator is a function (sighting.<parameter> -> boolean), representing
+    a stochastic process that decides whether a certain sighting will or will not be recorded by the device.
     """
     def __init__(self, name, **kwargs):
         self.name   = name
@@ -53,14 +53,14 @@ class Discriminator():
         log.info("    {quantity} discriminator is {name}{params}".format(
             quantity    = c.param(self.property.capitalize()),
             name        = c.name(self.name),
-            params      = "" if self.params is None else " ({})".format(util.formatParameters(self.params)),
+            params      = "" if self.params is None else f" ({util.formatParameters(self.params)})",
         ))
         return self
 
     def warningDefault(self, name):
-        log.warning("No {} discriminator defined, defaulting to {}".format(self.property, self.default))
+        log.warning(f"No {self.property} discriminator defined, defaulting to {self.default}")
         return self
 
     def errorUnknown(self, name):
-        log.error(c.err("Unknown {} distribution \"{}\"".format(self.property, name)))
+        log.error(c.err("Unknown {self.property} distribution \"{name}\""))
         return self

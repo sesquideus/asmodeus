@@ -52,6 +52,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
     def run(self):
         self.analyze()
         self.plotSky()
+        self.finalize()
 
     def analyze(self):
         self.markTime()
@@ -71,6 +72,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
 
     def finalize(self):
         log.info(f"Finished in {self.runTime():.6f} seconds")
+        self.ok = True
 
 
 if __name__ == "__main__":
