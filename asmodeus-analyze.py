@@ -3,7 +3,7 @@
 import sys
 
 from core               import asmodeus, logger, exceptions
-from discriminator      import magnitude, altitude, angularSpeed
+from discriminator      import MagnitudeDiscriminator, AltitudeDiscriminator, AngularSpeedDiscriminator
 from utilities          import colour as c
 
 
@@ -36,14 +36,14 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
 
         try:
             bias = self.config.bias
-            self.discriminators = [
-                magnitude.MagnitudeDiscriminator.fromConfig(bias.magnitude),
-                altitude.AltitudeDiscriminator.fromConfig(bias.altitude),
-                angularSpeed.AngularSpeedDiscriminator.fromConfig(bias.angularSpeed),
-            ]
+            self.discriminators = {
+                'appMag':       MagnitudeDiscriminator.fromConfig(bias.magnitude),
+                'altitude':     AltitudeDiscriminator.fromConfig(bias.altitude),
+                'angSpeed':     AngularSpeedDiscriminator.fromConfig(bias.angularSpeed),
+            }
 
-            log.info("Discriminators loaded:")
-            for disc in self.discriminators:
+            log.info(f"Loaded {c.num(len(self.discriminators))} discriminators:")
+            for disc in self.discriminators.values():
                 disc.logInfo()
 
         except AttributeError as e:

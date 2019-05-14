@@ -13,9 +13,4 @@ class Frame:
         self.mass               = meteor.mass
 
     def __str__(self):
-        return "<MeteorFrame: {altaz}, {velocity} m/s, {speed:6.0f}, {lp} W>".format(
-            altaz               = self.position,
-            velocity            = self.velocity,
-            speed               = self.velocity.norm(),
-            lp                  = self.luminousPower,
-        )
+        return f"<MeteorFrame: {self.position}, {self.velocity:.0f} m/s, {self.velocity.norm():6.0f}, {self.luminousPower:e} W>"

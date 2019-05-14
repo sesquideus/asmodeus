@@ -12,7 +12,8 @@ import time
 import random
 import sys
 import yaml
-import numba
+import io
+import pickle
 import datetime
 
 from core                   import asmodeus, logger, exceptions
@@ -122,8 +123,8 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.dataset.name
         ) for meteor in self.meteors]
         
-        result = self.parallel(simulate, args, action = "Simulating meteors")
-        self.count = len(result)
+        self.meteors = self.parallel(simulate, args, action = "Simulating meteors")
+        self.count = len(self.meteors)
 
     def finalize(self):
         yaml.dump({
@@ -145,7 +146,6 @@ def simulate(args):
     queue.put(1)
     meteor.flyRK4(fps, spf)
     meteor.save(dataset)
-
 
 if __name__ == "__main__":
     log = logger.setupLog('root')

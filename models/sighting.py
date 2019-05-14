@@ -17,13 +17,11 @@ class Sighting():
 
         self.timestamp          = self.meteor.timestamp
         self.id                 = "{}{}".format(self.observer.id, self.timestamp)
-        self.frames             = []
-        self.firstFrame         = None
-        self.brightestFrame     = None
-        self.lastFrame          = None
         self.sighted            = None
 
         self.frames = [SightingFrame(self.observer, meteorFrame) for meteorFrame in self.meteor.frames]
+
+        log.debug(self.frames)
     
         self.first          = self.frames[0]
         self.last           = self.frames[-1]
@@ -82,7 +80,6 @@ class Sighting():
 
 class PointSighting():
     columns = [
-        'id',
         'timestamp',
         'altitude',
         'azimuth',

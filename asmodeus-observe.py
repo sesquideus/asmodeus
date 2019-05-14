@@ -58,13 +58,9 @@ class AsmodeusObserve(asmodeus.Asmodeus):
 
     def observe(self):
         self.markTime()
-        pool        = mp.Pool(processes = self.config.mp.processes)
-        manager     = mp.Manager()
-        queue       = manager.Queue()
         meteorFiles = self.dataset.list('meteors')
 
         argList = [(
-            queue,
             observer,
             self.dataset.path('meteors', meteorFile),
             self.config.observations.minAltitude,
@@ -72,20 +68,11 @@ class AsmodeusObserve(asmodeus.Asmodeus):
             self.config.observations.streaks,
         ) for meteorFile in meteorFiles for observer in self.observers]
         total = len(argList)
+
         log.info(f"Calculating {c.num(total)} observations using {c.num(self.config.mp.processes)} processes")
 
-        results = pool.map_async(observeMeteor, argList, 50)
-        
-        while not results.ready():
-            log.info("Calculating observations: {count} of {total} ({perc})".format(
-                count       = c.num("{:6d}".format(queue.qsize())),
-                total       = c.num("{:6d}".format(total)),
-                perc        = c.num("{:5.2f}%".format(100 * queue.qsize() / total)),
-            ))
-            time.sleep(1)
-
-        out = results.get()
-        self.count = len(out)
+        self.sightings = self.parallel(observe, argList, action = "Observing meteors")
+        self.count = len(self.sightings)
 
     def finalize(self):
         log.info("{num} observations were processed in {time} seconds ({rate} sightings per second)".format(
@@ -100,7 +87,7 @@ class AsmodeusObserve(asmodeus.Asmodeus):
         self.ok = True
         
 
-def observeMeteor(args):
+def observe(args):
     queue, observer, filename, minAlt, out, streaks = args
 
     queue.put(1)

@@ -100,7 +100,7 @@ class Asmodeus():
     def overrideWarning(self, parameter, old, new):
         log.warning(f"Overriding {c.param(parameter)} ({c.over(old)} -> {c.over(new)})")
 
-    def parallel(self, function, args, *, action, period = 1):
+    def parallel(self, function, args, *, action = "<default action>", period = 1):
         pool = mp.Pool(processes = self.config.mp.processes)
         manager = mp.Manager()
         queue = manager.Queue()
@@ -108,17 +108,14 @@ class Asmodeus():
 
         results = pool.map_async(function, [(queue, *x) for x in args], 20)
         
-        while True:
-            if results.ready():
-                break
-            else:
-                log.info("{action}: {count} of {total} ({perc})".format(
-                    action      = action,
-                    count       = c.num(f"{queue.qsize():6d}"),
-                    total       = c.num(f"{total:6d}"),
-                    perc        = c.num(f"{queue.qsize() / total * 100:5.2f}%"),
-                ))
-                time.sleep(period)
+        while not results.ready():
+            log.info("{action}: {count} of {total} ({perc})".format(
+                action      = action,
+                count       = c.num(f"{queue.qsize():6d}"),
+                total       = c.num(f"{total:6d}"),
+                perc        = c.num(f"{queue.qsize() / total * 100:5.2f}%"),
+            ))
+            time.sleep(period)
 
         return results.get()
 

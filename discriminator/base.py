@@ -46,6 +46,7 @@ class Discriminator():
     def all(self, **kwargs) -> (lambda float: float):
         return lambda _: 1
 
+    @classmethod
     def default(self, **kwargs):
         raise KeyError("No default discriminator defined for {}".format(self.property))
 
@@ -53,12 +54,12 @@ class Discriminator():
         log.info("    {quantity} discriminator is {name}{params}".format(
             quantity    = c.param(self.property.capitalize()),
             name        = c.name(self.name),
-            params      = "" if self.params is None else f" ({util.formatParameters(self.params)})",
+            params      = f" ({util.formatParameters(self.params)})" if self.params else "",
         ))
         return self
 
     def warningDefault(self, name):
-        log.warning(f"No {self.property} discriminator defined, defaulting to {self.default}")
+        log.warning(f"No {c.name(self.property)} discriminator defined, defaulting to {c.name(self.default)}")
         return self
 
     def errorUnknown(self, name):

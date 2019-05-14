@@ -7,7 +7,9 @@ import math
 import numpy as np
 import scipy.stats
 import pandas as pd
-import matplotlib.pyplot as pp
+import matplotlib.pyplot as plt
+
+from pprint import pprint as pp
 
 from core                       import histogram
 from physics                    import coord
@@ -79,24 +81,26 @@ class Observer():
 
 
     def loadSightingsDataFrame(self):
+        log.info("Creating a pandas dataframe")
+
         dicts = {}
         for sf in os.listdir(self.dataset.path('sightings', self.id)):
             sighting = Sighting.load(self.dataset.path('sightings', self.id, sf))
             dicts[sighting.id] = sighting.asDict()
 
+        log.info(f"Loaded {c.num(len(dicts))} sightings")
+
         self.dataframe = pd.DataFrame.from_dict(
             dicts,
             orient = 'index',
-            columns = PointSighting.columns
+            columns = PointSighting.columns,
         )
+
+        log.info(f"Dataframe loaded ({c.num(len(self.dataframe.index))} rows)")
 
     def setDiscriminators(self, discriminators):
         self.discriminators = discriminators
-
-        def bf(row):
-            return all([self.discriminators[0].compute(row['appMag']), self.discriminators[1].compute(row['altitude']), self.discriminators[2].compute(row['angSpeed'])])
-
-        self.biasFunction = bf
+        self.biasFunction = lambda row: all([disc.compute(row[prop]) for prop, disc in self.discriminators.items()])
 
     def applyBias(self):
         for sighting in self.allSightings:
@@ -153,7 +157,7 @@ class Observer():
         colours     = np.array([math.log10(sighting.luminousPower) if sighting.luminousPower > 1e-12 else -12 for sighting in dots])
         sizes       = np.array([0.01 * (math.log10(sighting.fluxDensity * 1e12 + 1))**4 for sighting in dots])
 
-        fig = pp.figure(figsize = (5, 5), dpi = 300, facecolor  = 'black')
+        fig = plt.figure(figsize = (5, 5), dpi = 300, facecolor  = 'black')
         ax = fig.add_subplot(111, projection = 'polar')
         cx = ax.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'hot', alpha = 1, linewidths = 0)
                
@@ -165,7 +169,7 @@ class Observer():
         ax.axes.yaxis.set_ticklabels([])
         ax.axes.yaxis.set_ticks(np.linspace(0, 90, 7))
         ax.grid(linewidth = 0.1, color = 'white')
-        pp.savefig(
+        plt.savefig(
             self.dataset.path('plots', self.id, 'sky.png'),
             bbox_inches = 'tight',
             facecolor = 'black',
@@ -209,22 +213,26 @@ class Observer():
     def kde(self):
         log.info("Creating KDEs for observer {name}, {count} sightings to process".format(
             name        = c.name(self.id),
-            count       = c.num(len(self.visibleSightings)),
+            count       = c.num(len(self.dataframe.index)),
         ))
         self.dataset.create('histograms', self.id, exist_ok = True)
 
-        #print(self.dataframe[self.dataframe['visible']])
+        visible = self.dataframe[self.dataframe.visible]
+
         stats = {}
         for stat, prop in self.histogramSettings.items():       
 #            data = [getattr(sighting.asPoint(), stat) for sighting in self.visibleSightings]
-            kernel = scipy.stats.gaussian_kde(self.dataframe[self.dataframe['visible']][stat])
+            if prop == 'timestamp':
+                kernel = scipy.stats.gaussian_kde(visible[stat])
+            else:
+                kernel = scipy.stats.gaussian_kde(visible[stat])
 
-            density = prop.bin / 10
+            density = prop.bin / 50
             count = (prop.max - prop.min) / density
             space = np.linspace(prop.min, prop.max, count)
 
             
-            figure = pp.figure(figsize = (8, 4), dpi = 300)
+            figure = plt.figure(figsize = (8, 4), dpi = 300)
             sub = figure.add_subplot(111)
 
             pdf = kernel.evaluate(space)
@@ -234,7 +242,7 @@ class Observer():
             sub.grid(linewidth = 0.2, linestyle = ':')
             #sub.plot(space, cdf)
 
-            pp.savefig(self.dataset.path('histograms', self.id, '{}-kde.png'.format(stat)), bbox_inches = 'tight')
+            plt.savefig(self.dataset.path('histograms', self.id, '{}-kde.png'.format(stat)), bbox_inches = 'tight')
 
             log.info(f"Created a KDE for {c.param(stat)}")
 

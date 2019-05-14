@@ -62,7 +62,7 @@ class Meteor:
     def __str__(self):
         return "<Meteor {id} at {position}, velocity {velocity} | " \
             "rho {density:4.0f} kg/m3, Q {ablationHeat:8.0f} J/kg, " \
-            "m {mass:10.6e} kg, r {radius:10.3f} mm>".format(
+            "m {mass:10.6e} kg, r {radius:10.3f} mm, {frames} frames>".format(
                 id              = self.id,
                 position        = self.position,
                 velocity        = self.velocity,
@@ -70,6 +70,7 @@ class Meteor:
                 radius          = self.radius * 1000,
                 density         = self.density,
                 ablationHeat    = self.ablationHeat,
+                frames          = len(self.frames),
             )
 
     def saveHDF5(self, dataset):
@@ -84,9 +85,6 @@ class Meteor:
             jinjaEnv('templates').get_template('meteor.kml').render({'meteor': self}),
             file = open(os.path.join(dataset, 'meteors', '{}.kml'.format(self.id)), 'w')
         )
-
-    def pickle(self):
-        return pickle.dumps(self)
 
     def acceleration(self, state):
         airRho = atmosphere.airDensity(state.position.norm() - constants.earthRadius)
@@ -131,11 +129,10 @@ class Meteor:
 
             if (frame % stepsPerFrame == 0):
                 self.frames.append(models.frame.Frame(self))
-                log.debug("{frame:04d} {time:6.3f} s | "
+                log.debug("{time:6.3f} s | "
                           "{latitude:6.4f} °N, {longitude:6.4f} °E, {elevation:6.0f} m | {density:9.3e} kg/m³ | "
-                          "v {speed:9.3f} m/s, dv {acceleration:13.3f} m/s², τ {lumEff:6.4f} | "
-                          "m {mass:8.4e} kg, dm {ablation:10.4e} kg/s | I {lp:10.3e} W, M {absmag:6.2f}m".format(
-                              frame           = frame,
+                          "v {speed:7.1f} m/s, dv {acceleration:13.3f} m/s², τ {lumEff:6.4f} | "
+                          "m {mass:6.2e} kg, dm {ablation:9.3e} kg/s, r {radius:7.3f} mm | I {lp:10.3e} W, M {absmag:6.2f}m".format(
                               time            = frame * dt,
                               latitude        = self.position.latitude(),
                               longitude       = self.position.longitude(),
@@ -146,6 +143,7 @@ class Meteor:
                               lumEff          = radiometry.luminousEfficiency(self.velocity.norm()),
                               ablation        = dmdt,
                               mass            = self.mass,
+                              radius          = (3 * self.mass / (4 * np.pi * self.density))**(1/3) * 1000,
                               lp              = self.luminousPower,
                               absmag          = radiometry.absoluteMagnitude(self.luminousPower),
                           ))
@@ -181,6 +179,8 @@ class Meteor:
                 log.debug("IMPACT")
                 self.fate = "Crater"
                 break
+
+        log.debug(f"Meteor generated ({len(self.frames)} frames)")
 
     def simulate(self):
         self.flyRK4()
