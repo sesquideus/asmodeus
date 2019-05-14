@@ -3,12 +3,11 @@ import itertools
 import functools
 import os
 import math
-
 import numpy as np
 import scipy.stats
 import pandas as pd
-import matplotlib.pyplot as plt
 
+from matplotlib import pyplot
 from pprint import pprint as pp
 
 from core                       import histogram
@@ -118,11 +117,10 @@ class Observer():
 
     def applyBiasDataframe(self):
         self.dataframe['visible'] = self.dataframe.apply(self.biasFunction, axis = 1)
+        self.visible = self.dataframe[self.dataframe.visible]
 
     def analyzeSightings(self):
         self.applyBiasDataframe()
-#        self.createHistograms()
-#        self.saveHistograms()
         self.kde()
 
     @classmethod
@@ -157,7 +155,7 @@ class Observer():
         colours     = np.array([math.log10(sighting.luminousPower) if sighting.luminousPower > 1e-12 else -12 for sighting in dots])
         sizes       = np.array([0.01 * (math.log10(sighting.fluxDensity * 1e12 + 1))**4 for sighting in dots])
 
-        fig = plt.figure(figsize = (5, 5), dpi = 300, facecolor  = 'black')
+        fig = pyplot.figure(figsize = (5, 5), dpi = 300, facecolor  = 'black')
         ax = fig.add_subplot(111, projection = 'polar')
         cx = ax.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'hot', alpha = 1, linewidths = 0)
                
@@ -169,7 +167,7 @@ class Observer():
         ax.axes.yaxis.set_ticklabels([])
         ax.axes.yaxis.set_ticks(np.linspace(0, 90, 7))
         ax.grid(linewidth = 0.1, color = 'white')
-        plt.savefig(
+        pyplot.savefig(
             self.dataset.path('plots', self.id, 'sky.png'),
             bbox_inches = 'tight',
             facecolor = 'black',
@@ -201,15 +199,6 @@ class Observer():
 
         return self.histograms
 
-    def histograms(self):
-        log.info("Creating histograms for observer {name}, {count} sightings to process".format(
-            name        = c.name(self.id),
-            count       = c.num(len(self.visibleSightings)),
-        ))
-
-        for stat, prop in self.histogramSettings.items():
-            pass
-
     def kde(self):
         log.info("Creating KDEs for observer {name}, {count} sightings to process".format(
             name        = c.name(self.id),
@@ -217,34 +206,34 @@ class Observer():
         ))
         self.dataset.create('histograms', self.id, exist_ok = True)
 
-        visible = self.dataframe[self.dataframe.visible]
+        for stat, params in self.histogramSettings.items():       
+            binCount = (params.max - params.min) // params.bin
+            space = np.linspace(params.min, params.max, binCount + 1)
+            pdf = self.propertyKDE(stat, params).evaluate(space)
 
-        stats = {}
-        for stat, prop in self.histogramSettings.items():       
-#            data = [getattr(sighting.asPoint(), stat) for sighting in self.visibleSightings]
-            if prop == 'timestamp':
-                kernel = scipy.stats.gaussian_kde(visible[stat])
-            else:
-                kernel = scipy.stats.gaussian_kde(visible[stat])
+            hist, edges = self.propertyHistogram(stat, params)
 
-            density = prop.bin / 50
-            count = (prop.max - prop.min) / density
-            space = np.linspace(prop.min, prop.max, count)
-
+            figure, axes = pyplot.subplots()
+            figure.tight_layout(rect = (0, 0, 1, 1))
+            figure.set_size_inches(6, 4)
+            figure.set_dpi(300)
             
-            figure = plt.figure(figsize = (8, 4), dpi = 300)
-            sub = figure.add_subplot(111)
-
-            pdf = kernel.evaluate(space)
-            cdf = np.cumsum(pdf) * density
-
-            sub.fill_between(space, 0, pdf, alpha = 0.5)
-            sub.grid(linewidth = 0.2, linestyle = ':')
-            #sub.plot(space, cdf)
-
-            plt.savefig(self.dataset.path('histograms', self.id, '{}-kde.png'.format(stat)), bbox_inches = 'tight')
+            axes.fill_between(space, 0, pdf, alpha = 0.5)
+            axes.grid(linewidth = 0.2, linestyle = ':')
+            axes.bar(edges, hist, width = params.bin, alpha = 0.5, align = 'edge', color = (1, 0.2, 0, 0.5))
+            figure.savefig(self.dataset.path('histograms', self.id, '{}-kde.png'.format(stat)), bbox_inches = 'tight')
 
             log.info(f"Created a KDE for {c.param(stat)}")
+
+    def propertyKDE(self, stat, params):
+        kernel = scipy.stats.gaussian_kde(self.visible[stat])
+        return kernel        
+
+    def propertyHistogram(self, stat, params):
+        count = (params.max - params.min) // params.bin
+        bins = np.linspace(params.min, params.max, count + 1)
+        hist, edges = np.histogram(self.visible[stat], bins = bins, range = (params.min, params.max), density = True)
+        return hist, edges[:-1]
 
     def saveHistograms(self):
         # amos        = asmodeus.createAmosHistograms('amos.tsv')

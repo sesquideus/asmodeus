@@ -45,7 +45,7 @@ meteors:
 
 observations:
     streaks:                    False
-    minAltitude:                0
+    minAltitude:                15
     observers:
         teplicne:
             latitude:           48.68231
