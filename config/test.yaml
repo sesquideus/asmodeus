@@ -34,8 +34,8 @@ meteors:
     time:
         distribution:           'uniform'
         parameters:
-            begin:              2016-08-12T02:00:00         # Beginning of the interval, ISO8601
-            end:                2016-08-12T02:00:00         # End of the interval, ISO8601
+            begin:              2016-08-12T00:00:00         # Beginning of the interval, ISO8601
+            end:                2016-08-12T00:01:00         # End of the interval, ISO8601
     integrator:                                             
         name:                   'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
         fps:                    20                          # Frames per second
