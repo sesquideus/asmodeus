@@ -208,7 +208,7 @@ class Observer():
 
         for stat, params in self.histogramSettings.items():       
             binCount = (params.max - params.min) // params.bin
-            space = np.linspace(params.min, params.max, binCount + 1)
+            space = np.linspace(params.min, params.max, binCount * 20)
             pdf = self.propertyKDE(stat, params).evaluate(space)
 
             hist, edges = self.propertyHistogram(stat, params)
