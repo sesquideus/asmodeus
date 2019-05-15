@@ -82,17 +82,7 @@ class Meteor:
             jinjaEnv('templates').get_template('meteor.kml').render({'meteor': self}),
             file = open(os.path.join(dataset, 'meteors', '{}.kml'.format(self.id)), 'w')
         )
-
-    def acceleration(self, state):
-        airRho = atmosphere.airDensity(state.position.norm() - constants.earthRadius)
-        speed = state.velocity.norm()
-        return -(self.dragCoefficient * self.shapeFactor * airRho * speed**2 / (state.mass**(1 / 3) * self.density**(2 / 3))) * state.velocity / speed
-
-    def ablation(self, state):
-        airRho = atmosphere.airDensity(state.position.norm() - 6371000)
-        speed = state.velocity.norm()
-        return -(self.heatTransfer * self.shapeFactor * airRho * speed**3 * (state.mass / self.density)**(2 / 3) / (2 * self.ablationHeat))
-
+   
     def evaluate(self, state, diff, dt):
         newState = State(
             state.position + diff.drdt * dt,
@@ -100,10 +90,13 @@ class Meteor:
             max(state.mass + diff.dmdt * dt, 1e-8)
         )
 
+        airRho = atmosphere.airDensity(state.position.norm() - constants.earthRadius)
+        speed = state.velocity.norm()
+
         return Diff(
             newState.velocity,
-            self.acceleration(newState),
-            self.ablation(newState)
+            -(self.dragCoefficient * self.shapeFactor * airRho * speed**2 / (state.mass**(1 / 3) * self.density**(2 / 3))) * state.velocity / speed,
+            -(self.heatTransfer * self.shapeFactor * airRho * speed**3 * (state.mass / self.density)**(2 / 3) / (2 * self.ablationHeat)),
         )
 
     def flyRK4(self, frameRate, stepsPerFrame):
