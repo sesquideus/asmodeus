@@ -9,7 +9,7 @@ import pickle
 
 import models.frame
 
-from physics        import atmosphere, coord, radiometry, constants
+from physics import atmosphere, coord, radiometry, constants
 
 log = logging.getLogger('root')
 
@@ -72,9 +72,6 @@ class Meteor:
                 ablationHeat    = self.ablationHeat,
                 frames          = len(self.frames),
             )
-
-    def saveHDF5(self, dataset):
-        pass        
 
     def save(self, dataset):
         fileIO = io.FileIO(os.path.join('datasets', dataset, 'meteors', '{}.{}'.format(self.id, 'pickle')), 'wb')

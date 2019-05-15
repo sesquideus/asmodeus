@@ -1,5 +1,5 @@
-import sys, math
-import numpy as np
+import sys
+import math
 
 from physics import constants
 
