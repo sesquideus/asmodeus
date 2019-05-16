@@ -7,13 +7,8 @@
     Outputs: meteors
 """
 
-import multiprocessing as mp
-import time
 import random
-import sys
 import yaml
-import io
-import pickle
 import datetime
 
 from core                   import asmodeus, logger, exceptions
@@ -58,7 +53,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.velocityDistribution   = VelocityDistribution.fromConfig(meteors.velocity).logInfo()
             self.densityDistribution    = DensityDistribution.fromConfig(meteors.material.density).logInfo()
             self.temporalDistribution   = TimeDistribution.fromConfig(meteors.time).logInfo()
-        
+
             log.info(f"Output will be written to dataset {c.name(self.dataset.name)} ({c.path(self.dataset.root())})")
 
         except AttributeError as e:
@@ -73,9 +68,9 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
 
     def generate(self):
         log.info(f"Generating {c.num(self.config.meteors.count)} meteoroids "
-            f"using {c.num(self.config.mp.processes)} processes "
-            f"at {c.num(self.config.meteors.integrator.fps)} frames per second, "
-            f"with {c.num(self.config.meteors.integrator.spf)} steps per frame")
+                f"using {c.num(self.config.mp.processes)} processes "
+                f"at {c.num(self.config.meteors.integrator.fps)} frames per second, "
+                f"with {c.num(self.config.meteors.integrator.spf)} steps per frame")
 
         self.meteors = [meteor for meteor in [self.createMeteor() for _ in range(0, self.config.meteors.count)] if meteor is not None]
         log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass}".format(
@@ -122,7 +117,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.config.meteors.integrator.spf,
             self.dataset.name
         ) for meteor in self.meteors]
-        
+
         self.meteors = self.parallel(simulate, args, action = "Simulating meteors")
         self.count = len(self.meteors)
 
@@ -146,6 +141,7 @@ def simulate(args):
     queue.put(1)
     meteor.flyRK4(fps, spf)
     meteor.save(dataset)
+
 
 if __name__ == "__main__":
     log = logger.setupLog('root')

@@ -136,33 +136,33 @@ class Meteor:
         frame = 0
 
         while True:
-            x, y, z = self.position.x, self.position.y, self.position.z
-            vx, vy, vz = self.velocity.x, self.velocity.y, self.velocity.z
-            m = self.mass
-            state = np.array([x, y, z, vx, vy, vz, m])
+            #x, y, z = self.position.x, self.position.y, self.position.z
+            #vx, vy, vz = self.velocity.x, self.velocity.y, self.velocity.z
+            #m = self.mass
+            #state = np.array([x, y, z, vx, vy, vz, m])
 
-            x = lambda d, dt: rungekutta(state, d, dt, self.dragCoefficient, self.shapeFactor, self.density, self.heatTransfer, self.ablationHeat)
-            d0 = np.array([0, 0, 0, 0, 0, 0, 0])
-            d1 = x(d0, 0)
-            d2 = x(d1, dt/2)
-            d3 = x(d2, dt/2)
-            d4 = x(d3, dt)
+            #x = lambda d, dt: rungekutta(state, d, dt, self.dragCoefficient, self.shapeFactor, self.density, self.heatTransfer, self.ablationHeat)
+            #d0 = np.array([0, 0, 0, 0, 0, 0, 0])
+            #d1 = x(d0, 0)
+            #d2 = x(d1, dt/2)
+            #d3 = x(d2, dt/2)
+            #d4 = x(d3, dt)
            
-            rdt = (d1[0:3] + 2 * d2[0:3] + 2 * d3[0:3] + d4[0:3]) / 6.0
-            vdt = (d1[3:6] + 2 * d2[3:6] + 2 * d3[3:6] + d4[3:6]) / 6.0
-            drdt = coord.Vector3D(rdt[0], rdt[1], rdt[2])
-            dvdt = coord.Vector3D(vdt[0], vdt[1], vdt[2])
-            dmdt = (d1[6] + 2 * d2[6] + 2 * d3[6] + d4[6]) / 6.0
-            #state = State(self.position, self.velocity, self.mass)
-            #d0 = Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0)
-            #d1 = self.evaluate(state, d0, 0.0)
-            #d2 = self.evaluate(state, d1, dt / 2)
-            #d3 = self.evaluate(state, d2, dt / 2)
-            #d4 = self.evaluate(state, d3, dt)
+            #rdt = (d1[0:3] + 2 * d2[0:3] + 2 * d3[0:3] + d4[0:3]) / 6.0
+            #vdt = (d1[3:6] + 2 * d2[3:6] + 2 * d3[3:6] + d4[3:6]) / 6.0
+            #drdt = coord.Vector3D(rdt[0], rdt[1], rdt[2])
+            #dvdt = coord.Vector3D(vdt[0], vdt[1], vdt[2])
+            #dmdt = (d1[6] + 2 * d2[6] + 2 * d3[6] + d4[6]) / 6.0
+            state = State(self.position, self.velocity, self.mass)
+            d0 = Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0)
+            d1 = self.evaluate(state, d0, 0.0)
+            d2 = self.evaluate(state, d1, dt / 2)
+            d3 = self.evaluate(state, d2, dt / 2)
+            d4 = self.evaluate(state, d3, dt)
 
-            #drdt = (d1.drdt + 2 * d2.drdt + 2 * d3.drdt + d4.drdt) / 6.0
-            #dvdt = (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt) / 6.0
-            #dmdt = (d1.dmdt + 2 * d2.dmdt + 2 * d3.dmdt + d4.dmdt) / 6.0
+            drdt = (d1.drdt + 2 * d2.drdt + 2 * d3.drdt + d4.drdt) / 6.0
+            dvdt = (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt) / 6.0
+            dmdt = (d1.dmdt + 2 * d2.dmdt + 2 * d3.dmdt + d4.dmdt) / 6.0
 
             self.luminousPower = -(radiometry.luminousEfficiency(self.velocity.norm()) * dmdt * self.velocity.norm()**2 / 2.0)
 

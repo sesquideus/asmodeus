@@ -21,7 +21,7 @@ class Sighting():
 
         self.frames = [SightingFrame(self.observer, meteorFrame) for meteorFrame in self.meteor.frames]
 
-        log.debug(self.frames)
+        #log.debug(self.frames)
     
         self.first          = self.frames[0]
         self.last           = self.frames[-1]
@@ -45,8 +45,8 @@ class Sighting():
         return {
             'id':               self.id,
             'timestamp':        self.brightest.frame.timestamp,
-            'simulationTime':   (self.last.timestamp - self.first.timestamp).total_seconds(),
-            'lightTime':        (self.lastVisible.timestamp - self.firstVisible.timestamp).total_seconds(),
+            'simulationTime':   (self.last.frame.timestamp - self.first.frame.timestamp).total_seconds(),
+            #'lightTime':        (self.lastVisible.timestamp - self.firstVisible.timestamp).total_seconds(),
         }
 
     def asPoint(self):
@@ -88,6 +88,7 @@ class PointSighting():
         'speed',
         'angSpeed',
         'initMass',
+        'mass',
         'lumPower',
         'fluxDensity',
         'absMag',
@@ -152,6 +153,7 @@ class PointSighting():
             'speed':        self.velocity.norm(),
             'angSpeed':     self.angularSpeed,
             'initMass':     self.initialMass,
+            'mass':         self.mass,
             'lumPower':     self.luminousPower,
             'fluxDensity':  self.fluxDensity,
             'absMag':       self.absoluteMagnitude,
@@ -159,7 +161,7 @@ class PointSighting():
         }
 
     def applyBias(self, *discriminators):
-        self.sighted            = all(map(lambda dis: dis.apply(self), discriminators))
+        self.sighted = all(map(lambda dis: dis.apply(self), discriminators))
         return self.sighted
 
     def printTSV(self, file):

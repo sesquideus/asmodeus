@@ -2,7 +2,7 @@ mp:
     processes:                  4
 
 meteors:
-    count:                      10000
+    count:                      10
     shape:
         dragCoefficient:        0.5                         # 0.6 for a spherical body
         shapeFactor:            1.21                        # 1.21 for a spherical body
@@ -51,13 +51,14 @@ observations:
             latitude:           48.68231
             longitude:          19.8575
             altitude:           692
+            horizon:            15
 
 biasFunctions:
     magnitude:   
         sigmoid: &sigmoid
             discriminator:      'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
             parameters:                        
-                limit:          5.5                         # Limiting magnitude m0
+                limit:          8.5                         # Limiting magnitude m0
                 width:          0.35                        # Width of the function
         all: &all
             discriminator:      'all'                       # Angular speed detection efficiency profile, possible values 'flat' or 'linear'

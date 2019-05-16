@@ -58,12 +58,8 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
         self.markTime()
         for observer in self.observers:
             observer.setDiscriminators(self.discriminators)
-#            observer.loadSightingsPickle()
-#            observer.analyzeSightings()
-
             observer.loadSightingsDataFrame()
             observer.analyzeSightings()
-            #observer.kde()
 
     def plotSky(self):
         for observer in self.observers:
