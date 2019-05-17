@@ -87,7 +87,7 @@ plot:
             elevation:          True
 
 statistics:                                                 # Histograms to be plotted for simulation data
-    histograms: 
+    quantities: &quantities
         altitude:
             min:                0
             max:                90
@@ -112,6 +112,14 @@ statistics:                                                 # Histograms to be p
             bin:                1
             name:               'angular speed'
             xaxis:              'number'
+    histograms:
+        *quantities
+    kdes:
+        *quantities
+    scatters:
+        -   x:                  'appMag'
+            y:                  'altitude'
+
 #        timestamp:
 #            min:                2016-08-11T19:00:00
 #            max:                2016-08-12T02:00:00

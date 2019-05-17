@@ -38,7 +38,7 @@ class AsmodeusObserve(asmodeus.Asmodeus):
         try:
             self.dataset.require('meteors')
         except FileNotFoundError as e:
-            log.error("Could not load {s} -- did you run {gen}?".format(
+            log.error("Could not load meteors from {s} -- did you run {gen}?".format(
                 s   = c.path(self.dataset.path('meteors')),
                 gen = c.script('asmodeus-generate'),
             ))
@@ -63,7 +63,6 @@ class AsmodeusObserve(asmodeus.Asmodeus):
         argList = [(
             observer,
             self.dataset.path('meteors', meteorFile),
-            self.config.observations.minAltitude,
             self.dataset.path('sightings', observer.id, meteorFile),
             self.config.observations.streaks,
         ) for meteorFile in meteorFiles for observer in self.observers]
@@ -88,16 +87,12 @@ class AsmodeusObserve(asmodeus.Asmodeus):
         
 
 def observe(args):
-    queue, observer, filename, minAlt, out, streaks = args
+    queue, observer, filename, out, streaks = args
 
     queue.put(1)
     meteor = Meteor.load(filename)
     sighting = Sighting(observer, meteor)
-    if sighting.brightest.altAz.latitude() >= minAlt:
-        sighting.save(out, streak = streaks)
-        return True
-    else:
-        return False
+    sighting.save(out, streak = streaks)
 
 if __name__ == "__main__":
     log = logger.setupLog('root')

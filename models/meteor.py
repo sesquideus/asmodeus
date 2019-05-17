@@ -27,6 +27,7 @@ class Diff:
         self.dvdt = dvdt
         self.dmdt = dmdt
 
+
 @numba.njit
 def rungekutta(state, diff, dt, dragCoefficient, shapeFactor, density, heatTransfer, ablationHeat):
     new = state + diff * dt
@@ -94,16 +95,6 @@ class Meteor:
             jinjaEnv('templates').get_template('meteor.kml').render({'meteor': self}),
             file = open(os.path.join(dataset, 'meteors', '{}.kml'.format(self.id)), 'w')
         )
-
-    def acceleration(self, state):
-        airRho = atmosphere.airDensity(state.position.norm() - constants.earthRadius)
-        speed = state.velocity.norm()
-        return -(self.dragCoefficient * self.shapeFactor * airRho * speed**2 / (state.mass**(1 / 3) * self.density**(2 / 3))) * state.velocity / speed
-
-    def ablation(self, state):
-        airRho = atmosphere.airDensity(state.position.norm() - constants.earthRadius)
-        speed = state.velocity.norm()
-        return -(self.heatTransfer * self.shapeFactor * airRho * speed**3 * (state.mass / self.density)**(2 / 3) / (2 * self.ablationHeat))
 
     def nextState(self, state, diff, dt):
         new = state + diff * dt

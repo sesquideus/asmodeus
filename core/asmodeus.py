@@ -87,7 +87,7 @@ class Asmodeus():
     def loadObservers(self):
         self.observers = []
         for oid, obs in self.config.observations.observers.items():
-            self.observers.append(Observer(oid, self.dataset, self.config.statistics.histograms, **obs.toDict()))
+            self.observers.append(Observer(oid, self.dataset, self.config.statistics, **obs.toDict()))
 
         log.info("Loaded {count} observer{s}:".format(
             count   = len(self.observers),
@@ -95,7 +95,7 @@ class Asmodeus():
         ))
 
         for o in self.observers:
-            log.info("    {}".format(o))
+            log.info(f"    {o}")
 
     def overrideWarning(self, parameter, old, new):
         log.warning(f"Overriding {c.param(parameter)} ({c.over(old)} -> {c.over(new)})")

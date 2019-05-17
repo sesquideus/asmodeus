@@ -21,10 +21,10 @@ meteors:
     position:
         distribution:           'rectangle'                 # Name of the distribution, currently only 'rectangle'
         parameters:
-            south:              46                          # Southern bound, degrees of latitude
-            north:              52                          # Northern bound, degrees of latitude
-            west:               15                          # Western bound, degrees of longitude
-            east:               25                          # Eastern bound, degrees of longitude
+            south:              41                          # Southern bound, degrees of latitude
+            north:              57                          # Northern bound, degrees of latitude
+            west:               10                          # Western bound, degrees of longitude
+            east:               29                          # Eastern bound, degrees of longitude
             elevation:          130000                      # Initial elevation of meteors, in m
     velocity:
         distribution:           'shower'                    # Currently only 'shower'
@@ -45,7 +45,6 @@ meteors:
 
 observations:
     streaks:                    False
-    minAltitude:                15
     observers:
         teplicne:
             latitude:           48.68231
@@ -107,25 +106,12 @@ statistics:                                                 # Histograms to be p
             bin:                0.25
             name:               'apparent magnitude'
             xaxis:              'number'
-        absMag:
-            min:                -12
-            max:                12
-            bin:                0.25
-            name:               'absolute magnitude'
-            xaxis:              'number'
         angSpeed:
             min:                0
             max:                40
             bin:                1
             name:               'angular speed'
             xaxis:              'number'
-#        timestamp:
-#            min:                2016-08-11T19:00:00
-#            max:                2016-08-12T02:00:00
-#            bin:                600
-#            name:               'time'
-#            xaxis:              time
-
     histograms:
         *quantities
     kdes:
@@ -133,8 +119,13 @@ statistics:                                                 # Histograms to be p
     scatters:
         -   x:                  'appMag'
             y:                  'altitude'
-        -   x:                  'appMag'
-            y:                  'absMag'
+
+#        timestamp:
+#            min:                2016-08-11T19:00:00
+#            max:                2016-08-12T02:00:00
+#            bin:                600
+#            name:               'time'
+#            xaxis:              time
 
 optimize:                                                   # Exhaustive search of the parameter space
     method:                     exhaustive

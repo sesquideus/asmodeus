@@ -20,7 +20,7 @@ log = logging.getLogger('root')
 
 
 class Observer():
-    def __init__(self, name, dataset, histogramSettings, **kwargs):
+    def __init__(self, name, dataset, settings, **kwargs):
         self.id                 = name
         self.dataset            = dataset
         self.position           = coord.Vector3D.fromGeodetic(
@@ -29,9 +29,7 @@ class Observer():
                                       kwargs.get('altitude', 0)
                                   )
         self.horizon            = kwargs.get('horizon', 0)
-        self.histogramSettings  = histogramSettings
-        self.allSightings       = []
-        self.visibleSightings   = []
+        self.settings           = settings
 
         self.earthToAltAzMatrix = functools.reduce(np.dot, [
                                     np.fliplr(np.eye(3)),
@@ -61,20 +59,9 @@ class Observer():
             position    = self.position.strGeodetic(),
         )
 
-    def loadSightingsPickle(self):
-        dir = self.dataset.path('sightings', self.id)
-        log.debug("Observer {obs}: loading sightings from {dir}".format(
-            obs         = c.name(self.id),
-            dir         = c.path(dir)),
-        )
-
-        self.allSightings = [Sighting.load(self.dataset.path('sightings', self.id, file)) for file in os.listdir(dir)]
-        log.info("Observer {obs}: {num} sightings loaded".format(
-            obs         = c.name(self.id),
-            num         = c.num(len(self.allSightings))
-        ))
-        return self.allSightings
-
+    def loadSightingsTSV(self):
+        log.info(f"Loading sightings from {c.path(self.dataset.path('sightings'))}")
+    
     def loadSightingsDataFrame(self):
         log.info(f"Loading sightings from {c.path(self.dataset.path('sightings'))}")
 
@@ -120,6 +107,7 @@ class Observer():
         self.applyBias()
         self.renderKDEs()
         self.renderHistograms()
+        self.renderScatters()
 
     @classmethod
     def skyPlotHeader(cls):
@@ -131,12 +119,8 @@ class Observer():
             obs     = c.name(self.id),
             name    = filename,
         ))
-        
-        self.dataset.create('tsv', self.id, exist_ok = True)
 
-        with open(filename, 'w') as file, pd.option_context('display.max_rows', None, 'display.max_columns', 100, 'display.width', 1000):
-            print(self.visible, file = file)
-
+        self.visible.to_csv(filename, sep = '\t')
 
     def plotSkyPlot(self, config):
         log.info(f"Plotting sky for observer {c.name(self.id)}")
@@ -170,37 +154,11 @@ class Observer():
             facecolor = 'black',
         )
 
-    def createHistograms(self):
-        log.info("Creating histograms for observer {name}, {count} sightings to process".format(
-            name        = c.name(self.id),
-            count       = c.num(len(self.visibleSightings)),
-        ))
-
-        self.histograms = {}
-
-        for stat, properties in self.histogramSettings.items():
-            self.histograms[stat] = {
-                'number':   histogram.FloatHistogram,
-                'time':     histogram.TimeHistogram,
-            }.get(properties.xaxis, 'number')(properties.min, properties.max, properties.bin, name = stat)
-
-        for sighting in self.visibleSightings:
-            for stat in self.histogramSettings:
-                try:
-                    self.histograms[stat].add(getattr(sighting.asPoint(), stat))
-                except KeyError as e:
-                    log.warning("{prop} out of range: {err}".format(
-                        prop    = c.param(stat),
-                        err     = e,
-                    ))
-
-        return self.histograms
-
     def renderKDEs(self):
         log.info(f"Creating {c.name('KDE')}s for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', self.id, 'kdes', exist_ok = True)
 
-        for stat, params in self.histogramSettings.items():       
+        for stat, params in self.settings.kdes.items():       
             points = 20 * (params.max - params.min) // params.bin
             space = np.linspace(params.min, params.max, points)
             pdf = self.propertyKDE(stat, params).evaluate(space)
@@ -219,7 +177,7 @@ class Observer():
         log.info(f"Creating {c.name('histograms')} for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', self.id, 'histograms', exist_ok = True)
 
-        for stat, params in self.histogramSettings.items():       
+        for stat, params in self.settings.histograms.items():       
             hist, edges = self.propertyHistogram(stat, params)
             figure, axes = self.emptyFigure()
 
@@ -242,6 +200,30 @@ class Observer():
         axes.grid(linewidth = 0.2, linestyle = ':')
 
         return figure, axes
+
+    def renderScatters(self):
+        log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
+        self.dataset.create('analyses', self.id, 'scatters', exist_ok = True)
+
+        for scatter in self.settings.scatters:
+            self.crossScatter(scatter.x, self.settings.quantities[scatter.x], scatter.y, self.settings.quantities[scatter.y])
+
+    def crossScatter(self, xstat, xparams, ystat, yparams):
+        figure, axes = self.emptyFigure()
+
+        axes.set_xlim(xparams.min, xparams.max)
+        axes.set_ylim(yparams.min, yparams.max)
+        
+        axes.scatter(
+            self.visible[xstat],
+            self.visible[ystat],
+            c           = np.maximum(np.log10(self.visible.lumPower), -12),
+            s           = 0.01 * np.log10(self.visible.fluxDensity * 1e12 + 1)**4,
+            cmap        = 'viridis',
+            alpha       = 1,
+            linewidths  = 0,
+        )
+        figure.savefig(self.dataset.path('analyses', self.id, 'scatters', f"{xstat}-{ystat}.png"))
             
         
 

@@ -118,7 +118,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.dataset.name
         ) for meteor in self.meteors]
 
-        self.meteors = self.parallel(simulate, args, action = "Simulating meteors")
+        self.meteors = self.parallel(simulate, args, action = "Simulating meteors", period = self.config.integrator.report)
         self.count = len(self.meteors)
 
     def finalize(self):
