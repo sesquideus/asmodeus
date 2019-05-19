@@ -119,7 +119,6 @@ class Observer():
             obs     = c.name(self.id),
             name    = filename,
         ))
-
         self.visible.to_csv(filename, sep = '\t')
 
     def plotSkyPlot(self, config):
@@ -219,7 +218,7 @@ class Observer():
             self.visible[ystat],
             c           = np.maximum(np.log10(self.visible.lumPower), -12),
             s           = 0.01 * np.log10(self.visible.fluxDensity * 1e12 + 1)**4,
-            cmap        = 'viridis',
+            cmap        = 'Greens',
             alpha       = 1,
             linewidths  = 0,
         )
