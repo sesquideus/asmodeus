@@ -144,7 +144,6 @@ class PointSighting():
 
     def asDict(self):
         return {
-            'id':           self.id,
             'timestamp':    self.timestamp,
             'altitude':     self.altitude,
             'azimuth':      self.azimuth,
@@ -159,6 +158,23 @@ class PointSighting():
             'absMag':       self.absoluteMagnitude,
             'appMag':       self.apparentMagnitude,
         }
+
+    def asTuple(self):
+        return (
+            self.timestamp,
+            self.altitude,
+            self.azimuth,
+            self.distance,
+            self.position.elevation(),
+            self.velocity.norm(),
+            self.angularSpeed,
+            self.initialMass,
+            self.mass,
+            self.luminousPower,
+            self.fluxDensity,
+            self.absoluteMagnitude,
+            self.apparentMagnitude,
+        )
 
     def applyBias(self, *discriminators):
         self.sighted = all(map(lambda dis: dis.apply(self), discriminators))

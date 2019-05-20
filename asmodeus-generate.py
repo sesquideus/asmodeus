@@ -14,12 +14,7 @@ import datetime
 from core                   import asmodeus, logger, exceptions
 from physics                import coord
 
-from distribution.position  import PositionDistribution
-from distribution.velocity  import VelocityDistribution
-from distribution.mass      import MassDistribution
-from distribution.density   import DensityDistribution
-from distribution.time      import TimeDistribution
-
+from distribution           import PositionDistribution, VelocityDistribution, MassDistribution, DensityDistribution, TimeDistribution
 from utilities              import colour as c
 from models.meteor          import Meteor
 
@@ -118,7 +113,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.dataset.name
         ) for meteor in self.meteors]
 
-        self.meteors = self.parallel(simulate, args, action = "Simulating meteors", period = self.config.integrator.report)
+        self.meteors = self.parallel(simulate, args, action = "Simulating meteors", period = self.config.meteors.integrator.report)
         self.count = len(self.meteors)
 
     def finalize(self):

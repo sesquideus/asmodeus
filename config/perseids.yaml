@@ -4,7 +4,7 @@ mp:
 meteors:
     count:                      100000
     shape:
-        dragCoefficient:        0.5                         # 0.6 for a spherical body
+        dragCoefficient:        0.6                         # 0.6 for a spherical body
         shapeFactor:            1.21                        # 1.21 for a spherical body
     material:
         density:                
@@ -41,7 +41,7 @@ meteors:
         name:                   'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
         fps:                    20                          # Frames per second
         spf:                    1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time
-        report:                 10
+        report:                 5
 
 observations:
     streaks:                    False

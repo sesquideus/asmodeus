@@ -5,7 +5,7 @@ import os
 import math
 import numpy as np
 import scipy.stats
-import pandas as pd
+import pandas
 
 from matplotlib import pyplot
 from pprint import pprint as pp
@@ -59,10 +59,17 @@ class Observer():
             position    = self.position.strGeodetic(),
         )
 
-    def loadSightingsTSV(self):
-        log.info(f"Loading sightings from {c.path(self.dataset.path('sightings'))}")
+#    def loadSightingsTSV(self):
+#        log.info(f"Loading sightings from {c.path(self.dataset.path('sightings'))}")
+
+    def createDataframe(self):
+        self.dataframe = pandas.DataFrame.from_records(
+            [sighting.asTuple() for sighting in self.sightings],
+            columns     = PointSighting.columns,
+        )
+        log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
     
-    def loadSightingsDataFrame(self):
+    def loadSightings(self):
         log.info(f"Loading sightings from {c.path(self.dataset.path('sightings'))}")
 
         dicts = {}
@@ -70,15 +77,18 @@ class Observer():
             sighting = Sighting.load(self.dataset.path('sightings', self.id, sf))
             dicts[sighting.id] = sighting.asDict()
 
-        log.info(f"Loaded {c.num(len(dicts))} sightings, creating a dataframe")
+        log.info(f"Loaded {c.num(len(dicts))} sightings")
+        self.createDataframe()
 
-        self.dataframe = pd.DataFrame.from_dict(
-            dicts,
-            orient = 'index',
-            columns = PointSighting.columns,
-        )
+    def loadDataframe(self):
+        filename = self.dataset.path('sightings', self.id, 'sky.tsv')
+        log.info(f"Loading a dataframe from {c.path(filename)}")
+        self.dataframe = pandas.read_csv(filename, sep = '\t') 
 
-        log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
+    def saveDataframe(self):
+        filename = self.dataset.path('sightings', self.id, 'sky.tsv')
+        log.info(f"Saving a TSV file for observer {c.name(self.id)} {c.path(filename)}")
+        self.dataframe.to_csv(filename, sep = '\t')
 
     def setDiscriminators(self, discriminators):
         self.discriminators = discriminators
@@ -99,27 +109,20 @@ class Observer():
     #    return self.visibleSightings
 
     def applyBias(self):
+        log.info(f"Applying bias DPFs")
         self.dataframe['visible'] = self.dataframe.apply(self.biasFunction, axis = 1)
         self.visible = self.dataframe[self.dataframe.visible]
-        log.info(f"Bias applied, {c.num(len(self.visible.index))} sightings marked as detected")
+        log.info(f"Bias applied, {c.num(len(self.visible.index))}/{c.num(len(self.dataframe.index))} sightings marked as detected")
 
     def analyzeSightings(self):
         self.applyBias()
-        self.renderKDEs()
-        self.renderHistograms()
-        self.renderScatters()
+        self.makeKDEs()
+        self.makeHistograms()
+        self.makeScatters()
 
     @classmethod
     def skyPlotHeader(cls):
         return "#                timestamp     alt       az      d      ele      v       as            m           F0           F   absmag  appmag"
-
-    def printTSV(self):
-        filename = self.dataset.path('tsv', self.id, 'sky.tsv')
-        log.info("Saving a TSV file for observer {obs} ({name})".format(
-            obs     = c.name(self.id),
-            name    = filename,
-        ))
-        self.visible.to_csv(filename, sep = '\t')
 
     def plotSkyPlot(self, config):
         log.info(f"Plotting sky for observer {c.name(self.id)}")
@@ -153,39 +156,51 @@ class Observer():
             facecolor = 'black',
         )
 
-    def renderKDEs(self):
+    def makeKDEs(self):
         log.info(f"Creating {c.name('KDE')}s for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', self.id, 'kdes', exist_ok = True)
 
         for stat, params in self.settings.kdes.items():       
-            points = 20 * (params.max - params.min) // params.bin
-            space = np.linspace(params.min, params.max, points)
-            pdf = self.propertyKDE(stat, params).evaluate(space)
+            self.makeKDE(stat, **params)
 
-            figure, axes = self.emptyFigure()
-            axes.fill_between(space, 0, pdf, alpha = 0.5)
-            figure.savefig(self.dataset.path('analyses', self.id, 'kdes', f"{stat}.png"))
+    def makeKDE(self, stat, *, min, max, bin, **kwargs):
+        points = 20 * (max - min) // bin
+        space = np.linspace(min, max, points)
+        pdf = self.computeKDE(stat).evaluate(space)
 
-            log.info(f"Created a KDE for {c.param(stat)}")
+        figure, axes = self.emptyFigure()
+        axes.fill_between(space, 0, pdf, alpha = 0.5)
+        figure.savefig(self.dataset.path('analyses', self.id, 'kdes', f"{stat}.png"))
 
-    def propertyKDE(self, stat, params):
-        kernel = scipy.stats.gaussian_kde(self.visible[stat])
-        return kernel
+        log.info(f"Created a KDE for {c.param(stat)}")
 
-    def renderHistograms(self):
+    def computeKDE(self, stat):
+        return scipy.stats.gaussian_kde(self.visible[stat])
+
+    def makeHistograms(self):
         log.info(f"Creating {c.name('histograms')} for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', self.id, 'histograms', exist_ok = True)
 
         for stat, params in self.settings.histograms.items():       
-            hist, edges = self.propertyHistogram(stat, params)
-            figure, axes = self.emptyFigure()
+            self.makeHistogram(stat, params)
 
-            axes.bar(edges[:-1], hist, width = params.bin, alpha = 0.5, align = 'edge', color = (0.6, 0.0, 0.7, 0.5))
-            figure.savefig(self.dataset.path('analyses', self.id, 'histograms', f"{stat}.png"))
+    def makeHistogram(self, stat, params):
+        hist, edges = self.computeHistogram(stat, params)
 
-            log.info(f"Created a histogram for {c.param(stat)}")
+        figure, axes = self.emptyFigure()
+        axes.bar(edges[:-1], hist, width = params.bin, alpha = 0.5, align = 'edge', color = (0.3, 0.0, 0.7, 0.5))
+        figure.savefig(self.dataset.path('analyses', self.id, 'histograms', f"{stat}.png"))
 
-    def propertyHistogram(self, stat, params):
+        np.savetxt(
+            self.dataset.path('analyses', self.id, 'histograms', f"{stat}.tsv"),
+            np.vstack((edges[:-1], hist)).T,
+            delimiter       = '\t',
+            fmt             = ('%.10f', '%.10f'),
+        )
+
+        log.info(f"Created a histogram for {c.param(stat)}")
+
+    def computeHistogram(self, stat, params):
         count = (params.max - params.min) // params.bin
         bins = np.linspace(params.min, params.max, count + 1)
         hist, edges = np.histogram(self.visible[stat], bins = bins, range = (params.min, params.max), density = True)
@@ -200,32 +215,33 @@ class Observer():
 
         return figure, axes
 
-    def renderScatters(self):
+    def makeScatters(self):
         log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', self.id, 'scatters', exist_ok = True)
 
         for scatter in self.settings.scatters:
-            self.crossScatter(scatter.x, self.settings.quantities[scatter.x], scatter.y, self.settings.quantities[scatter.y])
+            self.crossScatter(scatter)
 
-    def crossScatter(self, xstat, xparams, ystat, yparams):
+    def crossScatter(self, scatter):
+        xparams = self.settings.quantities[scatter.x]
+        yparams = self.settings.quantities[scatter.y]
         figure, axes = self.emptyFigure()
 
         axes.set_xlim(xparams.min, xparams.max)
         axes.set_ylim(yparams.min, yparams.max)
         
         axes.scatter(
-            self.visible[xstat],
-            self.visible[ystat],
+            self.visible[scatter.x],
+            self.visible[scatter.y],
             c           = np.maximum(np.log10(self.visible.lumPower), -12),
             s           = 0.01 * np.log10(self.visible.fluxDensity * 1e12 + 1)**4,
-            cmap        = 'Greens',
+            cmap        = scatter.get('cmap', 'Greens'),
             alpha       = 1,
             linewidths  = 0,
         )
-        figure.savefig(self.dataset.path('analyses', self.id, 'scatters', f"{xstat}-{ystat}.png"))
-            
+        figure.savefig(self.dataset.path('analyses', self.id, 'scatters', f"{scatter.x}-{scatter.y}.png"))
+        log.info(f"Created a scatter plot for {c.param(scatter.x)} × {c.param(scatter.y)}")
         
-
         #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
 
     def minimize(self, settings):

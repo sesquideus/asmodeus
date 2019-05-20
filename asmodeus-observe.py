@@ -59,19 +59,24 @@ class AsmodeusObserve(asmodeus.Asmodeus):
     def observe(self):
         self.markTime()
         meteorFiles = self.dataset.list('meteors')
+        self.count = 0
 
-        argList = [(
-            observer,
-            self.dataset.path('meteors', meteorFile),
-            self.dataset.path('sightings', observer.id, meteorFile),
-            self.config.observations.streaks,
-        ) for meteorFile in meteorFiles for observer in self.observers]
-        total = len(argList)
+        for observer in self.observers:
+            argList = [(
+                observer,
+                self.dataset.path('meteors', meteorFile),
+                self.dataset.path('sightings', observer.id, meteorFile),
+                self.config.observations.streaks,
+            ) for meteorFile in meteorFiles]
+            total = len(argList)
 
-        log.info(f"Calculating {c.num(total)} observations using {c.num(self.config.mp.processes)} processes")
+            log.info(f"Calculating {c.num(total)} observations using {c.num(self.config.mp.processes)} processes")
 
-        self.sightings = self.parallel(observe, argList, action = "Observing meteors")
-        self.count = len(self.sightings)
+            observer.sightings = self.parallel(observe, argList, action = "Observing meteors")
+            observer.createDataframe()
+            observer.saveDataframe()
+
+            self.count += len(observer.sightings)
 
     def finalize(self):
         log.info("{num} observations were processed in {time} seconds ({rate} sightings per second)".format(
@@ -93,6 +98,7 @@ def observe(args):
     meteor = Meteor.load(filename)
     sighting = Sighting(observer, meteor)
     sighting.save(out, streak = streaks)
+    return sighting.asPoint()
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
