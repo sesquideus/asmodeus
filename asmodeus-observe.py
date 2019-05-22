@@ -19,12 +19,15 @@ from models.meteor import Meteor
 from models.sighting import Sighting
 
 
-class AsmodeusObserve(asmodeus.Asmodeus):
+class AsmodeusObserve(asmodeus.AsmodeusMP):
     name = 'observe'
     
     def createArgparser(self):
         super().createArgparser()
-        self.argparser.add_argument('-s', '--streaks', action = 'store_true')
+        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
+        self.argparser.add_argument('-p', '--processes',        type = int)
+        self.argparser.add_argument('-c', '--count',            type = int)
+        self.argparser.add_argument('-s', '--streaks',          action = 'store_true')
 
     def overrideConfig(self):
         super().overrideConfig()
@@ -33,22 +36,10 @@ class AsmodeusObserve(asmodeus.Asmodeus):
             self.config.observations.streaks = True
 
     def configure(self):
+        self.requireStage('meteors', 'asmodeus-generate')
+        self.protectOverwrite('sightings')
+
         self.loadObservers()
-
-        try:
-            self.dataset.require('meteors')
-        except FileNotFoundError as e:
-            log.error("Could not load meteors from {s} -- did you run {gen}?".format(
-                s   = c.path(self.dataset.path('meteors')),
-                gen = c.script('asmodeus-generate'),
-            ))
-            raise exceptions.PrerequisiteError()
-
-        if self.dataset.exists('sightings') and not self.config.overwrite:
-            raise exceptions.OverwriteError(c.path(self.dataset.path('sightings')))
-        else:
-            self.dataset.reset('sightings')
-
         for observer in self.observers:
             self.dataset.create('sightings', observer.id)
 
@@ -72,7 +63,7 @@ class AsmodeusObserve(asmodeus.Asmodeus):
 
             log.info(f"Calculating {c.num(total)} observations using {c.num(self.config.mp.processes)} processes")
 
-            observer.sightings = self.parallel(observe, argList, action = "Observing meteors")
+            observer.sightings = self.parallel(observe, argList, action = "Observing meteors", period = self.config.mp.report)
             observer.createDataframe()
             observer.saveDataframe()
 

@@ -1,0 +1,12 @@
+mp:
+    processes:                  4
+    report:                     5
+
+observations:
+    streaks:                    False
+    observers:
+        teplicne:
+            latitude:           48.68231
+            longitude:          19.8575
+            altitude:           692
+            horizon:            15

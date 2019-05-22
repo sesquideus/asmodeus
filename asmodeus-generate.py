@@ -19,12 +19,14 @@ from utilities              import colour as c
 from models.meteor          import Meteor
 
 
-class AsmodeusGenerate(asmodeus.Asmodeus):
+class AsmodeusGenerate(asmodeus.AsmodeusMP):
     name = 'generate'
 
     def createArgparser(self):
         super().createArgparser()
-        self.argparser.add_argument('-c', '--count', type = int)
+        self.argparser.add_argument('-p', '--processes',        type = int)
+        self.argparser.add_argument('-c', '--count',            type = int)
+        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
 
     def overrideConfig(self):
         super().overrideConfig()
@@ -33,11 +35,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.config.meteors.count = self.args.count
 
     def configure(self):
-        if self.dataset.exists('meteors') and not self.config.overwrite:
-            raise exceptions.OverwriteError(c.path(self.dataset.path('meteors')))
-        else:
-            self.dataset.reset()
-            self.dataset.create('meteors')
+        self.protectOverwrite('meteors', fullReset = True)
 
         try:
             log.info("Configuring meteoroid property distributions")
@@ -113,7 +111,7 @@ class AsmodeusGenerate(asmodeus.Asmodeus):
             self.dataset.name
         ) for meteor in self.meteors]
 
-        self.meteors = self.parallel(simulate, args, action = "Simulating meteors", period = self.config.meteors.integrator.report)
+        self.meteors = self.parallel(simulate, args, action = "Simulating meteors", period = self.config.mp.report)
         self.count = len(self.meteors)
 
     def finalize(self):

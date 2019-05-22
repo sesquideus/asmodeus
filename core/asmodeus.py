@@ -24,7 +24,7 @@ class Asmodeus():
             self.config = configuration.load(self.args.config)
             self.overrideConfig()
 
-            self.dataset = dataset.Dataset(os.path.splitext(os.path.basename(self.args.config.name))[0], self.config.observations.observers)
+            self.dataset = dataset.Dataset(os.path.splitext(os.path.basename(self.args.config.name))[0])
             self.configure()
         except exceptions.CommandLineError as e:
             log.critical("Incorrect command line arguments")
@@ -39,6 +39,8 @@ class Asmodeus():
             log.critical("Missing prerequisites, aborting")
             sys.exit(-1)
 
+        log.info("Initialization complete")
+
     def __del__(self):
         if self.ok:
             log.info("{} finished successfully".format(c.script(f"asmodeus-{self.name}")))
@@ -49,11 +51,27 @@ class Asmodeus():
     def createArgparser(self):
         self.argparser = argparse.ArgumentParser(description = "All-Sky Meteor Observation and Detection Efficiency Simulator")
         self.argparser.add_argument('config',                   type = argparse.FileType('r'))
-        self.argparser.add_argument('-d', '--debug',            action = 'store_true')
-        self.argparser.add_argument('-p', '--processes',        type = int)
         self.argparser.add_argument('-D', '--dataset',          type = str)
-        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
+        self.argparser.add_argument('-d', '--debug',            action = 'store_true')
         self.argparser.add_argument('-l', '--logfile',          type = argparse.FileType('w'))
+
+    def protectOverwrite(self, stage, *, fullReset = False):
+        if self.dataset.exists(stage) and not self.config.overwrite:
+            raise exceptions.OverwriteError(c.path(self.dataset.path(stage)))
+        else:
+            if fullReset:
+                self.dataset.reset()
+            self.dataset.reset(stage)
+
+    def requireStage(self, stage, program):
+        try:
+            self.dataset.require(stage)
+        except FileNotFoundError as e:
+            log.error("Could not load meteors from {s} -- did you run {gen}?".format(
+                s   = c.path(self.dataset.path(stage)),
+                gen = c.script(program),
+            ))
+            raise exceptions.PrerequisiteError()
 
     def overrideConfig(self):
         log.setLevel(logging.DEBUG if self.args.debug else logging.INFO)
@@ -70,10 +88,6 @@ class Asmodeus():
             log.addHandler(logging.FileHandler(self.args.logfile.name))
             log.warning(f"Added log output {c.over(self.args.logfile.name)}")
 
-        if self.args.processes:
-            self.overrideWarning('process count', self.config.mp.processes, self.args.processes)
-            self.config.mp.processes = self.args.processes
-
         if self.args.dataset:
             self.overrideWarning('dataset', self.config.dataset.name, self.args.dataset)
             self.config.dataset.name = self.args.dataset
@@ -87,7 +101,7 @@ class Asmodeus():
     def loadObservers(self):
         self.observers = []
         for oid, obs in self.config.observations.observers.items():
-            self.observers.append(Observer(oid, self.dataset, self.config.statistics, **obs.toDict()))
+            self.observers.append(Observer(oid, self.dataset, **obs.toDict()))
 
         log.info("Loaded {count} observer{s}:".format(
             count   = len(self.observers),
@@ -118,6 +132,16 @@ class Asmodeus():
             time.sleep(period)
 
         return results.get()
+
+
+class AsmodeusMP(Asmodeus):
+    def overrideConfig(self):
+        super().overrideConfig()
+        
+        if self.args.processes:
+            self.overrideWarning('process count', self.config.mp.processes, self.args.processes)
+            self.config.mp.processes = self.args.processes
+
 
 # Old crap below
 

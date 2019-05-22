@@ -12,7 +12,8 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
 
     def createArgparser(self):
         super().createArgparser()
-        self.argparser.add_argument('-s', '--sky-plots', action = 'store_true')
+        self.argparser.add_argument('-s', '--sky-plots',        action = 'store_true')
+        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
 
     def overrideConfig(self):
         super().overrideConfig()
@@ -21,6 +22,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
             self.config.plot.sky.enable = True
 
     def configure(self):
+        self.protectOverwrite('analyses')
         self.loadObservers()
 
         try:

@@ -20,7 +20,7 @@ log = logging.getLogger('root')
 
 
 class Observer():
-    def __init__(self, name, dataset, settings, **kwargs):
+    def __init__(self, name, dataset, **kwargs):
         self.id                 = name
         self.dataset            = dataset
         self.position           = coord.Vector3D.fromGeodetic(
@@ -29,7 +29,7 @@ class Observer():
                                       kwargs.get('altitude', 0)
                                   )
         self.horizon            = kwargs.get('horizon', 0)
-        self.settings           = settings
+        self.settings           = kwargs.get('settings', {})
 
         self.earthToAltAzMatrix = functools.reduce(np.dot, [
                                     np.fliplr(np.eye(3)),
