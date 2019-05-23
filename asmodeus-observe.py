@@ -8,9 +8,10 @@
     Outputs: sightings
 """
 
-import time
-import sys
+import argparse
 import multiprocessing as mp
+import sys
+import time
 
 from core               import asmodeus, logger, exceptions
 from utilities          import colour as c
@@ -24,10 +25,15 @@ class AsmodeusObserve(asmodeus.AsmodeusMP):
     
     def createArgparser(self):
         super().createArgparser()
+        self.argparser.add_argument('config',                   type = argparse.FileType('r'))
         self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
         self.argparser.add_argument('-p', '--processes',        type = int)
         self.argparser.add_argument('-c', '--count',            type = int)
         self.argparser.add_argument('-s', '--streaks',          action = 'store_true')
+
+    def buildConfig(self):
+        self.config = self.loadConfigFile(self.args.config)
+        self.config.dataset.name = self.args.dataset
 
     def overrideConfig(self):
         super().overrideConfig()

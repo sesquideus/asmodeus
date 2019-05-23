@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import sys
+import argparse
+import dotmap
 
 from core               import asmodeus, logger, exceptions
 from discriminator      import MagnitudeDiscriminator, AltitudeDiscriminator, AngularSpeedDiscriminator
@@ -12,8 +14,21 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
 
     def createArgparser(self):
         super().createArgparser()
+        self.argparser.add_argument('observers',                type = argparse.FileType('r'))
+        self.argparser.add_argument('analyses',                 type = argparse.FileType('r'))
         self.argparser.add_argument('-s', '--sky-plots',        action = 'store_true')
         self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
+
+    def buildConfig(self):
+        observerConfig = self.loadConfigFile(self.args.observers)
+        analysesConfig = self.loadConfigFile(self.args.analyses)
+
+        self.config = dotmap.DotMap({
+            'observations': observerConfig.observations.toDict(),
+            'analyses':  analysesConfig.toDict(),
+        })
+        self.config.pprint()
+        self.config.dataset.name = self.args.dataset
 
     def overrideConfig(self):
         super().overrideConfig()
@@ -22,22 +37,14 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
             self.config.plot.sky.enable = True
 
     def configure(self):
+        self.requireStage('sightings', 'asmodeus-observe')
         self.protectOverwrite('analyses')
+        self.protectOverwrite('plots')
+        self.protectOverwrite('histograms')
         self.loadObservers()
 
         try:
-            self.dataset.require('sightings')
-            self.dataset.reset('plots')
-            self.dataset.reset('histograms')
-        except FileNotFoundError as e:
-            log.error("Could not load {s} -- did you run {obs}?".format(
-                s   = c.path(self.dataset.path('sightings')),
-                obs = c.script('asmodeus-observe'),
-            ))
-            raise exceptions.PrerequisiteError()
-
-        try:
-            bias = self.config.bias
+            bias = self.config.analyses.bias
             self.discriminators = {
                 'appMag':       MagnitudeDiscriminator.fromConfig(bias.magnitude),
                 'altitude':     AltitudeDiscriminator.fromConfig(bias.altitude),

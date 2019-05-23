@@ -1,11 +1,13 @@
 import argparse
 import os
 import sys
+import dotmap
 import multiprocessing as mp
 import logging
 import time
+import yaml
 
-from core import configuration, dataset, exceptions
+from core import dataset, exceptions
 from utilities import colour as c
 
 from models.observer import Observer
@@ -20,11 +22,10 @@ class Asmodeus():
         self.createArgparser()
         self.args = self.argparser.parse_args()
 
-        try:
-            self.config = configuration.load(self.args.config)
+        try:    
+            self.buildConfig()
+            self.dataset = dataset.Dataset(self.config.dataset.name)
             self.overrideConfig()
-
-            self.dataset = dataset.Dataset(os.path.splitext(os.path.basename(self.args.config.name))[0])
             self.configure()
         except exceptions.CommandLineError as e:
             log.critical("Incorrect command line arguments")
@@ -50,10 +51,22 @@ class Asmodeus():
 
     def createArgparser(self):
         self.argparser = argparse.ArgumentParser(description = "All-Sky Meteor Observation and Detection Efficiency Simulator")
-        self.argparser.add_argument('config',                   type = argparse.FileType('r'))
-        self.argparser.add_argument('-D', '--dataset',          type = str)
+        self.argparser.add_argument('dataset',                  type = str)
         self.argparser.add_argument('-d', '--debug',            action = 'store_true')
         self.argparser.add_argument('-l', '--logfile',          type = argparse.FileType('w'))
+
+    @classmethod
+    def loadConfigFile(self, file):
+        try:
+            config = yaml.safe_load(file)
+        except FileNotFoundError as e:
+            log.error("Could not load configuration file {}: {}".format(configFile, e))
+            raise exceptions.CommandLineError()
+
+        return dotmap.DotMap(config, _dynamic = True)
+
+    def buildConfig(self):
+        raise NotImplementedError("You need to define the buildConfig method for every ASMODEUS subclass.")
 
     def protectOverwrite(self, stage, *, fullReset = False):
         if self.dataset.exists(stage) and not self.config.overwrite:
@@ -101,7 +114,7 @@ class Asmodeus():
     def loadObservers(self):
         self.observers = []
         for oid, obs in self.config.observations.observers.items():
-            self.observers.append(Observer(oid, self.dataset, **obs.toDict()))
+            self.observers.append(Observer(oid, self.dataset, settings = self.config.analyses.statistics, **obs.toDict()))
 
         log.info("Loaded {count} observer{s}:".format(
             count   = len(self.observers),

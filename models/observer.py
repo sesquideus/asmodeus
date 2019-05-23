@@ -29,7 +29,8 @@ class Observer():
                                       kwargs.get('altitude', 0)
                                   )
         self.horizon            = kwargs.get('horizon', 0)
-        self.settings           = kwargs.get('settings', {})
+        self.settings           = kwargs.get('settings')
+        print(self.settings)
 
         self.earthToAltAzMatrix = functools.reduce(np.dot, [
                                     np.fliplr(np.eye(3)),

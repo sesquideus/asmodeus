@@ -1,6 +1,6 @@
 mp:                                                         # Multiprocessing configuration
     processes:                  4                           # Number of parallel processes to use (should be equal to number of cores)
-    report:                     5                           # Report progress every N seconds
+    report:                     1                           # Report progress every N seconds
 
 meteors:
     count:                      100000

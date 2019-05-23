@@ -7,9 +7,10 @@
     Outputs: meteors
 """
 
+import argparse
+import datetime
 import random
 import yaml
-import datetime
 
 from core                   import asmodeus, logger, exceptions
 from physics                import coord
@@ -24,9 +25,14 @@ class AsmodeusGenerate(asmodeus.AsmodeusMP):
 
     def createArgparser(self):
         super().createArgparser()
+        self.argparser.add_argument('config',                   type = argparse.FileType('r'))
+        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
         self.argparser.add_argument('-p', '--processes',        type = int)
         self.argparser.add_argument('-c', '--count',            type = int)
-        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
+
+    def buildConfig(self):
+        self.config = self.loadConfigFile(self.args.config)
+        self.config.dataset.name = self.args.dataset
 
     def overrideConfig(self):
         super().overrideConfig()
@@ -35,6 +41,8 @@ class AsmodeusGenerate(asmodeus.AsmodeusMP):
             self.config.meteors.count = self.args.count
 
     def configure(self):
+        log.info(f"Working with dataset {c.name(self.dataset.name)} ({c.path(self.dataset.root())})")
+
         self.protectOverwrite('meteors', fullReset = True)
 
         try:
@@ -46,8 +54,6 @@ class AsmodeusGenerate(asmodeus.AsmodeusMP):
             self.velocityDistribution   = VelocityDistribution.fromConfig(meteors.velocity).logInfo()
             self.densityDistribution    = DensityDistribution.fromConfig(meteors.material.density).logInfo()
             self.temporalDistribution   = TimeDistribution.fromConfig(meteors.time).logInfo()
-
-            log.info(f"Output will be written to dataset {c.name(self.dataset.name)} ({c.path(self.dataset.root())})")
 
         except AttributeError as e:
             raise exceptions.ConfigurationError(e)
