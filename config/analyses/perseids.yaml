@@ -74,6 +74,8 @@ statistics:                                                 # Histograms to be p
             y:                  'altitude'
         -   x:                  'appMag'
             y:                  'absMag'
+        -   x:                  'logMass'
+            y:                  'absMag'
 
 optimize:                                                   # Exhaustive search of the parameter space
     method:                     exhaustive
