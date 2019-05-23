@@ -32,7 +32,6 @@ class AsmodeusGenerate(asmodeus.AsmodeusMP):
 
     def buildConfig(self):
         self.config = self.loadConfigFile(self.args.config)
-        self.config.dataset.name = self.args.dataset
 
     def overrideConfig(self):
         super().overrideConfig()
@@ -60,7 +59,7 @@ class AsmodeusGenerate(asmodeus.AsmodeusMP):
 
         return self
 
-    def run(self):
+    def runSpecific(self):
         self.generate()
         self.process()
         self.finalize()

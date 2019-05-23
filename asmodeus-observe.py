@@ -33,7 +33,6 @@ class AsmodeusObserve(asmodeus.AsmodeusMP):
 
     def buildConfig(self):
         self.config = self.loadConfigFile(self.args.config)
-        self.config.dataset.name = self.args.dataset
 
     def overrideConfig(self):
         super().overrideConfig()
@@ -49,7 +48,7 @@ class AsmodeusObserve(asmodeus.AsmodeusMP):
         for observer in self.observers:
             self.dataset.create('sightings', observer.id)
 
-    def run(self):
+    def runSpecific(self):
         self.observe()
         self.finalize()
 

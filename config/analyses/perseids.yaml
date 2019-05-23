@@ -26,35 +26,41 @@ plot:
 
 statistics:                                                 # Histograms to be plotted for simulation data
     quantities: &quantities
-        altitude:
+        altitude: &altitude
             min:                0
             max:                90
             bin:                1
             name:               'altitude'
             xaxis:              'number'
-        azimuth:
+        azimuth: &azimuth
             min:                0
             max:                360
-            bin:                15
+            bin:                5
             name:               'azimuth'
             xaxis:              'number'
-        appMag:
-            min:                -12
-            max:                12
+        appMag: &appMag
+            min:                -16
+            max:                8
             bin:                0.25
             name:               'apparent magnitude'
             xaxis:              'number'
-        absMag:
-            min:                -12
-            max:                12
+        absMag: &absMag
+            min:                -16
+            max:                8
             bin:                0.25
             name:               'absolute magnitude'
             xaxis:              'number'
-        angSpeed:
+        angSpeed: &angSpeed
             min:                0
             max:                40
             bin:                1
             name:               'angular speed'
+            xaxis:              'number'
+        logInitMass: &logInitMass
+            min:                -6.0
+            max:                1
+            bin:                0.1
+            name:               'log initial mass'
             xaxis:              'number'
 #        timestamp:
 #            min:                2016-08-11T19:00:00
@@ -64,18 +70,25 @@ statistics:                                                 # Histograms to be p
 #            xaxis:              time
 
     histograms:
-        enabled:                True
+        enabled:                False
         quantities:             *quantities
     kdes:
         enabled:                False
         quantities:             *quantities
     scatters:
-        -   x:                  'appMag'
-            y:                  'altitude'
-        -   x:                  'appMag'
-            y:                  'absMag'
-        -   x:                  'logMass'
-            y:                  'absMag'
+#        -   x:                  appMag
+#            y:                  altitude
+#            colour:             absMag
+#        -   x:                  appMag
+#            y:                  absMag
+#            colour:             absMag
+#        -   x:                  logInitMass
+#            y:                  appMag
+#            colour:             absMag
+        -   x:                  logInitMass
+            y:                  altitude
+            colour:             absMag
+
 
 optimize:                                                   # Exhaustive search of the parameter space
     method:                     exhaustive

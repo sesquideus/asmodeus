@@ -10,7 +10,7 @@ import pandas
 from matplotlib import pyplot
 from pprint import pprint as pp
 
-from core                       import histogram
+from core                       import exceptions
 from physics                    import coord
 from models.sighting            import Sighting, PointSighting
 from models.sightingframe       import SightingFrame
@@ -29,8 +29,6 @@ class Observer():
                                       kwargs.get('altitude', 0)
                                   )
         self.horizon            = kwargs.get('horizon', 0)
-        self.settings           = kwargs.get('settings')
-        print(self.settings)
 
         self.earthToAltAzMatrix = functools.reduce(np.dot, [
                                     np.fliplr(np.eye(3)),
@@ -85,6 +83,7 @@ class Observer():
         filename = self.dataset.path('sightings', self.id, 'sky.tsv')
         log.info(f"Loading a dataframe from {c.path(filename)}")
         self.dataframe = pandas.read_csv(filename, sep = '\t') 
+        log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
 
     def saveDataframe(self):
         filename = self.dataset.path('sightings', self.id, 'sky.tsv')
@@ -158,13 +157,18 @@ class Observer():
         )
 
     def makeKDEs(self):
-        log.info(f"Creating {c.name('KDE')}s for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
+        if not self.settings.kdes.enabled:
+            log.warning("Skipping KDEs")
+            return
+
+        log.info(f"Creating KDEs for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', self.id, 'kdes', exist_ok = True)
 
-        for stat, params in self.settings.kdes.items():       
+        for stat, params in self.settings.kdes.quantities.items():       
             self.makeKDE(stat, **params)
 
     def makeKDE(self, stat, *, min, max, bin, **kwargs):
+        log.info(f"Creating a KDE for {c.param(stat)}")
         points = 20 * (max - min) // bin
         space = np.linspace(min, max, points)
         pdf = self.computeKDE(stat).evaluate(space)
@@ -173,19 +177,22 @@ class Observer():
         axes.fill_between(space, 0, pdf, alpha = 0.5)
         figure.savefig(self.dataset.path('analyses', self.id, 'kdes', f"{stat}.png"))
 
-        log.info(f"Created a KDE for {c.param(stat)}")
-
     def computeKDE(self, stat):
         return scipy.stats.gaussian_kde(self.visible[stat])
 
     def makeHistograms(self):
-        log.info(f"Creating {c.name('histograms')} for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
+        if not self.settings.histograms.enabled:
+            log.warning("Skipping histograms")
+            return
+
+        log.info(f"Creating histograms for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', self.id, 'histograms', exist_ok = True)
 
-        for stat, params in self.settings.histograms.items():       
+        for stat, params in self.settings.histograms.quantities.items():       
             self.makeHistogram(stat, params)
 
     def makeHistogram(self, stat, params):
+        log.info(f"Creating a histogram for {c.param(stat)}")
         hist, edges = self.computeHistogram(stat, params)
 
         figure, axes = self.emptyFigure()
@@ -199,10 +206,8 @@ class Observer():
             fmt             = ('%.10f', '%.10f'),
         )
 
-        log.info(f"Created a histogram for {c.param(stat)}")
-
     def computeHistogram(self, stat, params):
-        count = (params.max - params.min) // params.bin
+        count = int(np.ceil((params.max - params.min) / params.bin))
         bins = np.linspace(params.min, params.max, count + 1)
         hist, edges = np.histogram(self.visible[stat], bins = bins, range = (params.min, params.max), density = True)
         return hist, edges
@@ -224,25 +229,29 @@ class Observer():
             self.crossScatter(scatter)
 
     def crossScatter(self, scatter):
-        xparams = self.settings.quantities[scatter.x]
-        yparams = self.settings.quantities[scatter.y]
-        figure, axes = self.emptyFigure()
+        log.info(f"Creating a scatter plot for {c.param(scatter.x)} × {c.param(scatter.y)}")
 
-        axes.set_xlim(xparams.min, xparams.max)
-        axes.set_ylim(yparams.min, yparams.max)
-        
-        axes.scatter(
-            self.visible[scatter.x],
-            self.visible[scatter.y],
-            c           = np.maximum(np.log10(self.visible.lumPower), -12),
-            s           = 0.01 * np.log10(self.visible.fluxDensity * 1e12 + 1)**4,
-            cmap        = scatter.get('cmap', 'Greens'),
-            alpha       = 1,
-            linewidths  = 0,
-        )
-        figure.savefig(self.dataset.path('analyses', self.id, 'scatters', f"{scatter.x}-{scatter.y}.png"))
-        log.info(f"Created a scatter plot for {c.param(scatter.x)} × {c.param(scatter.y)}")
-        
+        try:
+            xparams = self.settings.quantities[scatter.x]
+            yparams = self.settings.quantities[scatter.y]
+            figure, axes = self.emptyFigure()
+
+            axes.set_xlim(xparams.min, xparams.max)
+            axes.set_ylim(yparams.min, yparams.max)
+            
+            axes.scatter(
+                self.visible[scatter.x],
+                self.visible[scatter.y],
+                c           = self.visible[scatter.colour],
+                s           = 0.01 * np.log10(self.visible.fluxDensity * 1e12 + 1)**4,
+                cmap        = scatter.get('cmap', 'viridis_r'),
+                alpha       = 1,
+                linewidths  = 0,
+            )
+            figure.savefig(self.dataset.path('analyses', self.id, 'scatters', f"{scatter.x}-{scatter.y}.png"))
+        except KeyError as e:
+            raise exceptions.ConfigurationError(f"Invalid scatter configuration parameter {e}") from e
+
         #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
 
     def minimize(self, settings):

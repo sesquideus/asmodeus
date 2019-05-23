@@ -26,9 +26,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
         self.config = dotmap.DotMap({
             'observations': observerConfig.observations.toDict(),
             'analyses':  analysesConfig.toDict(),
-        })
-        self.config.pprint()
-        self.config.dataset.name = self.args.dataset
+        }, _dynamic = False)
 
     def overrideConfig(self):
         super().overrideConfig()
@@ -58,7 +56,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
         except AttributeError as e:
             raise exceptions.ConfigurationError(e)
 
-    def run(self):
+    def runSpecific(self):
         self.analyze()
         self.plotSky()
         self.finalize()
@@ -66,6 +64,7 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
     def analyze(self):
         self.markTime()
         for observer in self.observers:
+            observer.settings = self.config.analyses.statistics
             observer.setDiscriminators(self.discriminators)
             observer.loadDataframe()
             observer.analyzeSightings()

@@ -63,14 +63,14 @@ def fit(edges, values, *, weights = None):
     
     return coefs[0], coefs[1]
 
-s = analyzeInitMass()
-rv = analyzeAppMag()
+#s = analyzeInitMass()
+#rv = analyzeAppMag()
 ra = analyzeAbsMag()
 
-print(f"s = {s:1.6f}")
+#print(f"s = {s:1.6f}")
 print(f"ra = {ra:1.6f}")
-print(f"rv = {rv:1.6f}")
-print(f"1 + 2.5 log r_v = {1 + 2.5 * np.log10(rv)}")
+#print(f"rv = {rv:1.6f}")
+#print(f"1 + 2.5 log r_v = {1 + 2.5 * np.log10(rv)}")
 print(f"1 + 2.5 log r_a = {1 + 2.5 * np.log10(ra)}")
 
 plt.show()

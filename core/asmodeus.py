@@ -24,30 +24,23 @@ class Asmodeus():
 
         try:    
             self.buildConfig()
-            self.dataset = dataset.Dataset(self.config.dataset.name)
+            self.dataset = dataset.Dataset(self.args.dataset)
             self.overrideConfig()
             self.configure()
         except exceptions.CommandLineError as e:
             log.critical("Incorrect command line arguments")
             sys.exit(-1)
         except exceptions.ConfigurationError as e:
-            log.critical(f"Configuration error \"{e}\", terminating")
+            log.critical(f"Terminating due to a configuration error: {e}")
             sys.exit(-1)
         except exceptions.OverwriteError as e:
-            log.critical(f"Target directory {e} already exists, terminating (use --overwrite)")
+            log.critical(f"Target directory {e} already exists (use --overwrite)")
             sys.exit(-1)
         except exceptions.PrerequisiteError:
             log.critical("Missing prerequisites, aborting")
             sys.exit(-1)
 
         log.info("Initialization complete")
-
-    def __del__(self):
-        if self.ok:
-            log.info("{} finished successfully".format(c.script(f"asmodeus-{self.name}")))
-        else:
-            log.critical("{} aborted".format(c.script(f"asmodeus-{self.name}")))
-        log.info("-" * 50)
 
     def createArgparser(self):
         self.argparser = argparse.ArgumentParser(description = "All-Sky Meteor Observation and Detection Efficiency Simulator")
@@ -62,8 +55,11 @@ class Asmodeus():
         except FileNotFoundError as e:
             log.error("Could not load configuration file {}: {}".format(configFile, e))
             raise exceptions.CommandLineError()
+        except yaml.composer.ComposerError as e:
+            log.error("Undefined alias detected")
+            raise exceptions.ConfigurationError(e)
 
-        return dotmap.DotMap(config, _dynamic = True)
+        return dotmap.DotMap(config, _dynamic = False)
 
     def buildConfig(self):
         raise NotImplementedError("You need to define the buildConfig method for every ASMODEUS subclass.")
@@ -101,20 +97,28 @@ class Asmodeus():
             log.addHandler(logging.FileHandler(self.args.logfile.name))
             log.warning(f"Added log output {c.over(self.args.logfile.name)}")
 
-        if self.args.dataset:
-            self.overrideWarning('dataset', self.config.dataset.name, self.args.dataset)
-            self.config.dataset.name = self.args.dataset
-
     def markTime(self):
         self.startTime = time.time()
 
     def runTime(self):
         return time.time() - self.startTime
 
+    def run(self):
+        try:
+            self.runSpecific()
+        except exceptions.ConfigurationError as e:
+            log.critical(f"Terminating due to a configuration error: {e}")
+        finally:
+            if self.ok:
+                log.info("{} finished successfully".format(c.script(f"asmodeus-{self.name}")))
+            else:
+                log.critical("{} aborted".format(c.script(f"asmodeus-{self.name}")))
+            log.info("-" * 50)
+
     def loadObservers(self):
         self.observers = []
         for oid, obs in self.config.observations.observers.items():
-            self.observers.append(Observer(oid, self.dataset, settings = self.config.analyses.statistics, **obs.toDict()))
+            self.observers.append(Observer(oid, self.dataset, **obs.toDict()))
 
         log.info("Loaded {count} observer{s}:".format(
             count   = len(self.observers),
