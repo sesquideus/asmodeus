@@ -20,14 +20,13 @@ from utilities              import colour as c
 from models.meteor          import Meteor
 
 
-class AsmodeusGenerate(asmodeus.AsmodeusMP):
+class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
     name = 'generate'
 
     def createArgparser(self):
         super().createArgparser()
         self.argparser.add_argument('config',                   type = argparse.FileType('r'))
         self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
-        self.argparser.add_argument('-p', '--processes',        type = int)
         self.argparser.add_argument('-c', '--count',            type = int)
 
     def buildConfig(self):
@@ -39,10 +38,12 @@ class AsmodeusGenerate(asmodeus.AsmodeusMP):
             self.overrideWarning('count', self.config.meteors.count, self.args.count)
             self.config.meteors.count = self.args.count
 
+    def prepareDataset(self):
+        self.protectOverwrite()
+        self.protectOverwrite('meteors')
+
     def configure(self):
         log.info(f"Working with dataset {c.name(self.dataset.name)} ({c.path(self.dataset.root())})")
-
-        self.protectOverwrite('meteors', fullReset = True)
 
         try:
             log.info("Configuring meteoroid property distributions")
@@ -62,13 +63,12 @@ class AsmodeusGenerate(asmodeus.AsmodeusMP):
     def runSpecific(self):
         self.generate()
         self.process()
-        self.finalize()
 
     def generate(self):
         log.info(f"Generating {c.num(self.config.meteors.count)} meteoroids "
-                f"using {c.num(self.config.mp.processes)} processes "
-                f"at {c.num(self.config.meteors.integrator.fps)} frames per second, "
-                f"with {c.num(self.config.meteors.integrator.spf)} steps per frame")
+                 f"using {c.num(self.config.mp.processes)} processes "
+                 f"at {c.num(self.config.meteors.integrator.fps)} frames per second, "
+                 f"with {c.num(self.config.meteors.integrator.spf)} steps per frame")
 
         self.meteors = [meteor for meteor in [self.createMeteor() for _ in range(0, self.config.meteors.count)] if meteor is not None]
         log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass}".format(
@@ -131,7 +131,7 @@ class AsmodeusGenerate(asmodeus.AsmodeusMP):
             rate    = c.num(f"{len(self.meteors) / self.runTime():.3f}"),
             dir     = c.path(self.dataset.path('meteors')),
         ))
-        self.ok = True
+        super().finalize()
 
 
 def simulate(args):
@@ -143,5 +143,4 @@ def simulate(args):
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
-    asmo = AsmodeusGenerate()
-    asmo.run()
+    AsmodeusGenerate().run()

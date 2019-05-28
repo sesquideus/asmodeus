@@ -114,17 +114,11 @@ class Observer():
         self.visible = self.dataframe[self.dataframe.visible]
         log.info(f"Bias applied, {c.num(len(self.visible.index))}/{c.num(len(self.dataframe.index))} sightings marked as detected")
 
-    def analyzeSightings(self):
-        self.applyBias()
-        self.makeKDEs()
-        self.makeHistograms()
-        self.makeScatters()
-
     @classmethod
     def skyPlotHeader(cls):
         return "#                timestamp     alt       az      d      ele      v       as            m           F0           F   absmag  appmag"
 
-    def plotSkyPlot(self, config):
+    def plotSky(self, config):
         log.info(f"Plotting sky for observer {c.name(self.id)}")
         self.dataset.create('plots', self.id)
 
@@ -157,10 +151,6 @@ class Observer():
         )
 
     def makeKDEs(self):
-        if not self.settings.kdes.enabled:
-            log.warning("Skipping KDEs")
-            return
-
         log.info(f"Creating KDEs for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', self.id, 'kdes', exist_ok = True)
 

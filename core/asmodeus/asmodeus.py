@@ -1,5 +1,4 @@
 import argparse
-import os
 import sys
 import dotmap
 import multiprocessing as mp
@@ -22,19 +21,20 @@ class Asmodeus():
         self.createArgparser()
         self.args = self.argparser.parse_args()
 
-        try:    
+        try:
             self.buildConfig()
             self.dataset = dataset.Dataset(self.args.dataset)
             self.overrideConfig()
+            self.prepareDataset()
             self.configure()
         except exceptions.CommandLineError as e:
-            log.critical("Incorrect command line arguments")
+            log.critical(f"Incorrect command line arguments: {e}")
             sys.exit(-1)
         except exceptions.ConfigurationError as e:
             log.critical(f"Terminating due to a configuration error: {e}")
             sys.exit(-1)
         except exceptions.OverwriteError as e:
-            log.critical(f"Target directory {e} already exists (use --overwrite)")
+            log.critical(f"Target directory {e} already exists (use {c.param('-O')} or {c.param('--overwrite')} to overwrite the existing dataset)")
             sys.exit(-1)
         except exceptions.PrerequisiteError:
             log.critical("Missing prerequisites, aborting")
@@ -53,7 +53,7 @@ class Asmodeus():
         try:
             config = yaml.safe_load(file)
         except FileNotFoundError as e:
-            log.error("Could not load configuration file {}: {}".format(configFile, e))
+            log.error("Could not load configuration file {}: {}".format(file, e))
             raise exceptions.CommandLineError()
         except yaml.composer.ComposerError as e:
             log.error("Undefined alias detected")
@@ -61,21 +61,22 @@ class Asmodeus():
 
         return dotmap.DotMap(config, _dynamic = False)
 
-    def buildConfig(self):
-        raise NotImplementedError("You need to define the buildConfig method for every ASMODEUS subclass.")
+    def prepareDataset(self):
+        raise NotImplementedError(f"You need to define the {c.name('prepareDataset')} method for every ASMODEUS subclass.")
 
-    def protectOverwrite(self, stage, *, fullReset = False):
-        if self.dataset.exists(stage) and not self.config.overwrite:
-            raise exceptions.OverwriteError(c.path(self.dataset.path(stage)))
+    def buildConfig(self):
+        raise NotImplementedError(f"You need to define the {c.name('buildConfig')} method for every ASMODEUS subclass.")
+
+    def protectOverwrite(self, *path):
+        if self.dataset.exists(*path) and not self.config.overwrite:
+            raise exceptions.OverwriteError(c.path(self.dataset.path(*path)))
         else:
-            if fullReset:
-                self.dataset.reset()
-            self.dataset.reset(stage)
+            self.dataset.reset(*path)
 
     def requireStage(self, stage, program):
         try:
             self.dataset.require(stage)
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             log.error("Could not load meteors from {s} -- did you run {gen}?".format(
                 s   = c.path(self.dataset.path(stage)),
                 gen = c.script(program),
@@ -106,13 +107,14 @@ class Asmodeus():
     def run(self):
         try:
             self.runSpecific()
+            self.finalize()
         except exceptions.ConfigurationError as e:
             log.critical(f"Terminating due to a configuration error: {e}")
         finally:
             if self.ok:
-                log.info("{} finished successfully".format(c.script(f"asmodeus-{self.name}")))
+                log.info(f"{c.script(f'asmodeus-{self.name}')} finished successfully in {self.runTime():.6f} s")
             else:
-                log.critical("{} aborted".format(c.script(f"asmodeus-{self.name}")))
+                log.critical(f"{c.script(f'asmodeus-{self.name}')} aborted")
             log.info("-" * 50)
 
     def loadObservers(self):
@@ -138,7 +140,7 @@ class Asmodeus():
         total = len(args)
 
         results = pool.map_async(function, [(queue, *x) for x in args], 20)
-        
+
         while not results.ready():
             log.info("{action}: {count} of {total} ({perc})".format(
                 action      = action,
@@ -150,28 +152,6 @@ class Asmodeus():
 
         return results.get()
 
-
-class AsmodeusMP(Asmodeus):
-    def overrideConfig(self):
-        super().overrideConfig()
-        
-        if self.args.processes:
-            self.overrideWarning('process count', self.config.mp.processes, self.args.processes)
-            self.config.mp.processes = self.args.processes
-
-
-# Old crap below
-
-def createAmosHistograms(file):
-    h = config.statistics.histograms
-    histograms = {
-        'altitude':         Histogram.load(file, 'altitude', h.altitude.min, h.altitude.max, h.altitude.bin, 1).normalize(),
-        'azimuth':          Histogram.load(file, 'azimuth', h.azimuth.min, h.azimuth.max, h.azimuth.bin, 2).normalize(),
-        'angularSpeed':     Histogram.load(file, 'angularSpeed', h.angularSpeed.min, h.angularSpeed.max, h.angularSpeed.bin, 3).normalize(),
-        'magnitude':        Histogram.load(file, 'magnitude', h.magnitude.min, h.magnitude.max, h.magnitude.bin, 4).normalize(),
-    }
-
-    for name, histogram in histograms.items():
-        histogram.tsv(open(datasetPath('histograms', 'amos-{}.tsv'.format(histogram.name)), 'w'))
-
-    return histograms
+    def finalize(self):
+        log.debug("Wrapping everything up...")
+        self.ok = True

@@ -9,25 +9,21 @@
 """
 
 import argparse
-import multiprocessing as mp
-import sys
-import time
 
-from core               import asmodeus, logger, exceptions
+from core               import asmodeus, logger
 from utilities          import colour as c
 
 from models.meteor import Meteor
 from models.sighting import Sighting
 
 
-class AsmodeusObserve(asmodeus.AsmodeusMP):
+class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
     name = 'observe'
-    
+
     def createArgparser(self):
         super().createArgparser()
         self.argparser.add_argument('config',                   type = argparse.FileType('r'))
         self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
-        self.argparser.add_argument('-p', '--processes',        type = int)
         self.argparser.add_argument('-c', '--count',            type = int)
         self.argparser.add_argument('-s', '--streaks',          action = 'store_true')
 
@@ -40,19 +36,16 @@ class AsmodeusObserve(asmodeus.AsmodeusMP):
             self.overrideWarning('streaks', self.config.observations.streaks, self.args.streaks)
             self.config.observations.streaks = True
 
-    def configure(self):
+    def prepareDataset(self):
         self.requireStage('meteors', 'asmodeus-generate')
         self.protectOverwrite('sightings')
 
+    def configure(self):
         self.loadObservers()
         for observer in self.observers:
             self.dataset.create('sightings', observer.id)
 
     def runSpecific(self):
-        self.observe()
-        self.finalize()
-
-    def observe(self):
         self.markTime()
         meteorFiles = self.dataset.list('meteors')
         self.count = 0
@@ -84,8 +77,8 @@ class AsmodeusObserve(asmodeus.AsmodeusMP):
             target  = c.over('streaks' if self.config.observations.streaks else 'points'),
             dir     = c.path(self.dataset.path('sightings')),
         ))
-        self.ok = True
-        
+        super().finalize()
+
 
 def observe(args):
     queue, observer, filename, out, streaks = args
@@ -96,8 +89,7 @@ def observe(args):
     sighting.save(out, streak = streaks)
     return sighting.asPoint()
 
+
 if __name__ == "__main__":
     log = logger.setupLog('root')
-    asmo = AsmodeusObserve()
-    asmo.run()
-
+    AsmodeusObserve().run()

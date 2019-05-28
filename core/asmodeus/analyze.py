@@ -1,22 +1,23 @@
-#!/usr/bin/env python
-
-import sys
 import argparse
 import dotmap
+import logging
 
-from core               import asmodeus, logger, exceptions
-from discriminator      import MagnitudeDiscriminator, AltitudeDiscriminator, AngularSpeedDiscriminator
-from utilities          import colour as c
+from core import exceptions
+from discriminator import MagnitudeDiscriminator, AltitudeDiscriminator, AngularSpeedDiscriminator
+from utilities import colour as c
+
+from core.asmodeus import Asmodeus
+
+log = logging.getLogger('root')
 
 
-class AsmodeusAnalyze(asmodeus.Asmodeus):
+class AsmodeusAnalyze(Asmodeus):
     name = 'analyze'
 
     def createArgparser(self):
         super().createArgparser()
         self.argparser.add_argument('observers',                type = argparse.FileType('r'))
         self.argparser.add_argument('analyses',                 type = argparse.FileType('r'))
-        self.argparser.add_argument('-s', '--sky-plots',        action = 'store_true')
         self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
 
     def buildConfig(self):
@@ -28,19 +29,11 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
             'analyses':  analysesConfig.toDict(),
         }, _dynamic = False)
 
-    def overrideConfig(self):
-        super().overrideConfig()
-        if self.args.sky_plots:
-            self.overrideWarning('sky plots', self.config.plot.sky.enabled, self.args.sky_plots)
-            self.config.plot.sky.enable = True
+    def prepareDataset(self):
+        self.requireStage('sightings', 'asmodeus-observe')
 
     def configure(self):
-        self.requireStage('sightings', 'asmodeus-observe')
-        self.protectOverwrite('analyses')
-        self.protectOverwrite('plots')
-        self.protectOverwrite('histograms')
         self.loadObservers()
-
         try:
             bias = self.config.analyses.bias
             self.discriminators = {
@@ -57,28 +50,13 @@ class AsmodeusAnalyze(asmodeus.Asmodeus):
             raise exceptions.ConfigurationError(e)
 
     def runSpecific(self):
-        self.analyze()
-        self.plotSky()
-        self.finalize()
-
-    def analyze(self):
-        self.markTime()
         for observer in self.observers:
-            observer.settings = self.config.analyses.statistics
-            observer.setDiscriminators(self.discriminators)
-            observer.loadDataframe()
-            observer.analyzeSightings()
+            self.markTime()
+            self.prepareObserver(observer)
+            self.runAnalysis(observer)
 
-    def plotSky(self):
-        for observer in self.observers:
-            observer.plotSkyPlot(self.config)
-
-    def finalize(self):
-        log.info(f"Finished in {self.runTime():.6f} seconds")
-        self.ok = True
-
-
-if __name__ == "__main__":
-    log = logger.setupLog('root')
-    asmo = AsmodeusAnalyze()
-    asmo.run()
+    def prepareObserver(self, observer):
+        observer.settings = self.config.analyses.statistics
+        observer.setDiscriminators(self.discriminators)
+        observer.loadDataframe()
+        observer.applyBias()
