@@ -21,7 +21,7 @@ meteors:
         distribution:           'pareto'                    # Particle mass distribution. Possible values 'pareto', 'exponential' or a number
         parameters:
             minimum:            0.000001                    # Minimum particle mass, in kg
-            shape:              1.85                        # Shape of the distribution, corresponds to s-index (N(m) \propto m^-s)
+            shape:              1.80                        # Shape of the distribution, corresponds to s-index (N(m) \propto m^-s)
 
     position:
         distribution:           'rectangle'                 # Name of the distribution, currently only 'rectangle'

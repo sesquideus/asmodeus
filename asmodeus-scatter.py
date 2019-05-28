@@ -4,17 +4,17 @@ from core               import asmodeus, logger
 from utilities          import colour as c
 
 
-class AsmodeusSky(asmodeus.AsmodeusAnalyze):
-    name = 'sky'
+class AsmodeusScatter(asmodeus.AsmodeusAnalyze):
+    name = 'scatter'
 
     def prepareDataset(self):
         super().prepareDataset()
-        self.protectOverwrite('plots')
+        self.protectOverwrite('analyses', 'kde')
 
     def runAnalysis(self, observer):
-        observer.plotSky()
+        observer.makeScatters()
 
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
-    AsmodeusSky().run()
+    AsmodeusScatter().run()

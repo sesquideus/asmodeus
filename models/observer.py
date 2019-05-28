@@ -8,7 +8,9 @@ import scipy.stats
 import pandas
 
 from matplotlib import pyplot
+from matplotlib.ticker import ScalarFormatter
 from pprint import pprint as pp
+from astropy.time import Time
 
 from core                       import exceptions
 from physics                    import coord
@@ -83,6 +85,7 @@ class Observer():
         filename = self.dataset.path('sightings', self.id, 'sky.tsv')
         log.info(f"Loading a dataframe from {c.path(filename)}")
         self.dataframe = pandas.read_csv(filename, sep = '\t') 
+        self.dataframe['mjd'] = Time(self.dataframe.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
         log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
 
     def saveDataframe(self):
@@ -118,19 +121,15 @@ class Observer():
     def skyPlotHeader(cls):
         return "#                timestamp     alt       az      d      ele      v       as            m           F0           F   absmag  appmag"
 
-    def plotSky(self, config):
-        log.info(f"Plotting sky for observer {c.name(self.id)}")
+    def plotSky(self):
+        path = self.dataset.path('plots', self.id, 'sky.png')
+        log.info(f"Plotting sky for observer {c.name(self.id)} ({c.path(path)})")
         self.dataset.create('plots', self.id)
 
-        if config.observations.streaks:
-            dots = [point.asDotMap() for sighting in self.visible for point in sighting.frames]
-        else:
-            dots = self.visible
-
-        azimuths    = dots.azimuth
-        altitudes   = 90 - dots.altitude
-        colours     = np.maximum(np.log10(dots.lumPower), -12)
-        sizes       = 0.01 * np.log10(dots.fluxDensity * 1e12 + 1)**4
+        azimuths    = self.visible.azimuth
+        altitudes   = 90 - self.visible.altitude
+        colours     = np.maximum(np.log10(self.visible.lumPower), -12)
+        sizes       = 0.01 * np.log10(self.visible.fluxDensity * 1e12 + 1)**4
 
         fig = pyplot.figure(figsize = (5, 5), dpi = 300, facecolor  = 'black')
         ax = fig.add_subplot(111, projection = 'polar')
@@ -145,7 +144,7 @@ class Observer():
         ax.axes.yaxis.set_ticks(np.linspace(0, 90, 7))
         ax.grid(linewidth = 0.1, color = 'white')
         pyplot.savefig(
-            self.dataset.path('plots', self.id, 'sky.png'),
+            path,
             bbox_inches = 'tight',
             facecolor = 'black',
         )
@@ -228,6 +227,7 @@ class Observer():
 
             axes.set_xlim(xparams.min, xparams.max)
             axes.set_ylim(yparams.min, yparams.max)
+            axes.xaxis.set_major_formatter(ScalarFormatter(useOffset = False))
             
             axes.scatter(
                 self.visible[scatter.x],

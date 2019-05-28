@@ -129,7 +129,7 @@ class PointSighting():
             "{fluxDensity:9.3e}\t" \
             "{absMag:6.2f}\t" \
             "{appMag:6.2f}".format(
-                timestamp           = self.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
+                timestamp           = self.timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f"),
                 altitude            = self.altitude,
                 azimuth             = self.azimuth,
                 distance            = self.distance,
@@ -163,7 +163,7 @@ class PointSighting():
 
     def asTuple(self):
         return (
-            self.timestamp,
+            self.timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f"),
             self.altitude,
             self.azimuth,
             self.distance,

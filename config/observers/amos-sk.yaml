@@ -1,0 +1,27 @@
+mp:
+    processes:                  4
+    report:                     1
+
+observations:
+    streaks:                    False
+    observers:
+        ago:
+            latitude:           48.3729
+            longitude:          17.2738
+            altitude:           538
+            horizon:            15
+        arbo:
+            latitude:           48.3235
+            longitude:          18.3685
+            altitude:           201
+            horizon:            15
+        vazec:
+            latitude:           49.0543
+            longitude:          19.9899
+            altitude:           812
+            horizon:            15
+        knm:
+            latitude:           49.3073
+            longitude:          18.7655
+            altitude:           414
+            horizon:            15
