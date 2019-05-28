@@ -170,10 +170,6 @@ class Observer():
         return scipy.stats.gaussian_kde(self.visible[stat])
 
     def makeHistograms(self):
-        if not self.settings.histograms.enabled:
-            log.warning("Skipping histograms")
-            return
-
         log.info(f"Creating histograms for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', self.id, 'histograms', exist_ok = True)
 

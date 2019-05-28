@@ -4,17 +4,17 @@ from core               import asmodeus, logger
 from utilities          import colour as c
 
 
-class AsmodeusKDE(asmodeus.AsmodeusAnalyze):
-    name = 'kde'
+class AsmodeusHistograms(asmodeus.AsmodeusAnalyze):
+    name = 'histogram'
 
     def prepareDataset(self):
         super().prepareDataset()
-        self.protectOverwrite('analyses', 'kde')
+        self.protectOverwrite('analyses', 'histograms')
 
     def runAnalysis(self, observer):
-        observer.makeKDEs()
+        observer.makeHistograms()
 
 
 if __name__ == "__main__":
     log = logger.setupLog('root')
-    AsmodeusKDE().run()
+    AsmodeusHistograms().run()

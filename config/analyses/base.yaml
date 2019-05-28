@@ -63,10 +63,16 @@ statistics:                                                 # Histograms to be p
             name:               'log initial mass'
             xaxis:              'number'
         mjd: &mjd
-            min:                57611.791666
-            max:                57612.083333
+            min:                57611.691666
+            max:                57612.183333
             bin:                0.0069444444
             name:               'MJD'
+            xaxis:              'number'
+        elevation: &elevation
+            min:                60000
+            max:                120000
+            bin:                1000
+            name:               'elevation'
             xaxis:              'number'
 #        timestamp:
 #            min:                2016-08-11T19:00:00
@@ -76,10 +82,8 @@ statistics:                                                 # Histograms to be p
 #            xaxis:              time
 
     histograms:
-        enabled:                False
         quantities:             *quantities
     kdes:
-        enabled:                False
         quantities:             *quantities
     scatters:
 #        -   x:                  appMag
@@ -100,6 +104,13 @@ statistics:                                                 # Histograms to be p
         -   x:                  mjd
             y:                  appMag
             colour:             absMag
+        -   x:                  logInitMass
+            y:                  elevation
+            colour:             absMag
+        -   x:                  mjd
+            y:                  elevation
+            colour:             absMag
+            
 
 
 optimize:                                                   # Exhaustive search of the parameter space
