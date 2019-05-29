@@ -3,7 +3,7 @@ mp:                                                         # Multiprocessing co
     report:                     1                           # Report progress every N seconds
 
 meteors:
-    count:                      100000
+    count:                      200000
 
     shape:
         dragCoefficient:        0.6                         # 0.6 for a spherical body

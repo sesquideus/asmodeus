@@ -23,7 +23,7 @@ class PositionDistribution(base.Distribution):
         return lambda: coord.Vector3D.fromGeodetic(latitude, longitude, elevation)
 
     @classmethod
-    def rectangle(self, *, south: float, north: float, west: float, east: float, elevation: float) -> (lambda: coord.Vector3D):
+    def rectangle(cls, *, south: float, north: float, west: float, east: float, elevation: float) -> (lambda: coord.Vector3D):
         # log.info("This means a total area of about {:.0f} km²".format(
         #     (math.sin(math.radians(north)) - math.sin(math.radians(south))) * math.radians(east - west) * (6371 + elevation / 1000)**2)
         # )
@@ -34,7 +34,7 @@ class PositionDistribution(base.Distribution):
             p = random.random()
             if p < math.cos(math.radians(latitude)):
                 log.debug("Meteoroid position accepted")
-                return coord.Vector3D.fromGeodetic(latitude, longitude, elevation)
+                return coord.Vector3D.fromGeodetic(latitude, longitude, elevation + random.uniform(0, 20000))
             else:
                 log.debug("Meteoroid position rejected at {}".format(latitude))
                 return fun()

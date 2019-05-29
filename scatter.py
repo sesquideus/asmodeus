@@ -9,7 +9,7 @@ class AsmodeusScatter(asmodeus.AsmodeusAnalyze):
 
     def prepareDataset(self):
         super().prepareDataset()
-        self.protectOverwrite('analyses', 'kde')
+        self.protectOverwrite('analyses', 'scatters')
 
     def runAnalysis(self, observer):
         observer.makeScatters()

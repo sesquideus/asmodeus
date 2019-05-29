@@ -44,7 +44,8 @@ class Observer():
             met = c.name(meteor),
             nf  = c.num(len(meteor.frames))
         ))
-        return [SightingFrame(self, frame) for frame in meteor.frames]
+        frames = [SightingFrame(self, frame) for frame in meteor.frames]
+        return [frame for frame in frames if frame.altitude >= self.horizon]
 
     def altAz(self, point: coord.Vector3D) -> coord.Vector3D:
         """
@@ -59,9 +60,6 @@ class Observer():
             id          = c.name(self.id),
             position    = self.position.strGeodetic(),
         )
-
-#    def loadSightingsTSV(self):
-#        log.info(f"Loading sightings from {c.path(self.dataset.path('sightings'))}")
 
     def createDataframe(self):
         self.dataframe = pandas.DataFrame.from_records(
@@ -86,6 +84,7 @@ class Observer():
         log.info(f"Loading a dataframe from {c.path(filename)}")
         self.dataframe = pandas.read_csv(filename, sep = '\t') 
         self.dataframe['mjd'] = Time(self.dataframe.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
+        self.dataframe['logInitMass'] = np.log(self.dataframe.initMass.to_numpy(dtype = 'float'))
         log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
 
     def saveDataframe(self):
@@ -117,10 +116,6 @@ class Observer():
         self.visible = self.dataframe[self.dataframe.visible]
         log.info(f"Bias applied, {c.num(len(self.visible.index))}/{c.num(len(self.dataframe.index))} sightings marked as detected")
 
-    @classmethod
-    def skyPlotHeader(cls):
-        return "#                timestamp     alt       az      d      ele      v       as            m           F0           F   absmag  appmag"
-
     def plotSky(self):
         path = self.dataset.path('plots', self.id, 'sky.png')
         log.info(f"Plotting sky for observer {c.name(self.id)} ({c.path(path)})")
@@ -151,7 +146,7 @@ class Observer():
 
     def makeKDEs(self):
         log.info(f"Creating KDEs for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
-        self.dataset.create('analyses', self.id, 'kdes', exist_ok = True)
+        self.dataset.create('analyses', 'kdes', self.id, exist_ok = True)
 
         for stat, params in self.settings.kdes.quantities.items():       
             self.makeKDE(stat, **params)
@@ -164,14 +159,14 @@ class Observer():
 
         figure, axes = self.emptyFigure()
         axes.fill_between(space, 0, pdf, alpha = 0.5)
-        figure.savefig(self.dataset.path('analyses', self.id, 'kdes', f"{stat}.png"))
+        figure.savefig(self.dataset.path('analyses', 'kdes', self.id, f"{stat}.png"))
 
     def computeKDE(self, stat):
         return scipy.stats.gaussian_kde(self.visible[stat])
 
     def makeHistograms(self):
         log.info(f"Creating histograms for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
-        self.dataset.create('analyses', self.id, 'histograms', exist_ok = True)
+        self.dataset.create('analyses', 'histograms', self.id, exist_ok = True)
 
         for stat, params in self.settings.histograms.quantities.items():       
             self.makeHistogram(stat, params)
@@ -182,7 +177,7 @@ class Observer():
 
         figure, axes = self.emptyFigure()
         axes.bar(edges[:-1], hist, width = params.bin, alpha = 0.5, align = 'edge', color = (0.3, 0.0, 0.7, 0.5))
-        figure.savefig(self.dataset.path('analyses', self.id, 'histograms', f"{stat}.png"))
+        figure.savefig(self.dataset.path('analyses', 'histograms', self.id, f"{stat}.png"))
 
         np.savetxt(
             self.dataset.path('analyses', self.id, 'histograms', f"{stat}.tsv"),
@@ -199,7 +194,7 @@ class Observer():
 
     def emptyFigure(self):
         figure, axes = pyplot.subplots()
-        figure.tight_layout(rect = (0.1, 0, 1, 1))
+        figure.tight_layout(rect = (0.05, 0, 1, 1))
         figure.set_size_inches(6, 4)
         figure.set_dpi(300)
         axes.grid(linewidth = 0.2, linestyle = ':')
@@ -208,12 +203,15 @@ class Observer():
 
     def makeScatters(self):
         log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
-        self.dataset.create('analyses', self.id, 'scatters', exist_ok = True)
+        self.dataset.create('analyses', 'scatters', self.id, exist_ok = True)
 
         for scatter in self.settings.scatters:
             self.crossScatter(scatter)
 
     def crossScatter(self, scatter):
+        """
+            Render a cross-scatter plot of four variables using a scatter dotmap
+        """
         log.info(f"Creating a scatter plot for {c.param(scatter.x)} × {c.param(scatter.y)}")
 
         try:
@@ -229,12 +227,12 @@ class Observer():
                 self.visible[scatter.x],
                 self.visible[scatter.y],
                 c           = self.visible[scatter.colour],
-                s           = 0.01 * np.log10(self.visible.fluxDensity * 1e12 + 1)**4,
+                s           = 4 * np.exp(-self.visible.appMag / 5),
                 cmap        = scatter.get('cmap', 'viridis_r'),
                 alpha       = 1,
                 linewidths  = 0,
             )
-            figure.savefig(self.dataset.path('analyses', self.id, 'scatters', f"{scatter.x}-{scatter.y}.png"))
+            figure.savefig(self.dataset.path('analyses', 'scatters', self.id, f"{scatter.x}-{scatter.y}.png"))
         except KeyError as e:
             raise exceptions.ConfigurationError(f"Invalid scatter configuration parameter {e}") from e
 
