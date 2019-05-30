@@ -51,3 +51,28 @@ class Dataset():
 
     def list(self, *path):
         return os.listdir(self.path(*path))
+
+
+class DataManager():
+    def __init__(self, name, root = ''):
+        self.name = name
+        self.root = os.path.realpath(root)
+
+    def createRoot(self):
+        os.makedirs(self.root)
+        
+    def path(self, *path):
+        return os.path.join(self.root, *path)
+
+    def exists(self, *path):
+        return os.path.exists(self.path(*path))
+
+    def list(self, *path):
+        return os.listdir(self.path(*path))
+
+    def checkMeteors(self):
+        return self.exists('meteors') and self.exists('meteors.yaml')
+
+    def meteorFiles(self):
+        return self.list('meteors')
+        

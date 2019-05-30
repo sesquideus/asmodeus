@@ -28,7 +28,6 @@ class SightingFrame():
 
         self.apparentMagnitude  = radiometry.apparentMagnitude(self.fluxDensity)
         self.absoluteMagnitude  = self.frame.absoluteMagnitude
-        #self.sighted            = False
         log.debug(self)
 
     def __str__(self):

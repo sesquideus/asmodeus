@@ -82,9 +82,11 @@ class Observer():
     def loadDataframe(self):
         filename = self.dataset.path('sightings', self.id, 'sky.tsv')
         log.info(f"Loading a dataframe from {c.path(filename)}")
+        
         self.dataframe = pandas.read_csv(filename, sep = '\t') 
         self.dataframe['mjd'] = Time(self.dataframe.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
         self.dataframe['logInitMass'] = np.log(self.dataframe.initMass.to_numpy(dtype = 'float'))
+
         log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
 
     def saveDataframe(self):
@@ -95,20 +97,6 @@ class Observer():
     def setDiscriminators(self, discriminators):
         self.discriminators = discriminators
         self.biasFunction = lambda row: all([disc.compute(row[prop]) for prop, disc in self.discriminators.items()])
-
-    #def applyBias(self):
-    #    for sighting in self.allSightings:
-    #        sighting.applyBias(*self.discriminators)
-    #        log.debug("Meteor was " + (c.ok("detected") if sighting.sighted else c.err("not detected")))
-
-    #    self.visibleSightings = [s for s in self.allSightings if s.sighted]
-    #    log.info("Selection bias applied ({dc} discriminators), {sc} sightings survived ({pct})".format(
-    #        dc      = c.num(len(self.discriminators)),
-    #        sc      = c.num(len(self.visibleSightings)),
-    #        pct     = c.num("{:5.2f}%".format(100 * len(self.visibleSightings) / len(self.allSightings) if len(self.allSightings) > 0 else 0)),
-    #    ))
-
-    #    return self.visibleSightings
 
     def applyBias(self):
         log.info(f"Applying bias DPFs")
@@ -160,6 +148,7 @@ class Observer():
         figure, axes = self.emptyFigure()
         axes.fill_between(space, 0, pdf, alpha = 0.5)
         figure.savefig(self.dataset.path('analyses', 'kdes', self.id, f"{stat}.png"))
+        pyplot.close(figure)
 
     def computeKDE(self, stat):
         return scipy.stats.gaussian_kde(self.visible[stat])
@@ -178,6 +167,7 @@ class Observer():
         figure, axes = self.emptyFigure()
         axes.bar(edges[:-1], hist, width = params.bin, alpha = 0.5, align = 'edge', color = (0.3, 0.0, 0.7, 0.5))
         figure.savefig(self.dataset.path('analyses', 'histograms', self.id, f"{stat}.png"))
+        pyplot.close(figure)
 
         np.savetxt(
             self.dataset.path('analyses', self.id, 'histograms', f"{stat}.tsv"),
@@ -211,6 +201,11 @@ class Observer():
     def crossScatter(self, scatter):
         """
             Render a cross-scatter plot of four variables using a scatter dotmap
+            scatter: dotmap in shape
+            -   x:          <property to plot on x axis>
+                y:          <property to plot on y axis>
+                colour:     <property to use for colouring the dots>
+                size:       <property to determine dot size>
         """
         log.info(f"Creating a scatter plot for {c.param(scatter.x)} × {c.param(scatter.y)}")
 
@@ -233,6 +228,7 @@ class Observer():
                 linewidths  = 0,
             )
             figure.savefig(self.dataset.path('analyses', 'scatters', self.id, f"{scatter.x}-{scatter.y}.png"))
+            pyplot.close(figure)
         except KeyError as e:
             raise exceptions.ConfigurationError(f"Invalid scatter configuration parameter {e}") from e
 

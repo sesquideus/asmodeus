@@ -21,21 +21,13 @@ class Sighting():
 
         self.frames = [SightingFrame(self.observer, meteorFrame) for meteorFrame in self.meteor.frames]
 
-        #log.debug(self.frames)
-    
         self.first          = self.frames[0]
         self.last           = self.frames[-1]
         self.brightest      = None
-        #self.firstVisible   = None
-        #self.lastVisible    = None
 
         for frame in self.frames:
             if self.brightest is None or self.brightest.apparentMagnitude > frame.apparentMagnitude:
                 self.brightest = frame
-            #if frame.apparentMagnitude < 4:
-            #    if self.firstVisible is None:
-            #        self.firstVisible = frame
-            #    self.lastVisible = frame
 
     @staticmethod
     def load(filename):
@@ -46,7 +38,6 @@ class Sighting():
             'id':               self.id,
             'timestamp':        self.brightest.frame.timestamp,
             'simulationTime':   (self.last.frame.timestamp - self.first.frame.timestamp).total_seconds(),
-            #'lightTime':        (self.lastVisible.timestamp - self.firstVisible.timestamp).total_seconds(),
         }
 
     def asPoint(self):

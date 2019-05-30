@@ -1,4 +1,6 @@
-from core import asmodeus
+from core import asmodeus, logger
+
+log = logger.setupLog('root')
 
 
 class AsmodeusScatter(asmodeus.AsmodeusAnalyze):
