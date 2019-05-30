@@ -61,6 +61,7 @@ class Meteor:
 
         self.id                 = self.timestamp.strftime("%Y%m%d-%H%M%S-%f")
         self.frames             = []
+        self.initMass           = self.mass
 
         log.debug(self.__str__())
 
@@ -86,9 +87,8 @@ class Meteor:
                 frames          = len(self.frames),
             )
 
-    def save(self, dataset):
-        fileIO = io.FileIO(os.path.join('datasets', dataset, 'meteors', '{}.{}'.format(self.id, 'pickle')), 'wb')
-        pickle.dump(self, fileIO)
+    def save(self, filename):
+        pickle.dump(self, io.FileIO(os.path.join(filename, f"{self.id}.pickle"), 'wb'))
 
     def saveKML(self, dataset):
         print(
@@ -100,7 +100,7 @@ class Meteor:
         new = state + diff * dt
         new[6] = max(new[6], 1e-8)
 
-        airRho = atmosphere.airDensity(np.linalg.norm(new[0:3]) - 6371000)
+        airRho = atmosphere.airDensity(np.linalg.norm(new[0:3]) - constants.earthRadius)
         speed = np.linalg.norm(new[3:6])
         drag = -(self.dragCoefficient * self.shapeFactor * airRho * speed**2 / (new[6]**(1 / 3) * self.density**(2 / 3))) / speed
         ablation = -(self.heatTransfer * self.shapeFactor * airRho * speed**3 * (new[6] / self.density)**(2 / 3) / (2 * self.ablationHeat))
@@ -192,22 +192,18 @@ class Meteor:
             # If all mass has been ablated away, the particle is pronounced dead
             if self.mass < 0:
                 log.debug("Burnt to death")
-                self.fate = "Ablated"
                 break
 
             if self.position.elevation() > 200000:
                 log.debug("Flew away")
-                self.fate = "Flew away"
                 break
 
-            if self.velocity.norm() < 2000:
+            if self.velocity.norm() < 200:
                 log.debug("Survived with final mass {:12.6f} kg".format(self.mass))
-                self.fate = "Meteorite"
                 break
 
             if self.position.elevation() < 0:
                 log.debug("IMPACT")
-                self.fate = "Crater"
                 break
 
         log.debug(f"Meteor generated ({len(self.frames)} frames)")
