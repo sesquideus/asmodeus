@@ -29,15 +29,11 @@ class PositionDistribution(base.Distribution):
         # )
 
         def fun():
-            latitude = random.uniform(south, north)
+            southSin = math.sin(math.radians(south))
+            northSin = math.sin(math.radians(north))
+            latitude = math.degrees(math.asin(random.uniform(southSin, northSin)))
             longitude = random.uniform(west, east)
-            p = random.random()
-            if p < math.cos(math.radians(latitude)):
-                log.debug("Meteoroid position accepted")
-                return coord.Vector3D.fromGeodetic(latitude, longitude, elevation + random.uniform(0, 20000))
-            else:
-                log.debug("Meteoroid position rejected at {}".format(latitude))
-                return fun()
+            return coord.Vector3D.fromGeodetic(latitude, longitude, elevation + random.uniform(0, 20000))
 
         return fun
 

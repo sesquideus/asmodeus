@@ -31,9 +31,15 @@ class WindowGenerate(QW.QDialog):
 
 
         layout = QW.QHBoxLayout()
+        self.countLabel = QLabel('Count:')
+        self.countLabel.setAlignment(Qt.AlignLeft)
+        layout.addWidget(self.countLabel)
         self.count = QW.QSpinBox()
         self.count.setMinimum(0)
         self.count.setMaximum(1000000)
+        layout.addWidget(self.count)
+        
+        self.setLayout(layout)
 
         combo = QW.QComboBox(self)
         combo.addItem('Uniform')
@@ -44,7 +50,7 @@ class WindowGenerate(QW.QDialog):
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
 
-        self.resize(1000, 1000)
+        #self.resize(1000, 1000)
 
 class MainWindow(QMainWindow):
     version = '0.0.1'

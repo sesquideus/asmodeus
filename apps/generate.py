@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
     Asmodeus, script 1: generate
 
@@ -18,6 +17,8 @@ from physics                import coord
 from distribution           import PositionDistribution, VelocityDistribution, MassDistribution, DensityDistribution, TimeDistribution
 from utilities              import colour as c
 from models.meteor          import Meteor
+
+log = logger.setupLog('root')
 
 
 class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
@@ -139,8 +140,3 @@ def simulate(args):
     queue.put(1)
     meteor.flyRK4(fps, spf)
     meteor.save(dataset)
-
-
-if __name__ == "__main__":
-    log = logger.setupLog('root')
-    AsmodeusGenerate().run()

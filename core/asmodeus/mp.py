@@ -4,7 +4,7 @@ from .asmodeus import Asmodeus
 class AsmodeusMultiprocessing(Asmodeus):
     def createArgparser(self):
         super().createArgparser()
-        self.argparser.add_argument('-p', '--processes',        type = int)
+        self.argparser.add_argument('-p', '--processes', type = int)
 
     def overrideConfig(self):
         super().overrideConfig()

@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+from core import asmodeus
 
-from core               import asmodeus, logger
-from utilities          import colour as c
+log = logger.setupLog('root')
 
 
 class AsmodeusSky(asmodeus.AsmodeusAnalyze):
@@ -13,8 +12,3 @@ class AsmodeusSky(asmodeus.AsmodeusAnalyze):
 
     def runAnalysis(self, observer):
         observer.plotSky()
-
-
-if __name__ == "__main__":
-    log = logger.setupLog('root')
-    AsmodeusSky().run()

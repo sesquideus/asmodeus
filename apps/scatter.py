@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
-from core               import asmodeus, logger
-from utilities          import colour as c
+from core import asmodeus
 
 
 class AsmodeusScatter(asmodeus.AsmodeusAnalyze):
@@ -13,8 +10,3 @@ class AsmodeusScatter(asmodeus.AsmodeusAnalyze):
 
     def runAnalysis(self, observer):
         observer.makeScatters()
-
-
-if __name__ == "__main__":
-    log = logger.setupLog('root')
-    AsmodeusScatter().run()

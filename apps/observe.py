@@ -16,6 +16,8 @@ from utilities          import colour as c
 from models.meteor import Meteor
 from models.sighting import Sighting
 
+log = logger.setupLog('root')
+
 
 class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
     name = 'observe'
@@ -88,8 +90,3 @@ def observe(args):
     sighting = Sighting(observer, meteor)
     sighting.save(out, streak = streaks)
     return sighting.asPoint()
-
-
-if __name__ == "__main__":
-    log = logger.setupLog('root')
-    AsmodeusObserve().run()
