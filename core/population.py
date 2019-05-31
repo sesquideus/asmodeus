@@ -44,7 +44,7 @@ class Population():
             self.parameters.material.ablationHeat,
             self.parameters.material.heatTransfer,
             self.parameters.shape.dragCoefficient,
-            fps, spf, os.path.join('datasets', 'plys', 'meteors')
+            fps, spf,
         ) for _ in range(0, self.parameters.count)]
 
         meteors = parallel(simulate, args, processes = processes, action = "Simulating meteors")
@@ -56,7 +56,7 @@ class Population():
             mass            = c.num("{:6f} kg".format(sum(map(lambda x: x.initMass, self.meteors)))),
         ))
 
-    def save(self, directory, processes = 1):
+    def save(self, directory):
         log.info(f"Saving the population to {c.path(directory)}")
         
         for meteor in self.meteors:

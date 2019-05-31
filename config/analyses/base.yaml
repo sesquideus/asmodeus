@@ -3,7 +3,7 @@ biasFunctions:
         sigmoid: &sigmoid
             discriminator:      'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
             parameters:                        
-                limit:          9.5                         # Limiting magnitude m0
+                limit:          8.5                         # Limiting magnitude m0
                 width:          0.35                        # Width of the function
         all: &all
             discriminator:      'all'                       # Angular speed detection efficiency profile, possible values 'flat' or 'linear'
@@ -64,7 +64,7 @@ statistics:                                                 # Histograms to be p
             xaxis:              'number'
         mjd: &mjd
             min:                57611.691666
-            max:                57612.283333
+            max:                57612.183333
             bin:                0.0069444444
             name:               'MJD'
             xaxis:              'number'
@@ -74,7 +74,6 @@ statistics:                                                 # Histograms to be p
             bin:                1000
             name:               'elevation'
             xaxis:              'number'
-
 #        timestamp:
 #            min:                2016-08-11T19:00:00
 #            max:                2016-08-12T02:00:00
@@ -90,33 +89,29 @@ statistics:                                                 # Histograms to be p
 #        -   x:                  appMag
 #            y:                  altitude
 #            colour:             absMag
-        -   x:                  appMag
-            y:                  absMag
-            colour:             absMag
+        -   {x:     appMag, y:      absMag, colour: absMag}
 #        -   x:                  logInitMass
 #            y:                  appMag
 #            colour:             absMag
         -   x:                  logInitMass
             y:                  altitude
-            colour:             appMag
+            colour:             absMag
         -   x:                  mjd
             y:                  altitude
-            colour:             appMag
+            colour:             absMag
         -   x:                  mjd
             y:                  appMag
-            colour:             appMag
+            colour:             absMag
         -   x:                  logInitMass
             y:                  elevation
-            colour:             appMag
+            colour:             absMag
         -   x:                  mjd
             y:                  elevation
-            colour:             appMag
-        -   x:                  logInitMass
-            y:                  elevation
-            colour:             appMag
+            colour:             absMag
         -   x:                  mjd
-            y:                  absMag
-            colour:             elevation
+            y:                  angSpeed
+            colour:             appMag
+        -   {x:   altitude, y: angSpeed, colour: appMag
             
 
 
