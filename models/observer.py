@@ -85,8 +85,9 @@ class Observer():
         
         self.dataframe = pandas.read_csv(filename, sep = '\t') 
         self.dataframe['mjd'] = Time(self.dataframe.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
-        self.dataframe['logInitMass'] = np.log(self.dataframe.initMass.to_numpy(dtype = 'float'))
+        self.dataframe['logInitMass'] = np.log10(self.dataframe.initMass.to_numpy(dtype = 'float'))
 
+        print(self.dataframe)
         log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
 
     def saveDataframe(self):
@@ -170,7 +171,7 @@ class Observer():
         pyplot.close(figure)
 
         np.savetxt(
-            self.dataset.path('analyses', self.id, 'histograms', f"{stat}.tsv"),
+            self.dataset.path('analyses', 'histograms', self.id, f"{stat}.tsv"),
             np.vstack((edges[:-1], hist)).T,
             delimiter       = '\t',
             fmt             = ('%.10f', '%.10f'),

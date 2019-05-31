@@ -1,6 +1,6 @@
 mp:
     processes:                  4
-    report:                     5
+    report:                     1
 
 observations:
     streaks:                    False

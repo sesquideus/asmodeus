@@ -17,6 +17,7 @@ log = logging.getLogger('root')
 class Asmodeus():
     def __init__(self):
         self.ok = False
+        self.startTime = time.time()
         log.info("Initializing {}".format(c.script("asmodeus-{}".format(self.name))))
         self.createArgparser()
         self.args = self.argparser.parse_args()
@@ -99,7 +100,10 @@ class Asmodeus():
             log.warning(f"Added log output {c.over(self.args.logfile.name)}")
 
     def markTime(self):
-        self.startTime = time.time()
+        self.mark = time.time()
+
+    def stopTime(self):
+        return time.time() - self.mark
 
     def runTime(self):
         return time.time() - self.startTime

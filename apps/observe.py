@@ -11,6 +11,7 @@
 import argparse
 
 from core               import asmodeus, logger
+from core.parallel      import parallel
 from utilities          import colour as c
 
 from models.meteor import Meteor
@@ -54,7 +55,6 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
 
         for observer in self.observers:
             argList = [(
-                observer,
                 self.dataset.path('meteors', meteorFile),
                 self.dataset.path('sightings', observer.id, meteorFile),
                 self.config.observations.streaks,
@@ -63,7 +63,12 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
 
             log.info(f"Calculating {c.num(total)} observations using {c.num(self.config.mp.processes)} processes")
 
-            observer.sightings = self.parallel(observe, argList, action = "Observing meteors", period = self.config.mp.report)
+            observer.sightings = parallel(observe, argList,
+                initializer = init,
+                initargs    = (observer, self.config.observations.streaks),
+                action      = "Observing meteors",
+                period      = self.config.mp.report
+            )
             observer.createDataframe()
             observer.saveDataframe()
 
@@ -81,9 +86,16 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
         ))
         super().finalize()
 
+def init(queuex, observerx, streaksx):
+    global queue
+    queue = queuex
+    global observer
+    observer = observerx
+    global streaks
+    streaks = streaksx
 
 def observe(args):
-    queue, observer, filename, out, streaks = args
+    filename, out, streaks = args
 
     queue.put(1)
     meteor = Meteor.load(filename)

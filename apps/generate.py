@@ -46,12 +46,21 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
         self.population = Population(self.config.meteors)
 
     def runSpecific(self):
+        self.population.generate()
+
         self.markTime()
         self.population.simulate(self.config.mp.processes, self.config.meteors.integrator.fps, self.config.meteors.integrator.spf)
+        log.info("{num} meteors were generated in {time} seconds ({rate} meteors per second)".format(
+            num     = c.num(self.population.parameters.count),
+            time    = c.num(f"{self.stopTime():.6f}"),
+            rate    = c.num(f"{self.population.parameters.count / self.stopTime():.3f}"),
+        ))
+        
+        self.markTime()
         self.population.save(self.dataset.path('meteors'))
-        log.info("{num} meteors were generated in {time} seconds ({rate} meteors per second) and saved to {dir}".format(
-            num     = c.num(self.population.count),
-            time    = c.num(f"{self.runTime():.6f}"),
-            rate    = c.num(f"{self.population.count / self.runTime():.3f}"),
+        log.info("{num} meteors were saved to {dir} in {time} seconds ({rate} meteors per second)".format(
+            num     = c.num(self.population.parameters.count),
+            time    = c.num(f"{self.stopTime():.6f}"),
+            rate    = c.num(f"{self.population.parameters.count / self.stopTime():.3f}"),
             dir     = c.path(self.dataset.path('meteors')),
         ))

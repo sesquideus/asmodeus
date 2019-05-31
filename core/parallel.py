@@ -7,13 +7,13 @@ from utilities          import colour as c
 log = logging.getLogger('root')
 
 
-def parallel(function, args, *, processes = 1, action = "<default action>", period = 1):
-    pool = mp.Pool(processes = processes)
+def parallel(function, args, *, initializer = None, initargs = (), processes = 1, action = "<default action>", period = 1):
     manager = mp.Manager()
     queue = manager.Queue()
+    pool = mp.Pool(processes = processes, initializer = initializer, initargs = (queue, *initargs))
     total = len(args)
 
-    results = pool.map_async(function, [(queue, *x) for x in args], 50)
+    results = pool.map_async(function, args, 2000)
 
     while not results.ready():
         log.info("{action}: {count} of {total} ({perc})".format(

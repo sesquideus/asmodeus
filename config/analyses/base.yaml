@@ -111,7 +111,7 @@ statistics:                                                 # Histograms to be p
         -   x:                  mjd
             y:                  angSpeed
             colour:             appMag
-        -   {x:   altitude, y: angSpeed, colour: appMag
+        -   {x:   altitude, y: angSpeed, colour: appMag}
             
 
 

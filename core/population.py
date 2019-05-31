@@ -4,6 +4,9 @@ import os
 import logging
 import random
 
+import time
+import multiprocessing as mp
+
 from core.parallel      import parallel
 from distribution       import PositionDistribution, VelocityDistribution, MassDistribution, DensityDistribution, TimeDistribution
 from models.meteor      import Meteor
@@ -29,35 +32,48 @@ class Population():
 
     def generate(self):
         log.info(f"Generating {c.num(self.parameters.count)} meteoroids")
+        count = 0
+        self.iterations = 0
 
-        self.meteors = parallel(generate, args, processes = 4, action = "Generating meteoroids")
-        self.count = len(self.meteors)
+        self.meteors = []
+
+        while (count < self.parameters.count):
+            mass                = self.massDistribution.sample()
+            density             = self.densityDistribution.sample()
+            timestamp           = self.temporalDistribution.sample()
+            position            = self.positionDistribution.sample()
+            velocityEquatorial  = self.velocityDistribution.sample()
+
+            velocityECEF        = coord.Vector3D.fromNumpyVector((coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
+            entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
+
+            self.iterations += 1
+            if entryAngleSin > random.random():
+                self.meteors.append(Meteor(
+                    mass            = mass,
+                    density         = density,
+                    timestamp       = timestamp,
+                    velocity        = velocityECEF,
+                    position        = position,
+                    ablationHeat    = self.parameters.material.ablationHeat,
+                    heatTransfer    = self.parameters.material.heatTransfer,
+                    dragCoefficient = self.parameters.shape.dragCoefficient,
+                ))
+                count += 1
 
     def simulate(self, processes, fps, spf):
         log.info(f"Simulating atmospheric entry: using {c.num(processes)} processes at {c.num(fps)} frames per second, with {c.num(spf)} steps per frame")
-        args = [(
-            self.temporalDistribution.sample(),
-            self.massDistribution.sample(),
-            self.densityDistribution.sample(),
-            self.positionDistribution.sample(),
-            self.velocityDistribution.sample(),
-            self.parameters.material.ablationHeat,
-            self.parameters.material.heatTransfer,
-            self.parameters.shape.dragCoefficient,
-            fps, spf,
-        ) for _ in range(0, self.parameters.count)]
 
-        meteors = parallel(simulate, args, processes = processes, action = "Simulating meteors")
-        self.meteors = list(filter(None.__ne__, meteors))
-        self.count = len(self.meteors)
-        log.info("{total} meteoroids survived the sin θ test ({percent}), total mass {mass}".format(
-            total           = c.num(self.count),
-            percent         = c.num(f"{100 * len(self.meteors) / self.parameters.count:5.2f}%"),
+        args = [(meteor,) for meteor in self.meteors]
+        
+        self.meteors = parallel(simulate, args, initializer = init, initargs = (fps, spf), processes = processes, action = "Simulating meteors")
+        log.info("Total mass {mass}, effective area {area}".format(
+            area            = c.num(f"{self.parameters.count / self.iterations * 100:5.2f}%"),
             mass            = c.num("{:6f} kg".format(sum(map(lambda x: x.initMass, self.meteors)))),
         ))
 
     def save(self, directory):
-        log.info(f"Saving the population to {c.path(directory)}")
+        log.debug(f"Saving the population to {c.path(directory)}")
         
         for meteor in self.meteors:
             meteor.save(directory)
@@ -68,35 +84,42 @@ class Population():
             'timestamp':    datetime.datetime.now().isoformat(),
         }, open(self.dataset.path('meteors.yaml'), 'w'), default_flow_style = False)
 
-        
-def simulate(args):
-    queue, timestamp, mass, density, position, velocityEquatorial, ablationHeat, heatTransfer, dragCoefficient, fps, spf = args
-    queue.put(1)
+def init(queuex, fpsx, spfx):
+    global fps
+    fps = fpsx
+    global spf
+    spf = spfx
+    global queue
+    queue = queuex
 
-    velocityECEF        = coord.Vector3D.fromNumpyVector((coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
+def worker(args):
+    queue, = args
+    position            = pd.sample()
+    velocity            = vd.sample()
+    timestamp           = td.sample()
+    velocityECEF        = coord.Vector3D.fromNumpyVector((coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocity.toNumpyVector()))
     entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
-
-    rnd                 = random.random()
-    accepted            = rnd < entryAngleSin
-
-    log.debug("Meteoroid {status}: sine of entry angle {sin:.6f}, random value {rnd:.6f}".format(
-        status          = c.ok('accepted') if accepted else c.err('rejected'),
-        sin             = entryAngleSin,
-        rnd             = rnd,
-    ))
+    queue.put(1)
 
     if random.random() < entryAngleSin:
         meteor = Meteor(
-            mass            = mass,
-            density         = density,
+            timestamp       = timestamp,
+            mass            = md.sample(),
+            density         = dd.sample(),
             velocity        = velocityECEF,
             position        = position,
-            timestamp       = timestamp,
-            ablationHeat    = ablationHeat,
-            heatTransfer    = heatTransfer,
-            dragCoefficient = dragCoefficient,
+            ablationHeat    = ah,
+            heatTransfer    = ht,
+            dragCoefficient = dc,
         )
         meteor.flyRK4(fps, spf)
         return meteor
     else:
         return None
+
+def simulate(args):
+    meteor = args[0]
+    queue.put(1)
+
+    meteor.flyRK4(fps, spf)
+    return meteor
