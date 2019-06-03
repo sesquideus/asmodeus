@@ -63,8 +63,8 @@ statistics:                                                 # Histograms to be p
             name:               'log initial mass'
             xaxis:              'number'
         mjd: &mjd
-            min:                57611.691666
-            max:                57612.183333
+            min:                57611.791666
+            max:                57612.083333
             bin:                0.0069444444
             name:               'MJD'
             xaxis:              'number'
