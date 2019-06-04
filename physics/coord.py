@@ -22,6 +22,9 @@ class Vector3D:
             self.z + other.z
         )
 
+    def __radd__(self, other):
+        return self.__add__(other)
+
     def __iadd__(self, other):
         if not isinstance(other, Vector3D):
             raise TypeError("Vector3D: cannot __iadd__ {}".format(type(other)))
@@ -56,6 +59,8 @@ class Vector3D:
                 self.y * other,
                 self.z * other,
             )
+        else:
+            raise TypeError("Vector3D: cannot __mul__ {}".format(type(other)))
 
     def __imul__(self, other):
         if not isinstance(other, numbers.Number):

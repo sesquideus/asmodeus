@@ -12,8 +12,9 @@ def parallel(function, args, *, initializer = None, initargs = (), processes = 1
     queue = manager.Queue()
     pool = mp.Pool(processes = processes, initializer = initializer, initargs = (queue, *initargs))
     total = len(args)
+    chunksize = (total // processes)
 
-    results = pool.map_async(function, args, 2000)
+    results = pool.map_async(function, args, chunksize)
 
     while not results.ready():
         log.info("{action}: {count} of {total} ({perc})".format(

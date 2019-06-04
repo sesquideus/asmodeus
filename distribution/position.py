@@ -13,7 +13,7 @@ class PositionDistribution(base.Distribution):
 
     def __init__(self, name, **kwargs):
         self.functions = {
-            'rectangle':    self.__class__.rectangle,
+            'pillow':       self.__class__.pillow,
             'circle':       self.__class__.circle,
         }
         super().__init__(name, **kwargs)
@@ -23,7 +23,7 @@ class PositionDistribution(base.Distribution):
         return lambda: coord.Vector3D.fromGeodetic(latitude, longitude, elevation)
 
     @classmethod
-    def rectangle(cls, *, south: float, north: float, west: float, east: float, elevation: float) -> (lambda: coord.Vector3D):
+    def pillow(cls, *, south: float, north: float, west: float, east: float, bottom: float, top: float) -> (lambda: coord.Vector3D):
         # log.info("This means a total area of about {:.0f} km²".format(
         #     (math.sin(math.radians(north)) - math.sin(math.radians(south))) * math.radians(east - west) * (6371 + elevation / 1000)**2)
         # )
@@ -33,7 +33,8 @@ class PositionDistribution(base.Distribution):
             northSin = math.sin(math.radians(north))
             latitude = math.degrees(math.asin(random.uniform(southSin, northSin)))
             longitude = random.uniform(west, east)
-            return coord.Vector3D.fromGeodetic(latitude, longitude, elevation + random.uniform(0, 20000))
+            elevation = random.uniform(bottom, top)
+            return coord.Vector3D.fromGeodetic(latitude, longitude, elevation)
 
         return fun
 
