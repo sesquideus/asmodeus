@@ -13,6 +13,7 @@ class PositionDistribution(base.Distribution):
 
     def __init__(self, name, **kwargs):
         self.functions = {
+            'constant':     self.__class__.constant,
             'pillow':       self.__class__.pillow,
             'circle':       self.__class__.circle,
         }
@@ -24,10 +25,6 @@ class PositionDistribution(base.Distribution):
 
     @classmethod
     def pillow(cls, *, south: float, north: float, west: float, east: float, bottom: float, top: float) -> (lambda: coord.Vector3D):
-        # log.info("This means a total area of about {:.0f} km²".format(
-        #     (math.sin(math.radians(north)) - math.sin(math.radians(south))) * math.radians(east - west) * (6371 + elevation / 1000)**2)
-        # )
-
         def fun():
             southSin = math.sin(math.radians(south))
             northSin = math.sin(math.radians(north))
