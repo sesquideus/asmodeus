@@ -57,5 +57,5 @@ class Distribution():
         return self
 
     def errorUnknown(self, name):
-        log.error("Unknown {} distribution \"{}\"".format(self.quantity, name))
+        log.error(f'Unknown {self.quantity} distribution "{name}"')
         return self

@@ -63,5 +63,5 @@ class Discriminator():
         return self
 
     def errorUnknown(self, name):
-        log.error(c.err("Unknown {self.property} distribution \"{name}\""))
+        log.error(f'Unknown {c.name(self.property)} distribution "{c.param(name)}"')
         return self

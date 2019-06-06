@@ -124,7 +124,7 @@ class Asmodeus():
     def loadObservers(self):
         self.observers = []
         for oid, obs in self.config.observations.observers.items():
-            self.observers.append(Observer(oid, self.dataset, **obs.toDict()))
+            self.observers.append(Observer(oid, self.dataset, **obs.toDict(), streaks = self.config.observations.streaks))
 
         log.info("Loaded {count} observer{s}:".format(
             count   = len(self.observers),

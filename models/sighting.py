@@ -19,11 +19,11 @@ class Sighting():
         self.id                 = "{}{}".format(self.observer.id, self.timestamp)
         self.sighted            = None
 
-        self.frames = [SightingFrame(self.observer, meteorFrame) for meteorFrame in self.meteor.frames]
+        self.frames             = [SightingFrame(self.observer, meteorFrame) for meteorFrame in self.meteor.frames]
 
-        self.first          = self.frames[0]
-        self.last           = self.frames[-1]
-        self.brightest      = None
+        self.first              = self.frames[0]
+        self.last               = self.frames[-1]
+        self.brightest          = None
 
         for frame in self.frames:
             if self.brightest is None or self.brightest.apparentMagnitude > frame.apparentMagnitude:
@@ -42,10 +42,6 @@ class Sighting():
 
     def asPoint(self):
         return PointSighting(self)
-
-    def printTSV(self, file):
-        for frame in self.frames:
-            print(frame.asTSV(), file = file)
 
     def save(self, filename, *, streak = False):
         if streak:

@@ -57,7 +57,6 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
             argList = [(
                 self.dataset.path('meteors', meteorFile),
                 self.dataset.path('sightings', observer.id, meteorFile),
-                self.config.observations.streaks,
             ) for meteorFile in meteorFiles]
             total = len(argList)
 
@@ -95,10 +94,14 @@ def init(queuex, observerx, streaksx):
     streaks = streaksx
 
 def observe(args):
-    filename, out, streaks = args
+    filename, out = args
 
     queue.put(1)
     meteor = Meteor.load(filename)
     sighting = Sighting(observer, meteor)
     sighting.save(out, streak = streaks)
-    return sighting.asPoint()
+
+    if streaks:
+        return sighting
+    else:
+        return sighting.asPoint()

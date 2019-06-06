@@ -171,8 +171,6 @@ class Meteor:
 
             frame += 1
 
-            self.timestamp += datetime.timedelta(seconds = dt)
-
             self.position += drdt * dt
             self.velocity += dvdt * dt
             self.mass     += dmdt * dt

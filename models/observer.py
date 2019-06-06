@@ -22,15 +22,12 @@ log = logging.getLogger('root')
 
 
 class Observer():
-    def __init__(self, name, dataset, **kwargs):
+    def __init__(self, name, dataset, *, latitude, longitude, altitude, horizon, streaks):
         self.id                 = name
         self.dataset            = dataset
-        self.position           = coord.Vector3D.fromGeodetic(
-                                      kwargs.get('latitude', 0),
-                                      kwargs.get('longitude', 0),
-                                      kwargs.get('altitude', 0)
-                                  )
-        self.horizon            = kwargs.get('horizon', 0)
+        self.position           = coord.Vector3D.fromGeodetic(latitude, longitude, altitude)
+        self.horizon            = horizon
+        self.streaks            = streaks
 
         self.earthToAltAzMatrix = functools.reduce(np.dot, [
                                     np.fliplr(np.eye(3)),
@@ -38,22 +35,12 @@ class Observer():
                                     coord.rotMatrixZ(-self.position.longitude()),
                                 ])
 
-    def observe(self, meteor):
-        log.debug("Observer {obs} trying to see meteor {} ({} recorded frames)".format(
-            obs = c.name(self.id),
-            met = c.name(meteor),
-            nf  = c.num(len(meteor.frames))
-        ))
-        frames = [SightingFrame(self, frame) for frame in meteor.frames]
-        return [frame for frame in frames if frame.altitude >= self.horizon]
-
     def altAz(self, point: coord.Vector3D) -> coord.Vector3D:
         """
             Returns AltAz coordinates of an EarthLocation point as observed by this observer
             point: EarthLocation
         """
-        diff = point - self.position
-        return coord.Vector3D.fromNumpyVector(self.earthToAltAzMatrix @ diff.toNumpyVector())
+        return coord.Vector3D.fromNumpyVector(self.earthToAltAzMatrix @ (point - self.position).toNumpyVector())
 
     def __str__(self):
         return "Observer {id} at {position}".format(
@@ -62,10 +49,16 @@ class Observer():
         )
 
     def createDataframe(self):
-        self.dataframe = pandas.DataFrame.from_records(
-            [sighting.asTuple() for sighting in self.sightings],
-            columns     = PointSighting.columns,
-        )
+        if self.streaks:
+            self.dataframe = pandas.DataFrame.from_records(
+                [frame.asTuple() for sighting in self.sightings for frame in sighting.frames],
+                columns     = PointSighting.columns,
+            )
+        else:
+            self.dataframe = pandas.DataFrame.from_records(
+                [sighting.asTuple() for sighting in self.sightings],
+                columns     = PointSighting.columns,
+            )
         log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
     
     def loadSightings(self):
@@ -87,7 +80,6 @@ class Observer():
         self.dataframe['mjd'] = Time(self.dataframe.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
         self.dataframe['logInitMass'] = np.log10(self.dataframe.initMass.to_numpy(dtype = 'float'))
 
-        print(self.dataframe)
         log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
 
     def saveDataframe(self):
@@ -110,7 +102,7 @@ class Observer():
         log.info(f"Plotting sky for observer {c.name(self.id)} ({c.path(path)})")
         self.dataset.create('plots', self.id)
 
-        azimuths    = self.visible.azimuth
+        azimuths    = np.radians(self.visible.azimuth)
         altitudes   = 90 - self.visible.altitude
         colours     = np.maximum(np.log10(self.visible.lumPower), -12)
         sizes       = 0.01 * np.log10(self.visible.fluxDensity * 1e12 + 1)**4

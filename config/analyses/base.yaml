@@ -1,7 +1,7 @@
 biasFunctions:
     magnitude:   
         sigmoid: &sigmoid
-            discriminator:      'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
+            discriminator:      all                         # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
             parameters:                        
                 limit:          8.5                         # Limiting magnitude m0
                 width:          0.35                        # Width of the function
@@ -39,14 +39,14 @@ statistics:                                                 # Histograms to be p
             name:               'azimuth'
             xaxis:              'number'
         appMag: &appMag
-            min:                -16
-            max:                8
+            min:                -15
+            max:                10
             bin:                0.25
             name:               'apparent magnitude'
             xaxis:              'number'
         absMag: &absMag
-            min:                -16
-            max:                8
+            min:                -15
+            max:                10
             bin:                0.25
             name:               'absolute magnitude'
             xaxis:              'number'
@@ -57,7 +57,7 @@ statistics:                                                 # Histograms to be p
             name:               'angular speed'
             xaxis:              'number'
         logInitMass: &logInitMass
-            min:                -6.0
+            min:                -6.5
             max:                1
             bin:                0.1
             name:               'log initial mass'
@@ -70,7 +70,7 @@ statistics:                                                 # Histograms to be p
             xaxis:              'number'
         elevation: &elevation
             min:                60000
-            max:                120000
+            max:                150000
             bin:                1000
             name:               'elevation'
             xaxis:              'number'
@@ -111,8 +111,9 @@ statistics:                                                 # Histograms to be p
         -   x:                  mjd
             y:                  angSpeed
             colour:             appMag
-        -   {x:   altitude, y: angSpeed, colour: appMag}
-            
+        -   {x:   altitude,     y:    angSpeed, colour: appMag}
+        -   {x:     appMag,     y:   elevation, colour: logInitMass}
+        -   {x:     appMag,     y: logInitMass, colour: logInitMass}
 
 
 optimize:                                                   # Exhaustive search of the parameter space

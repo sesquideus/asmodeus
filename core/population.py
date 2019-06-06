@@ -28,7 +28,7 @@ class Population():
             self.densityDistribution    = DensityDistribution.fromConfig(self.parameters.material.density).logInfo()
             self.temporalDistribution   = TimeDistribution.fromConfig(self.parameters.time).logInfo()
         except AttributeError as e:
-            raise exceptions.ConfigurationError(e)
+            raise exceptions.ConfigurationError(e) from e
 
     def generate(self):
         log.info(f"Generating {c.num(self.parameters.count)} meteoroids")
