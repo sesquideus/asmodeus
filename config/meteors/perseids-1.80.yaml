@@ -6,7 +6,10 @@ meteors:
     count:                      100000
 
     shape:
-        dragCoefficient:        0.6                         # 0.6 for a spherical body
+        dragCoefficient:        
+            distribution:       constant
+            parameters:
+                value:          0.6                         # 0.6 for a spherical body
         shapeFactor:            1.21                        # 1.21 for a spherical body
 
     material:

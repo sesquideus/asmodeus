@@ -12,9 +12,9 @@ class MassDistribution(base.Distribution):
 
     def __init__(self, name, **kwargs):
         self.functions = {
-            'pareto':       self.pareto,
-            'exponential':  self.exponential,
-            'constant':     self.constant,
+            'pareto':       self.__class__.pareto,
+            'exponential':  self.__class__.exponential,
+            'constant':     self.__class__.constant,
         }
         super().__init__(name, **kwargs)
 
@@ -25,10 +25,6 @@ class MassDistribution(base.Distribution):
     @classmethod
     def exponential(cls, *, shape: float) -> (lambda: float):
         return lambda: np.random.exponential(shape)
-
-    @classmethod
-    def constant(cls, *, value: float) -> (lambda: float):
-        return lambda: value
 
     @classmethod
     def power(cls, *, shape: float, minimum: float) -> (lambda: float):

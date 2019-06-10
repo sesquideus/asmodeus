@@ -47,17 +47,17 @@ def rungekutta(state, diff, dt, dragCoefficient, shapeFactor, density, heatTrans
 
 
 class Meteor:
-    def __init__(self, **kwargs):
-        self.mass               = kwargs.get('mass',            1)
-        self.density            = kwargs.get('density',         800)
+    def __init__(self, *, mass, density, position, velocity, timestamp, dragCoefficient, **kwargs):
+        self.mass               = mass
+        self.density            = density
         self.radius             = (3 * self.mass / (self.density * np.pi * 4))**(1 / 3)
 
-        self.position           = kwargs.get('position',        coord.Vector3D.fromGeodetic(48, 17, 120000))
-        self.velocity           = kwargs.get('velocity',        coord.Vector3D(0, 0, 0))
+        self.position           = position
+        self.velocity           = velocity
 
-        self.timestamp          = kwargs.get('timestamp',       datetime.datetime.now())
+        self.timestamp          = timestamp
 
-        self.dragCoefficient    = kwargs.get('dragCoefficient', 0.6)
+        self.dragCoefficient    = dragCoefficient
         self.shapeFactor        = kwargs.get('shapeFactor',     1.21)
         self.heatTransfer       = kwargs.get('heatTransfer',    0.5)
         self.ablationHeat       = kwargs.get('ablationHeat',    8e6)
@@ -108,7 +108,8 @@ class Meteor:
 
         return Diff(
             newVelocity,
-            -(self.dragCoefficient * self.shapeFactor * airRho * speed / (state.mass**(1 / 3) * self.density**(2 / 3))) * state.velocity,
+            -(self.dragCoefficient * self.shapeFactor * airRho * speed / (state.mass**(1 / 3) * self.density**(2 / 3))) * state.velocity
+                - constants.gravity * constants.earthMass / state.position.norm()**3 * state.position,
             -(self.heatTransfer * self.shapeFactor * airRho * speed**3 * (state.mass / self.density)**(2 / 3) / (2 * self.ablationHeat)),
         )
 
@@ -196,6 +197,94 @@ class Meteor:
                 break
 
         log.debug(f"Meteor generated ({len(self.frames)} frames)")
+
+    def diffRK4(
+
+    def fly(self, frameRate, stepsPerFrame):
+        dt = 1.0 / (frameRate * stepsPerFrame)
+        frame = 0
+
+        while True:
+            #if False:
+            #    x, y, z = self.position.x, self.position.y, self.position.z
+            #    vx, vy, vz = self.velocity.x, self.velocity.y, self.velocity.z
+            #    m = self.mass
+            #    state = np.array([x, y, z, vx, vy, vz, m])
+
+            #    x = lambda d, dt: rungekutta(state, d, dt, self.dragCoefficient, self.shapeFactor, self.density, self.heatTransfer, self.ablationHeat)
+            #    d0 = np.array([0, 0, 0, 0, 0, 0, 0])
+            #    d1 = x(d0, 0.0)
+            #    d2 = x(d1, dt/2)
+            #    d3 = x(d2, dt/2)
+            #    d4 = x(d3, dt)
+            #    
+            #    ns = (d1 + 2 * d2 + 2 * d3 + d4) / 6.0
+            #    drdt = coord.Vector3D(*ns[0:3])
+            #    dvdt = coord.Vector3D(*ns[3:6])
+            #    dmdt = ns[6]
+            #else:
+            state = State(self.position, self.velocity, self.mass)
+            d0 = Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0)
+            d1 = self.evaluate(state, d0, 0.0)
+            d2 = self.evaluate(state, d1, dt / 2)
+            d3 = self.evaluate(state, d2, dt / 2)
+            d4 = self.evaluate(state, d3, dt)
+            
+            drdt = (d1.drdt + 2 * d2.drdt + 2 * d3.drdt + d4.drdt) / 6.0
+            dvdt = (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt) / 6.0
+            dmdt = (d1.dmdt + 2 * d2.dmdt + 2 * d3.dmdt + d4.dmdt) / 6.0
+
+            self.luminousPower = -(radiometry.luminousEfficiency(self.velocity.norm()) * dmdt * self.velocity.norm()**2 / 2.0)
+
+            if (frame % stepsPerFrame == 0):
+                self.frames.append(models.frame.Frame(self))
+                log.debug("{time:6.3f} s | "
+                          "{latitude:6.4f} °N, {longitude:6.4f} °E, {elevation:6.0f} m | {density:9.3e} kg/m³ | "
+                          "v {speed:7.1f} m/s, dv {acceleration:13.3f} m/s², τ {lumEff:6.4f} | "
+                          "m {mass:6.2e} kg, dm {ablation:9.3e} kg/s, r {radius:7.3f} mm | I {lp:10.3e} W, M {absmag:6.2f}m".format(
+                              time            = frame * dt,
+                              latitude        = self.position.latitude(),
+                              longitude       = self.position.longitude(),
+                              elevation       = self.position.elevation(),
+                              density         = atmosphere.airDensity(self.position.elevation()),
+                              speed           = self.velocity.norm(),
+                              acceleration    = -dvdt.norm(),
+                              lumEff          = radiometry.luminousEfficiency(self.velocity.norm()),
+                              ablation        = dmdt,
+                              mass            = self.mass,
+                              radius          = (3 * self.mass / (4 * np.pi * self.density))**(1/3) * 1000,
+                              lp              = self.luminousPower,
+                              absmag          = radiometry.absoluteMagnitude(self.luminousPower),
+                          ))
+
+            frame += 1
+
+            self.position += drdt * dt
+            self.velocity += dvdt * dt
+            self.mass     += dmdt * dt
+
+            # Advance time by dt
+            self.timestamp += datetime.timedelta(seconds = dt)
+
+            # If all mass has been ablated away, the particle is pronounced dead
+            if self.mass < 0:
+                log.debug("Burnt to death")
+                break
+
+            if self.position.elevation() > 200000:
+                log.debug("Flew away")
+                break
+
+            if self.velocity.norm() < 200:
+                log.debug("Survived with final mass {:12.6f} kg".format(self.mass))
+                break
+
+            if self.position.elevation() < 0:
+                log.debug("IMPACT")
+                break
+
+        log.debug(f"Meteor generated ({len(self.frames)} frames)")
+
 
     def simulate(self):
         self.flyRK4()

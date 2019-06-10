@@ -3,12 +3,14 @@ import io
 import os
 import logging
 import random
+import yaml
 
 import time
 import multiprocessing as mp
 
 from core.parallel      import parallel
-from distribution       import PositionDistribution, VelocityDistribution, MassDistribution, DensityDistribution, TimeDistribution
+from core               import exceptions
+from distribution       import PositionDistribution, VelocityDistribution, MassDistribution, DensityDistribution, TimeDistribution, DragCoefficientDistribution
 from models.meteor      import Meteor
 from physics            import coord
 from utilities          import colour as c
@@ -22,26 +24,28 @@ class Population():
         
         try:
             log.info("Configuring meteoroid property distributions")
-            self.massDistribution       = MassDistribution.fromConfig(self.parameters.mass).logInfo()
-            self.positionDistribution   = PositionDistribution.fromConfig(self.parameters.position).logInfo()
-            self.velocityDistribution   = VelocityDistribution.fromConfig(self.parameters.velocity).logInfo()
-            self.densityDistribution    = DensityDistribution.fromConfig(self.parameters.material.density).logInfo()
-            self.temporalDistribution   = TimeDistribution.fromConfig(self.parameters.time).logInfo()
+            self.massDistribution               = MassDistribution.fromConfig(self.parameters.mass).logInfo()
+            self.positionDistribution           = PositionDistribution.fromConfig(self.parameters.position).logInfo()
+            self.velocityDistribution           = VelocityDistribution.fromConfig(self.parameters.velocity).logInfo()
+            self.densityDistribution            = DensityDistribution.fromConfig(self.parameters.material.density).logInfo()
+            self.temporalDistribution           = TimeDistribution.fromConfig(self.parameters.time).logInfo()
+            self.dragCoefficientDistribution    = DragCoefficientDistribution.fromConfig(self.parameters.shape.dragCoefficient).logInfo()
         except AttributeError as e:
             raise exceptions.ConfigurationError(e) from e
 
     def generate(self):
         log.info(f"Generating {c.num(self.parameters.count)} meteoroids")
-        count = 0
+        self.count = 0
         self.iterations = 0
 
         self.meteors = []
 
-        while (count < self.parameters.count):
+        while (self.count < self.parameters.count):
             mass                = self.massDistribution.sample()
             density             = self.densityDistribution.sample()
             timestamp           = self.temporalDistribution.sample()
             position            = self.positionDistribution.sample()
+            dragCoefficient     = self.dragCoefficientDistribution.sample()
             velocityEquatorial  = self.velocityDistribution.sample()
 
             velocityECEF        = coord.Vector3D.fromNumpyVector((coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
@@ -57,16 +61,20 @@ class Population():
                     position        = position,
                     ablationHeat    = self.parameters.material.ablationHeat,
                     heatTransfer    = self.parameters.material.heatTransfer,
-                    dragCoefficient = self.parameters.shape.dragCoefficient,
+                    dragCoefficient = dragCoefficient,
                 ))
-                count += 1
+                self.count += 1
 
     def simulate(self, processes, fps, spf):
         log.info(f"Simulating atmospheric entry: using {c.num(processes)} processes at {c.num(fps)} frames per second, with {c.num(spf)} steps per frame")
-
-        args = [(meteor,) for meteor in self.meteors]
-        
-        self.meteors = parallel(simulate, args, initializer = init, initargs = (fps, spf), processes = processes, action = "Simulating meteors")
+        self.meteors = parallel(
+            simulate,
+            self.meteors,
+            initializer     = initialize,
+            initargs        = (fps, spf),
+            processes       = processes,
+            action          = "Simulating meteors",
+        )
         log.info("Total mass {mass}, effective area {area}".format(
             area            = c.num(f"{self.parameters.count / self.iterations * 100:5.2f}%"),
             mass            = c.num("{:6f} kg".format(sum(map(lambda x: x.initMass, self.meteors)))),
@@ -74,23 +82,18 @@ class Population():
 
     def save(self, directory):
         log.debug(f"Saving the population to {c.path(directory)}")
-        
         for meteor in self.meteors:
             meteor.save(directory)
 
-    def saveMetadata(self, fileName):
+    def saveMetadata(self, directory):
         yaml.dump({
             'count':        self.count,
             'timestamp':    datetime.datetime.now().isoformat(),
-        }, open(self.dataset.path('meteors.yaml'), 'w'), default_flow_style = False)
+        }, open(os.path.join(directory, 'meteors.yaml'), 'w'), default_flow_style = False)
 
-def init(queuex, fpsx, spfx):
-    global fps
-    fps = fpsx
-    global spf
-    spf = spfx
-    global queue
-    queue = queuex
+def initialize(queuex, fpsx, spfx):
+    global fps, spf, queue
+    fps, spf, queue = fpsx, spfx, queuex
 
 def worker(args):
     queue, = args
@@ -117,9 +120,7 @@ def worker(args):
     else:
         return None
 
-def simulate(args):
-    meteor = args[0]
-    queue.put(1)
-
+def simulate(meteor):
     meteor.flyRK4(fps, spf)
+    queue.put(1)
     return meteor

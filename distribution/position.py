@@ -32,12 +32,10 @@ class PositionDistribution(base.Distribution):
             longitude = random.uniform(west, east)
             elevation = random.uniform(bottom, top)
             return coord.Vector3D.fromGeodetic(latitude, longitude, elevation)
-
         return fun
 
     @classmethod
     def circle(cls, *, latitude: float, longitude: float, radius: float, elevation: float) -> (lambda: coord.Vector3D):
         def fun():
             return coord.Vector3D.fromGeodetic(0, 0, 0)  # Put real computation here
-
         return fun

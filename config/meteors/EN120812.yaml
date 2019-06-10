@@ -6,7 +6,10 @@ meteors:
     count:                      1
 
     shape:
-        dragCoefficient:        0.5                         # 0.47 for a spherical body
+        dragCoefficient:       
+            distribution:       constant
+            parameters:
+                value:          0.5
         shapeFactor:            1.21                        # 1.21 for a spherical body
 
     material:
@@ -22,14 +25,11 @@ meteors:
         parameters:
             value:              0.07
     position:
-        distribution:           pillow                      # Name of the distribution, currently only 'rectangle'
+        distribution:           constant
         parameters:
-            south:              49.5036                     # Southern bound, degrees of latitude
-            north:              49.5036                     # Northern bound, degrees of latitude
-            west:               14.4436                     # Western bound, degrees of longitude
-            east:               14.4436                     # Eastern bound, degrees of longitude
-            bottom:             170180                      # Initial elevation of meteors, in m
-            top:                170180                      # Initial elevation of meteors, in m
+            latitude:           49.5036                     # Southern bound, degrees of latitude
+            longitude:          14.4436                     # Eastern bound, degrees of longitude
+            elevation:          170180                      # Initial elevation of meteors, in m
     velocity:
         distribution:           'shower'                    # Currently only 'shower'
         parameters:
@@ -37,10 +37,9 @@ meteors:
             dec:                59.552                      # Declination in degrees
             speed:              59810                       # Entry speed in m/s
     time:
-        distribution:           uniform
+        distribution:           constant
         parameters:
-            begin:              2012-08-12T22:29:46         # Beginning of the interval, ISO8601
-            end:                2012-08-12T22:29:46         # End of the interval, ISO8601
+            value:              2012-08-12T22:29:46         # Beginning of the interval, ISO8601
 
     integrator:                                                 # Properties of the integrator
         name: 'rk4'                                             # Integrator to be used. Allowed values are 'rk4' and 'euler'.

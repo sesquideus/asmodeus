@@ -37,6 +37,10 @@ class Distribution():
         return lambda: value
 
     @classmethod
+    def uniform(self, *, min, max) -> (lambda: float):
+        return lambda: random.uniform(min, max)
+
+    @classmethod
     def gauss(cls, *, mean = 0, sigma = 1) -> (lambda: float):
         return lambda: random.gauss(mean, sigma)
 
