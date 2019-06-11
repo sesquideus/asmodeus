@@ -104,8 +104,8 @@ class Observer():
 
         azimuths    = np.radians(self.visible.azimuth)
         altitudes   = 90 - self.visible.altitude
-        colours     = np.maximum(np.log10(self.visible.lumPower), -12)
-        sizes       = 0.01 * np.log10(self.visible.fluxDensity * 1e12 + 1)**4
+        colours     = -self.visible.appMag
+        sizes       = 2 * np.exp(-self.visible.appMag / 3)
 
         fig = pyplot.figure(figsize = (5, 5), dpi = 300, facecolor  = 'black')
         ax = fig.add_subplot(111, projection = 'polar')
@@ -159,6 +159,8 @@ class Observer():
 
         figure, axes = self.emptyFigure()
         axes.bar(edges[:-1], hist, width = params.bin, alpha = 0.5, align = 'edge', color = (0.3, 0.0, 0.7, 0.5))
+        axes.set_xlabel(params.name)
+        axes.set_ylabel('relative count')
         figure.savefig(self.dataset.path('analyses', 'histograms', self.id, f"{stat}.png"))
         pyplot.close(figure)
 
@@ -177,10 +179,12 @@ class Observer():
 
     def emptyFigure(self):
         figure, axes = pyplot.subplots()
-        figure.tight_layout(rect = (0.05, 0, 1, 1))
+        figure.tight_layout(rect = (0.1, 0.06, 1, 1))
         figure.set_size_inches(6, 4)
         figure.set_dpi(300)
         axes.grid(linewidth = 0.2, linestyle = ':')
+        axes.xaxis.set_major_formatter(ScalarFormatter(useOffset = False))
+        axes.yaxis.set_major_formatter(ScalarFormatter(useOffset = False))
 
         return figure, axes
 
@@ -209,13 +213,14 @@ class Observer():
 
             axes.set_xlim(xparams.min, xparams.max)
             axes.set_ylim(yparams.min, yparams.max)
-            axes.xaxis.set_major_formatter(ScalarFormatter(useOffset = False))
+            axes.set_xlabel(xparams.name)
+            axes.set_ylabel(yparams.name)
             
             axes.scatter(
                 self.visible[scatter.x],
                 self.visible[scatter.y],
                 c           = self.visible[scatter.colour],
-                s           = 4 * np.exp(-self.visible.appMag / 5),
+                s           = 2 * np.exp(-self.visible.appMag / 3),
                 cmap        = scatter.get('cmap', 'viridis_r'),
                 alpha       = 1,
                 linewidths  = 0,

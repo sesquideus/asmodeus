@@ -20,6 +20,8 @@ class State:
         self.velocity = velocity
         self.mass = mass
 
+    def __str__(self):
+        return f"{self.position} {self.velocity} {self.mass}"
 
 class Diff:
     def __init__(self, drdt, dvdt, dmdt):
@@ -50,7 +52,7 @@ class Meteor:
     def __init__(self, *, mass, density, position, velocity, timestamp, dragCoefficient, **kwargs):
         self.mass               = mass
         self.density            = density
-        self.radius             = (3 * self.mass / (self.density * np.pi * 4))**(1 / 3)
+        self.radius             = (3 * self.mass / (self.density * math.pi * 4))**(1 / 3)
 
         self.position           = position
         self.velocity           = velocity
@@ -101,16 +103,16 @@ class Meteor:
             file = open(os.path.join(dataset, 'meteors', '{}.kml'.format(self.id)), 'w')
         )
 
-    def evaluate(self, state, diff, dt):
-        newVelocity = state.velocity + diff.dvdt * dt
-        airRho = atmosphere.airDensity(state.position.norm() - constants.earthRadius)
-        speed = state.velocity.norm()
+    def evaluate(self, state, diff, dt, node):
+        newState = State(state.position + diff.drdt * dt * node, state.velocity + diff.dvdt * dt * node, max(state.mass + diff.dmdt * dt * node, 1e-9))
+        airRho = atmosphere.airDensity(newState.position.norm() - constants.earthRadius)
+        speed = newState.velocity.norm()
 
         return Diff(
-            newVelocity,
-            -(self.dragCoefficient * self.shapeFactor * airRho * speed / (state.mass**(1 / 3) * self.density**(2 / 3))) * state.velocity
-                - constants.gravity * constants.earthMass / state.position.norm()**3 * state.position,
-            -(self.heatTransfer * self.shapeFactor * airRho * speed**3 * (state.mass / self.density)**(2 / 3) / (2 * self.ablationHeat)),
+            newState.velocity,
+            -(self.dragCoefficient * self.shapeFactor * airRho * speed / (newState.mass**(1 / 3) * self.density**(2 / 3))) * newState.velocity
+                - constants.gravity * constants.earthMass / newState.position.norm()**3 * newState.position,
+            -(self.heatTransfer * self.shapeFactor * airRho * speed**3 * (newState.mass / self.density)**(2 / 3) / (2 * self.ablationHeat)),
         )
 
     def flyRK4(self, frameRate, stepsPerFrame):
@@ -138,10 +140,10 @@ class Meteor:
             #else:
             state = State(self.position, self.velocity, self.mass)
             d0 = Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0)
-            d1 = self.evaluate(state, d0, 0.0)
-            d2 = self.evaluate(state, d1, dt / 2)
-            d3 = self.evaluate(state, d2, dt / 2)
-            d4 = self.evaluate(state, d3, dt)
+            d1 = self.evaluate(state, d0, dt,   0)
+            d2 = self.evaluate(state, d1, dt, 0.5)
+            d3 = self.evaluate(state, d2, dt, 0.5)
+            d4 = self.evaluate(state, d3, dt,   1)
             
             drdt = (d1.drdt + 2 * d2.drdt + 2 * d3.drdt + d4.drdt) / 6.0
             dvdt = (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt) / 6.0
@@ -197,8 +199,6 @@ class Meteor:
                 break
 
         log.debug(f"Meteor generated ({len(self.frames)} frames)")
-
-    def diffRK4(
 
     def fly(self, frameRate, stepsPerFrame):
         dt = 1.0 / (frameRate * stepsPerFrame)

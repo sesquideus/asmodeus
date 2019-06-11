@@ -43,5 +43,5 @@ meteors:
 
     integrator:                                                 # Properties of the integrator
         name: 'rk4'                                             # Integrator to be used. Allowed values are 'rk4' and 'euler'.
-        fps: 1000                                                 # Frames per second.
+        fps: 2000                                                 # Frames per second.
         spf: 1                                                # Steps per frame. Higher values mean more precise trajectories

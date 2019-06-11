@@ -59,7 +59,7 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
         
         self.markTime()
         self.population.save(self.root)
-        self.population.saveMetadata(self.root)
+        self.population.saveMetadata(self.dataset.path())
 
         log.info("{num} meteors were saved to {dir} in {time} seconds ({rate} meteors per second)".format(
             num     = c.num(self.population.parameters.count),

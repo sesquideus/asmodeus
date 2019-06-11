@@ -3,7 +3,7 @@ mp:
     report:                     1
 
 observations:
-    streaks:                    True
+    streaks:                    False
     observers:
         teplicne:
             latitude:           48.68231
