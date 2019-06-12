@@ -15,7 +15,7 @@ biasFunctions:
                 exponent:       0.4                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
 
 bias:
-    magnitude: *sigmoid
+    magnitude: *all
     angularSpeed: *all
     altitude: *all
 
@@ -69,11 +69,16 @@ statistics:                                                 # Histograms to be p
             name:               'MJD'
             xaxis:              'number'
         elevation: &elevation
-            min:                60000
-            max:                150000
+            min:                75000
+            max:                135000
             bin:                1000
             name:               'elevation'
             xaxis:              'number'
+        entryAngle: &entryAngle
+            min:                0
+            max:                90
+            bin:                2
+            name:               'entry angle'
 #        timestamp:
 #            min:                2016-08-11T19:00:00
 #            max:                2016-08-12T02:00:00
@@ -86,34 +91,21 @@ statistics:                                                 # Histograms to be p
     kdes:
         quantities:             *quantities
     scatters:
-#        -   x:                  appMag
-#            y:                  altitude
-#            colour:             absMag
-        -   {x:     appMag, y:      absMag, colour: absMag}
-#        -   x:                  logInitMass
-#            y:                  appMag
-#            colour:             absMag
-        -   x:                  logInitMass
-            y:                  altitude
-            colour:             absMag
-        -   x:                  mjd
-            y:                  altitude
-            colour:             absMag
-        -   x:                  mjd
-            y:                  appMag
-            colour:             absMag
-        -   x:                  logInitMass
-            y:                  elevation
-            colour:             absMag
-        -   x:                  mjd
-            y:                  elevation
-            colour:             absMag
-        -   x:                  mjd
-            y:                  angSpeed
-            colour:             appMag
-        -   {x:   altitude,     y:    angSpeed, colour: appMag}
-        -   {x:     appMag,     y:   elevation, colour: logInitMass}
-        -   {x:     appMag,     y: logInitMass, colour: logInitMass}
+        -   {x:         appMag, y:         absMag, colour: appMag}
+        -   {x:    logInitMass, y:       altitude, colour: appMag}
+        -   {x:            mjd, y:       altitude, colour: appMag}
+        -   {x:            mjd, y:         appMag, colour: appMag}
+        -   {x:    logInitMass, y:      elevation, colour: appMag}
+        -   {x:            mjd, y:      elevation, colour: appMag}
+        -   {x:            mjd, y:       angSpeed, colour: appMag}
+        -   {x:       altitude, y:       angSpeed, colour: appMag}
+        -   {x:         appMag, y:      elevation, colour: logInitMass}
+        -   {x:         appMag, y:    logInitMass, colour: logInitMass}
+        -   {x:            mjd, y:     entryAngle, colour: appMag}
+        -   {x:      elevation, y:     entryAngle, colour: appMag}
+        -   {x:         appMag, y:     entryAngle, colour: appMag}
+        -   {x:     entryAngle, y:       altitude, colour: appMag}
+        -   {x:       angSpeed, y:     entryAngle, colour: appMag}
 
 
 optimize:                                                   # Exhaustive search of the parameter space

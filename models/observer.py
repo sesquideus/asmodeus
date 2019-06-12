@@ -22,8 +22,9 @@ log = logging.getLogger('root')
 
 
 class Observer():
-    def __init__(self, name, dataset, *, latitude, longitude, altitude, horizon, streaks):
-        self.id                 = name
+    def __init__(self, id, dataset, *, name, latitude, longitude, altitude, horizon, streaks):
+        self.id                 = id
+        self.name               = name
         self.dataset            = dataset
         self.position           = coord.Vector3D.fromGeodetic(latitude, longitude, altitude)
         self.horizon            = horizon
@@ -105,25 +106,26 @@ class Observer():
         azimuths    = np.radians(self.visible.azimuth)
         altitudes   = 90 - self.visible.altitude
         colours     = -self.visible.appMag
-        sizes       = 2 * np.exp(-self.visible.appMag / 3)
+        sizes       = 8 * np.exp(-self.visible.appMag / 2)
 
-        fig = pyplot.figure(figsize = (5, 5), dpi = 300, facecolor  = 'black')
-        ax = fig.add_subplot(111, projection = 'polar')
-        cx = ax.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'hot', alpha = 1, linewidths = 0)
-               
-        ax.set_theta_zero_location('N', offset=0)
-        ax.set_ylim(0, 90.5)
-        ax.set_facecolor('black')
-        ax.axes.xaxis.set_ticks(np.linspace(0, 2*np.pi, 25))
-        #ax.axes.xaxis.set_ticklabels([])
-        ax.axes.yaxis.set_ticklabels([])
-        ax.axes.yaxis.set_ticks(np.linspace(0, 90, 7))
-        ax.grid(linewidth = 0.1, color = 'white')
-        pyplot.savefig(
-            path,
-            bbox_inches = 'tight',
-            facecolor = 'black',
-        )
+        figure, axes = pyplot.subplots(subplot_kw = {'projection': 'polar'})
+        
+        figure.tight_layout(rect = (0, 0, 1, 1))
+        figure.set_size_inches(8, 8)
+        figure.set_dpi(300)
+        figure.set_facecolor('black')
+
+        axes.xaxis.set_ticks(np.linspace(0, 2 * np.pi, 25))
+        axes.yaxis.set_ticklabels([])
+        axes.yaxis.set_ticks(np.linspace(0, 90, 7))
+        axes.set_ylim(0, 90.5)
+        axes.set_facecolor('black')
+        axes.grid(linewidth = 0.2, color = 'white')
+
+        axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'hot', alpha = 1, linewidths = 0)
+
+        figure.savefig(path, facecolor = 'black')
+
 
     def makeKDEs(self):
         log.info(f"Creating KDEs for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
@@ -158,7 +160,7 @@ class Observer():
         hist, edges = self.computeHistogram(stat, params)
 
         figure, axes = self.emptyFigure()
-        axes.bar(edges[:-1], hist, width = params.bin, alpha = 0.5, align = 'edge', color = (0.3, 0.0, 0.7, 0.5))
+        axes.bar(edges[:-1], hist, width = params.bin, alpha = 0.5, align = 'edge', color = (0.1, 0.7, 0.4, 0.5), edgecolor = (0.1, 0.3, 0.2, 1))
         axes.set_xlabel(params.name)
         axes.set_ylabel('relative count')
         figure.savefig(self.dataset.path('analyses', 'histograms', self.id, f"{stat}.png"))
@@ -178,8 +180,9 @@ class Observer():
         return hist, edges
 
     def emptyFigure(self):
+        pyplot.rcParams['font.family'] = "Minion Pro"
         figure, axes = pyplot.subplots()
-        figure.tight_layout(rect = (0.1, 0.06, 1, 1))
+        figure.tight_layout(rect = (0.07, 0.05, 1, 0.97))
         figure.set_size_inches(6, 4)
         figure.set_dpi(300)
         axes.grid(linewidth = 0.2, linestyle = ':')
@@ -204,23 +207,25 @@ class Observer():
                 colour:     <property to use for colouring the dots>
                 size:       <property to determine dot size>
         """
-        log.info(f"Creating a scatter plot for {c.param(scatter.x)} × {c.param(scatter.y)}")
+        log.info(f"Creating a scatter plot for {c.param(scatter.x):>20} × {c.param(scatter.y):>20}")
 
         try:
             xparams = self.settings.quantities[scatter.x]
             yparams = self.settings.quantities[scatter.y]
             figure, axes = self.emptyFigure()
 
+            axes.tick_params(axis = 'both', which = 'major', labelsize = 10)
             axes.set_xlim(xparams.min, xparams.max)
             axes.set_ylim(yparams.min, yparams.max)
-            axes.set_xlabel(xparams.name)
-            axes.set_ylabel(yparams.name)
+            axes.set_xlabel(xparams.name, fontdict = {'fontsize': 10})
+            axes.set_ylabel(yparams.name, fontdict = {'fontsize': 10})
+            axes.set_title(f"{self.name} – {xparams.name} × {yparams.name}", fontdict = {'fontsize': 12})
             
             axes.scatter(
                 self.visible[scatter.x],
                 self.visible[scatter.y],
                 c           = self.visible[scatter.colour],
-                s           = 2 * np.exp(-self.visible.appMag / 3),
+                s           = 3 * np.exp(-self.visible.appMag / 3),
                 cmap        = scatter.get('cmap', 'viridis_r'),
                 alpha       = 1,
                 linewidths  = 0,
@@ -228,9 +233,7 @@ class Observer():
             figure.savefig(self.dataset.path('analyses', 'scatters', self.id, f"{scatter.x}-{scatter.y}.png"))
             pyplot.close(figure)
         except KeyError as e:
-            raise exceptions.ConfigurationError(f"Invalid scatter configuration parameter {e}") from e
-
-        #    log.info("Chi-square for {} is {}".format(colour(histogram.name, 'name'), amos[name] @ histogram))
+            log.error(f"Invalid scatter configuration parameter {c.param(e)}") 
 
     def minimize(self, settings):
         log.info("Employing {method} method, {rep} evaluation repetition{s}".format(

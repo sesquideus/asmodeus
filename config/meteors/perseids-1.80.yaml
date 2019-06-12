@@ -29,10 +29,10 @@ meteors:
     position:
         distribution:           pillow                      # Name of the distribution, currently only 'rectangle'
         parameters:
-            south:              46                          # Southern bound, degrees of latitude
-            north:              52                          # Northern bound, degrees of latitude
-            west:               15                          # Western bound, degrees of longitude
-            east:               25                          # Eastern bound, degrees of longitude
+            south:              45                          # Southern bound, degrees of latitude
+            north:              53                          # Northern bound, degrees of latitude
+            west:               14                          # Western bound, degrees of longitude
+            east:               26                          # Eastern bound, degrees of longitude
             bottom:             130000                      # Lower bound, metres above surface
             top:                150000                      # Upper bound, metres above surface
 

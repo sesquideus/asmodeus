@@ -63,3 +63,10 @@ class Distribution():
     def errorUnknown(self, name):
         log.error(f'Unknown {self.quantity} distribution "{name}"')
         return self
+
+    def asDict(self):
+        return {
+            'name':         self.name,
+            'parameters':   self.params,
+        }
+

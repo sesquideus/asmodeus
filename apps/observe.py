@@ -68,6 +68,7 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
                 action      = "Observing meteors",
                 period      = self.config.mp.report
             )
+            observer.sightings = [s for s in observer.sightings if s is not None]
             observer.createDataframe()
             observer.saveDataframe()
 
@@ -99,7 +100,10 @@ def observe(args):
     queue.put(1)
     meteor = Meteor.load(filename)
     sighting = Sighting(observer, meteor)
-    sighting.save(out, streak = streaks)
+    #sighting.save(out, streak = streaks)
+
+    if sighting.brightest.altAz.latitude() < observer.horizon:
+        return None
 
     if streaks:
         return sighting

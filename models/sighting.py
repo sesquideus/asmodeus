@@ -72,6 +72,7 @@ class PointSighting():
         'azimuth',
         'distance',
         'elevation',
+        'entryAngle',
         'speed',
         'angSpeed',
         'initMass',
@@ -91,6 +92,7 @@ class PointSighting():
         self.position           = sighting.brightest.frame.position
         self.velocity           = sighting.brightest.frame.velocity
         self.velocityInf        = sighting.first.frame.velocity
+        self.entryAngle         = sighting.brightest.frame.entryAngle
         self.angularSpeed       = sighting.brightest.angularSpeed
         self.initialMass        = sighting.first.frame.mass
         self.mass               = sighting.brightest.frame.mass
@@ -153,6 +155,7 @@ class PointSighting():
             self.azimuth,
             self.distance,
             self.position.elevation(),
+            self.entryAngle,
             self.velocity.norm(),
             self.angularSpeed,
             self.initialMass,

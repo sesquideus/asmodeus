@@ -14,7 +14,7 @@ from utilities          import colour as c
 
 class Observation():
     def __init__(self, observer, population):
-
+        pass
 
     def observe(self):
         log.info(f"Calculating {c.num(total)} observations using {c.num(self.config.mp.processes)} processes")
@@ -40,9 +40,10 @@ class Observation():
         observer.createDataframe()
         observer.saveDataframe()
 
-            self.count += len(observer.sightings)
+        self.count += len(observer.sightings)
 
     def save(self):
+        pass
         
 
 def initialize(queuex, observerx, streaksx):

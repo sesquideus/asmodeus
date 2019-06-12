@@ -11,10 +11,8 @@ import datetime
 import random
 import yaml
 
-from core                   import asmodeus, logger, exceptions
-from core                   import Population
-
-from distribution           import PositionDistribution, VelocityDistribution, MassDistribution, DensityDistribution, TimeDistribution
+from core                   import asmodeus, logger
+from models                 import Population
 from utilities              import colour as c
 
 log = logger.setupLog('root')

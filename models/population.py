@@ -37,33 +37,35 @@ class Population():
         log.info(f"Generating {c.num(self.parameters.count)} meteoroids")
         self.count = 0
         self.iterations = 0
-
         self.meteors = []
 
         while (self.count < self.parameters.count):
-            mass                = self.massDistribution.sample()
-            density             = self.densityDistribution.sample()
-            timestamp           = self.temporalDistribution.sample()
-            position            = self.positionDistribution.sample()
-            dragCoefficient     = self.dragCoefficientDistribution.sample()
-            velocityEquatorial  = self.velocityDistribution.sample()
+            self.generateMeteoroid()
+            
+    def generateMeteoroid(self):
+        mass                = self.massDistribution.sample()
+        density             = self.densityDistribution.sample()
+        timestamp           = self.temporalDistribution.sample()
+        position            = self.positionDistribution.sample()
+        dragCoefficient     = self.dragCoefficientDistribution.sample()
+        velocityEquatorial  = self.velocityDistribution.sample()
 
-            velocityECEF        = coord.Vector3D.fromNumpyVector((coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
-            entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
+        velocityECEF        = coord.Vector3D.fromNumpyVector((coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector()))
+        entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
 
-            self.iterations += 1
-            if entryAngleSin > random.random():
-                self.meteors.append(Meteor(
-                    mass            = mass,
-                    density         = density,
-                    timestamp       = timestamp,
-                    velocity        = velocityECEF,
-                    position        = position,
-                    ablationHeat    = self.parameters.material.ablationHeat,
-                    heatTransfer    = self.parameters.material.heatTransfer,
-                    dragCoefficient = dragCoefficient,
-                ))
-                self.count += 1
+        self.iterations += 1
+        if entryAngleSin > random.random():
+            self.meteors.append(Meteor(
+                mass            = mass,
+                density         = density,
+                timestamp       = timestamp,
+                velocity        = velocityECEF,
+                position        = position,
+                ablationHeat    = self.parameters.material.ablationHeat,
+                heatTransfer    = self.parameters.material.heatTransfer,
+                dragCoefficient = dragCoefficient,
+            ))
+            self.count += 1
 
     def simulate(self, processes, fps, spf):
         log.info(f"Simulating atmospheric entry: using {c.num(processes)} processes at {c.num(fps)} frames per second, with {c.num(spf)} steps per frame")
@@ -72,7 +74,7 @@ class Population():
             self.meteors,
             initializer     = initialize,
             initargs        = (fps, spf),
-            processes       = processes,
+            processes       = min(self.count, processes),
             action          = "Simulating meteors",
         )
         log.info("Total mass {mass}, effective area {area}".format(
@@ -87,8 +89,16 @@ class Population():
 
     def saveMetadata(self, directory):
         yaml.dump({
-            'count':        self.count,
-            'timestamp':    datetime.datetime.now().isoformat(),
+            'count':            self.count,
+            'generated':        datetime.datetime.now().isoformat(),
+            'distributions':    {
+                'mass':             self.massDistribution.asDict(),
+                'density':          self.densityDistribution.asDict(),
+                'timestamp':        self.temporalDistribution.asDict(),
+                'position':         self.positionDistribution.asDict(),
+                'dragCoefficient':  self.dragCoefficientDistribution.asDict(),
+                'velocity':         self.velocityDistribution.asDict(),
+            },
         }, open(os.path.join(directory, 'meteors.yaml'), 'w'), default_flow_style = False)
 
 def initialize(queuex, fpsx, spfx):

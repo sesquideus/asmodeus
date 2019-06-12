@@ -149,18 +149,22 @@ class Meteor:
             dvdt = (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt) / 6.0
             dmdt = (d1.dmdt + 2 * d2.dmdt + 2 * d3.dmdt + d4.dmdt) / 6.0
 
-            self.luminousPower = -(radiometry.luminousEfficiency(self.velocity.norm()) * dmdt * self.velocity.norm()**2 / 2.0)
+            speed = self.velocity.norm()
+
+            self.luminousPower = -(radiometry.luminousEfficiency(speed) * dmdt * speed**2 / 2.0)
+            self.entryAngle = math.degrees(math.asin(-self.position * self.velocity / (self.position.norm() * speed)))
 
             if (frame % stepsPerFrame == 0):
                 self.frames.append(models.frame.Frame(self))
                 log.debug("{time:6.3f} s | "
-                          "{latitude:6.4f} °N, {longitude:6.4f} °E, {elevation:6.0f} m | {density:9.3e} kg/m³ | "
-                          "v {speed:7.1f} m/s, dv {acceleration:13.3f} m/s², τ {lumEff:6.4f} | "
-                          "m {mass:6.2e} kg, dm {ablation:9.3e} kg/s, r {radius:7.3f} mm | I {lp:10.3e} W, M {absmag:6.2f}m".format(
+                          "{latitude:6.4f} N, {longitude:6.4f} E, {elevation:6.0f} m, {angle:6.2f}° | {density:9.3e} kg/m³ | "
+                          "{speed:7.1f} m/s, {acceleration:13.3f} m/s², τ {lumEff:6.4f} | "
+                          "{mass:6.2e} kg, {ablation:9.3e} kg/s {radius:7.3f} mm | I {lp:10.3e} W, M {absmag:6.2f}m".format(
                               time            = frame * dt,
                               latitude        = self.position.latitude(),
                               longitude       = self.position.longitude(),
                               elevation       = self.position.elevation(),
+                              angle           = self.entryAngle,
                               density         = atmosphere.airDensity(self.position.elevation()),
                               speed           = self.velocity.norm(),
                               acceleration    = -dvdt.norm(),

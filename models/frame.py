@@ -11,6 +11,7 @@ class Frame:
         self.luminousPower      = meteor.luminousPower
         self.absoluteMagnitude  = radiometry.absoluteMagnitude(self.luminousPower)
         self.mass               = meteor.mass
+        self.entryAngle         = meteor.entryAngle
 
     def __str__(self):
         return f"<MeteorFrame: {self.position}, {self.velocity:.0f} m/s, {self.velocity.norm():6.0f} m/s, {self.luminousPower:e} W>"
