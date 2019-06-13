@@ -91,21 +91,25 @@ statistics:                                                 # Histograms to be p
     kdes:
         quantities:             *quantities
     scatters:
-        -   {x:         appMag, y:         absMag, colour: appMag}
-        -   {x:    logInitMass, y:       altitude, colour: appMag}
-        -   {x:            mjd, y:       altitude, colour: appMag}
         -   {x:            mjd, y:         appMag, colour: appMag}
-        -   {x:    logInitMass, y:      elevation, colour: appMag}
-        -   {x:            mjd, y:      elevation, colour: appMag}
+        -   {x:            mjd, y:       altitude, colour: appMag}
         -   {x:            mjd, y:       angSpeed, colour: appMag}
-        -   {x:       altitude, y:       angSpeed, colour: appMag}
-        -   {x:         appMag, y:      elevation, colour: logInitMass}
-        -   {x:         appMag, y:    logInitMass, colour: logInitMass}
+        -   {x:            mjd, y:      elevation, colour: appMag}
         -   {x:            mjd, y:     entryAngle, colour: appMag}
-        -   {x:      elevation, y:     entryAngle, colour: appMag}
-        -   {x:         appMag, y:     entryAngle, colour: appMag}
-        -   {x:     entryAngle, y:       altitude, colour: appMag}
+        -   {x:         appMag, y:         absMag, colour: appMag}
+        -   {x:         absMag, y:      elevation, colour: appMag}
+        -   {x:         absMag, y:     entryAngle, colour: appMag}
+        -   {x:         absMag, y:     entryAngle, colour: logInitMass}
+        -   {x:       altitude, y:       angSpeed, colour: appMag}
         -   {x:       angSpeed, y:     entryAngle, colour: appMag}
+        -   {x:      elevation, y:     entryAngle, colour: appMag}
+        -   {x:     entryAngle, y:       altitude, colour: appMag}
+        -   {x:     entryAngle, y:    logInitMass, colour: appMag}
+        -   {x:    logInitMass, y:         absMag, colour: appMag}
+        -   {x:    logInitMass, y:         appMag, colour: appMag}
+        -   {x:    logInitMass, y:       altitude, colour: appMag}
+        -   {x:    logInitMass, y:      elevation, colour: appMag}
+        -   {x:    logInitMass, y:     entryAngle, colour: absMag}
 
 
 optimize:                                                   # Exhaustive search of the parameter space

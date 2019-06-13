@@ -181,9 +181,10 @@ class Observer():
 
     def emptyFigure(self):
         pyplot.rcParams['font.family'] = "Minion Pro"
+        pyplot.rcParams['mathtext.fontset'] = "dejavuserif"
         figure, axes = pyplot.subplots()
         figure.tight_layout(rect = (0.07, 0.05, 1, 0.97))
-        figure.set_size_inches(6, 4)
+        figure.set_size_inches(8, 5)
         figure.set_dpi(300)
         axes.grid(linewidth = 0.2, linestyle = ':')
         axes.xaxis.set_major_formatter(ScalarFormatter(useOffset = False))
@@ -207,21 +208,22 @@ class Observer():
                 colour:     <property to use for colouring the dots>
                 size:       <property to determine dot size>
         """
-        log.info(f"Creating a scatter plot for {c.param(scatter.x):>20} × {c.param(scatter.y):>20}")
+        log.info(f"Creating a scatter plot for {c.param(scatter.x):>20} × {c.param(scatter.y):>20} (colour {c.param(scatter.colour):>20})")
 
         try:
             xparams = self.settings.quantities[scatter.x]
             yparams = self.settings.quantities[scatter.y]
+            cparams = self.settings.quantities[scatter.colour]
             figure, axes = self.emptyFigure()
 
-            axes.tick_params(axis = 'both', which = 'major', labelsize = 10)
+            axes.tick_params(axis = 'both', which = 'major', labelsize = 12)
             axes.set_xlim(xparams.min, xparams.max)
             axes.set_ylim(yparams.min, yparams.max)
-            axes.set_xlabel(xparams.name, fontdict = {'fontsize': 10})
-            axes.set_ylabel(yparams.name, fontdict = {'fontsize': 10})
-            axes.set_title(f"{self.name} – {xparams.name} × {yparams.name}", fontdict = {'fontsize': 12})
+            axes.set_xlabel(xparams.name, fontdict = {'fontsize': 12})
+            axes.set_ylabel(yparams.name, fontdict = {'fontsize': 12})
+            axes.set_title(f"{self.name} – {xparams.name} × {yparams.name}", fontdict = {'fontsize': 14})
             
-            axes.scatter(
+            sc = axes.scatter(
                 self.visible[scatter.x],
                 self.visible[scatter.y],
                 c           = self.visible[scatter.colour],
@@ -230,7 +232,8 @@ class Observer():
                 alpha       = 1,
                 linewidths  = 0,
             )
-            figure.savefig(self.dataset.path('analyses', 'scatters', self.id, f"{scatter.x}-{scatter.y}.png"))
+            axes.legend([sc], [cparams.name])
+            figure.savefig(self.dataset.path('analyses', 'scatters', self.id, f"{scatter.x}-{scatter.y}-{scatter.colour}.png"))
             pyplot.close(figure)
         except KeyError as e:
             log.error(f"Invalid scatter configuration parameter {c.param(e)}") 
