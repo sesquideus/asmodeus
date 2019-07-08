@@ -13,8 +13,8 @@ class Distribution():
         self.name   = name
         self.params = kwargs
         try:
-            self.sample = self.functions.get(name, self.default)(**kwargs)
-        except KeyError:
+            self.sample = self.functions.get(name)(**kwargs)
+        except TypeError:
             self.errorUnknown(name)
             raise exceptions.ConfigurationError()
 
