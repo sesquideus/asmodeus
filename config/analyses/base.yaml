@@ -101,7 +101,7 @@ statistics:                                                 # Histograms to be p
         -   {x:         absMag, y:     entryAngle, colour: appMag}
         -   {x:         absMag, y:     entryAngle, colour: logInitMass}
         -   {x:       altitude, y:       angSpeed, colour: appMag}
-        -   {x:       angSpeed, y:     entryAngle, colour: appMag}
+        -   {x:     entryAngle, y:       angSpeed, colour: appMag}
         -   {x:      elevation, y:     entryAngle, colour: appMag}
         -   {x:     entryAngle, y:       altitude, colour: appMag}
         -   {x:     entryAngle, y:    logInitMass, colour: appMag}

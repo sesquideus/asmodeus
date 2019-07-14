@@ -132,16 +132,19 @@ class Observer():
         self.dataset.create('analyses', 'kdes', self.id, exist_ok = True)
 
         for stat, params in self.settings.kdes.quantities.items():       
-            self.makeKDE(stat, **params)
+            self.makeKDE(stat, params)
 
-    def makeKDE(self, stat, *, min, max, bin, **kwargs):
+    def makeKDE(self, stat, params):
         log.info(f"Creating a KDE for {c.param(stat)}")
-        points = 20 * (max - min) // bin
-        space = np.linspace(min, max, points)
+        points = 20 * (params.max - params.min) // params.bin
+        space = np.linspace(params.min, params.max, points)
         pdf = self.computeKDE(stat).evaluate(space)
 
         figure, axes = self.emptyFigure()
         axes.fill_between(space, 0, pdf, alpha = 0.5)
+        axes.set_xlabel(params.name)
+        axes.set_ylabel('relative count')
+        axes.set_title(f"{self.name} – {params.name} KDE", fontdict = {'fontsize': 14})
         figure.savefig(self.dataset.path('analyses', 'kdes', self.id, f"{stat}.png"))
         pyplot.close(figure)
 
@@ -160,9 +163,10 @@ class Observer():
         hist, edges = self.computeHistogram(stat, params)
 
         figure, axes = self.emptyFigure()
-        axes.bar(edges[:-1], hist, width = params.bin, alpha = 0.5, align = 'edge', color = (0.1, 0.7, 0.4, 0.5), edgecolor = (0.1, 0.3, 0.2, 1))
-        axes.set_xlabel(params.name)
-        axes.set_ylabel('relative count')
+        axes.bar(edges[:-1], hist, width = params.bin, alpha = 0.5, align = 'edge', color = (0.1, 0.7, 0.4, 0.5), edgecolor = (0.0, 0.0, 0.0, 1), linewidth = 0.1)
+        axes.set_xlabel(params.name, fontdict = {'fontsize': 12})
+        axes.set_ylabel('relative count', fontdict = {'fontsize': 12})
+        axes.set_title(f"{self.name} – {params.name} histogram", fontdict = {'fontsize': 14})
         figure.savefig(self.dataset.path('analyses', 'histograms', self.id, f"{stat}.png"))
         pyplot.close(figure)
 
@@ -182,9 +186,12 @@ class Observer():
     def emptyFigure(self):
         pyplot.rcParams['font.family'] = "Minion Pro"
         pyplot.rcParams['mathtext.fontset'] = "dejavuserif"
+        pyplot.rcParams['axes.labelsize'] = 12
+        pyplot.rcParams['axes.titlesize'] = 12
+
         figure, axes = pyplot.subplots()
-        figure.tight_layout(rect = (0.07, 0.05, 1, 0.97))
-        figure.set_size_inches(8, 5)
+        figure.tight_layout(rect = (0.05, 0.03, 1, 0.98))
+        figure.set_size_inches(8, 6)
         figure.set_dpi(300)
         axes.grid(linewidth = 0.2, linestyle = ':')
         axes.xaxis.set_major_formatter(ScalarFormatter(useOffset = False))
@@ -227,7 +234,7 @@ class Observer():
                 self.visible[scatter.x],
                 self.visible[scatter.y],
                 c           = self.visible[scatter.colour],
-                s           = 3 * np.exp(-self.visible.appMag / 3),
+                s           = 6 * np.exp(-self.visible.appMag / 3),
                 cmap        = scatter.get('cmap', 'viridis_r'),
                 alpha       = 1,
                 linewidths  = 0,
