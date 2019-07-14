@@ -29,9 +29,11 @@ For basic analysis of a dataset use
 
     > ./asmodeus-histogram.py <dataset> <analysis config file>
     
-or
+to plot histograms of all pre-defined properties, or
 
     > ./asmodeus-scatter.py <dataset> <analysis config file>
+
+to plot 2D scatter plots of pairs of properties.
 
 ## Plotting a sky map
 Asmodeus includes a simple visualisation tool that plots the meteors as they would be observed in the sky.
