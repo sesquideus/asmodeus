@@ -15,14 +15,16 @@ First of all, you need to generate a population of virtual meteoroids. This is d
 
     > ./asmodeus-generate.py <dataset> <meteor config file>
     
-Meteor files are saved in `datasets/<dataset name>/meteors`.
+Meteor files are saved in `datasets/<dataset name>/meteors` along with the metadata, such as meteoroid count,
+timestamp and configuration options used to generate the population.
 
 ## Calculating sightings
 In the next step ASMODEUS computes the sightings.
 
     > ./asmodeus-observer.py <dataset> <observer config file>
     
-using the same `<dataset>` as before. Sightings are stored in `datasets/<dataset>/sightings`.
+using the same `<dataset>` as before. Sightings are stored in `datasets/<dataset>/sightings`
+along with the used configuration parameters.
 
 ## Analyses
 For basic analysis of a dataset use
