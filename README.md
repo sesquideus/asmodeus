@@ -36,7 +36,7 @@ For basic analysis of a dataset use
 
     > ./asmodeus-histogram.py <dataset> <analysis config file>
     
-to plot histograms of all pre-defined properties, or
+to plot histograms of selected pre-defined properties, or
 
     > ./asmodeus-scatter.py <dataset> <analysis config file>
 
@@ -52,5 +52,5 @@ If the observations were calculated with `streaks` option on, the sky map will c
 otherwise only the brightest frame of each meteor is shown.
 
 # Thanks
-Thanks belong to Juraj Tóth as the advisor of my master thesis, which required this program to be written,
-and to Peter Vereš who suggested using a simulation to de-bias the observational data.
+I would like to thank Juraj Tóth as the advisor of my master thesis, which required this program to be written,
+and to Peter Vereš, who suggested using a simulation as a means of de-biasing the observational data.
