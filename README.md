@@ -52,10 +52,15 @@ Asmodeus includes a simple visualisation tool that plots the meteors as they wou
     > ./asmodeus-sky.py <dataset> <sky-config-file>
 
 If the observations were calculated with `streaks` option on, the sky map will contain entire meteors,
-otherwise only the brightest frame of each meteor is shown.
+otherwise only the brightest frame of each meteor is shown. The sky maps are saved to
+`datasets/<dataset>/sky/<observer>/sky.png`.
 
 ## Comparing two analyses and multiparametric fit
-ASMODEUS can be used to fit the meteor distributions to another (observational) dataset.
+ASMODEUS can be used to fit the meteor distributions to another (observational) dataset with
+
+    > ./asmodeus-multifit <dataset> <other-dataset> <multifit-config-file>
+
+The program outputs the optimal values of parameters. Currently this is not implemented!
 
 # Thanks
 I would like to thank Juraj Tóth as the advisor of my master thesis, which required this program to be written,
