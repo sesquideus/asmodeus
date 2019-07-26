@@ -1,6 +1,10 @@
 # What is it?
+ASMODEUS is an universal all-sky meteor simulator. 
 
-## Installation
+Its original purpose was to determine and correct observation bias introduced by imperfections
+of all-sky camera systems and to use the corrected data to estimate the total meteoroid flux.
+
+# Installation
 ASMODEUS requires GNU/Linux operating system and a Python interpreter `>3.7`.
 We recommend using `pipenv` to manage a virtual environment. After cloning the repository
 and installing `pipenv`, run
@@ -36,7 +40,8 @@ to plot histograms of all pre-defined properties, or
 
     > ./asmodeus-scatter.py <dataset> <analysis config file>
 
-to plot 2D scatter plots of pairs of properties.
+to plot 2D scatter plots for tuples of properties. You may define properties to be displayed on
+the `x` axis, `y` axis, colour and dot size.
 
 ## Plotting a sky map
 Asmodeus includes a simple visualisation tool that plots the meteors as they would be observed in the sky.
@@ -45,3 +50,7 @@ Asmodeus includes a simple visualisation tool that plots the meteors as they wou
 
 If the observations were calculated with `streaks` option on, the sky map will contain entire meteors,
 otherwise only the brightest frame of each meteor is shown.
+
+# Thanks
+Thanks belong to Juraj Tóth as the advisor of my master thesis, which required this program to be written,
+and to Peter Vereš who suggested using a simulation to de-bias the observational data.
