@@ -19,9 +19,10 @@ Meteor files are saved in `datasets/<dataset name>/meteors` along with the metad
 timestamp and configuration options used to generate the population.
 
 ## Calculating sightings
-In the next step ASMODEUS computes the sightings.
+Once atmospheric entry of each meteoroid is simulated, you need to compute the geometry and luminosity
+data for ground-based observers. This is done by
 
-    > ./asmodeus-observer.py <dataset> <observer config file>
+    > ./asmodeus-observer.py <dataset> <observers config file>
     
 using the same `<dataset>` as before. Sightings are stored in `datasets/<dataset>/sightings`
 along with the used configuration parameters.
