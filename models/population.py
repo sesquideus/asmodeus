@@ -45,6 +45,8 @@ class Population():
             if len(dataset.listDir('meteors')) != config.count:
                 raise exceptions.PrerequisiteError("YAML file does not match contents")
 
+            
+
         except FileNotFoundError as e:
             log.error(f"Could not load configuration file {c.path(filename)}: {e}")
             raise exceptions.PrerequisiteError(e) from e

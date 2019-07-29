@@ -40,11 +40,14 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
         self.protectOverwrite('sightings')
 
     def configure(self):
-        self.population = Population.fromDataset(self.dataset)
         self.campaign = Campaign(self.dataset, self.population, self.config.observations.observers)
 
     def runSpecific(self):
         self.markTime()
+
+        self.campaign.loadPopulation()
+        self.campaign.observe()
+
         meteorFiles = self.dataset.list('meteors')
         self.count = 0
 

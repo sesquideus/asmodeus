@@ -57,10 +57,6 @@ class Observer():
         log.info(f"Loaded {c.num(len(dicts))} sightings")
         self.createDataframe()
 
-    def setDiscriminators(self, discriminators):
-        self.discriminators = discriminators
-        self.biasFunction = lambda row: all([disc.compute(row[prop]) for prop, disc in self.discriminators.items()])
-
 
 
 

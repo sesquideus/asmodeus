@@ -21,7 +21,7 @@ class Observation():
         self.parameters     = parameters
 
     def observe(self):
-        log.info(f"Calculating {c.num(total)} observations using {c.num(self.config.mp.processes)} processes")
+        log.info(f"Calculating {c.num(self.population.count)} observations using {c.num(self.config.mp.processes)} processes")
 
         meteorFiles = self.dataset.list('meteors')
         self.count = 0
