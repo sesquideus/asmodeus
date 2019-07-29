@@ -14,8 +14,10 @@ from core               import asmodeus, logger
 from core.parallel      import parallel
 from utilities          import colour as c
 
-from models.meteor import Meteor
-from models.sighting import Sighting
+from models.meteor      import Meteor
+from models.sighting    import Sighting
+from models.population  import Population
+from models.campaign    import Campaign
 
 log = logger.setupLog('root')
 
@@ -25,13 +27,7 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
 
     def createArgparser(self):
         super().createArgparser()
-        self.argparser.add_argument('config',                   type = argparse.FileType('r'))
-        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
-        self.argparser.add_argument('-c', '--count',            type = int)
         self.argparser.add_argument('-s', '--streaks',          action = 'store_true')
-
-    def buildConfig(self):
-        self.config = self.loadConfigFile(self.args.config)
 
     def overrideConfig(self):
         super().overrideConfig()
@@ -44,9 +40,8 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
         self.protectOverwrite('sightings')
 
     def configure(self):
-        self.loadObservers()
-        for observer in self.observers:
-            self.dataset.create('sightings', observer.id)
+        self.population = Population.fromDataset(self.dataset)
+        self.campaign = Campaign(self.dataset, self.population, self.config.observations.observers)
 
     def runSpecific(self):
         self.markTime()

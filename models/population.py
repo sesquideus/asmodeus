@@ -9,7 +9,8 @@ import time
 import multiprocessing as mp
 
 from core.parallel      import parallel
-from core               import exceptions
+from core               import exceptions, configuration
+from core.dataset       import Dataset
 from distribution       import PositionDistribution, VelocityDistribution, MassDistribution, DensityDistribution, TimeDistribution, DragCoefficientDistribution
 from models.meteor      import Meteor
 from physics            import coord
@@ -33,6 +34,24 @@ class Population():
         except AttributeError as e:
             raise exceptions.ConfigurationError(e) from e
 
+    @classmethod
+    def fromDataset(cls, dataset):
+        try:
+            config = configuration.loadYAML(open(dataset.path('meteors.yaml'), 'r'))
+
+            if not dataset.isDir('meteors'):
+                raise exceptions.PrerequisiteError("There is no {c.path('meteors')} directory in dataset {c.name(dataset.name)}")
+
+            if len(dataset.listDir('meteors')) != config.count:
+                raise exceptions.PrerequisiteError("YAML file does not match contents")
+
+        except FileNotFoundError as e:
+            log.error(f"Could not load configuration file {c.path(filename)}: {e}")
+            raise exceptions.PrerequisiteError(e) from e
+        except yaml.composer.ComposerError as e:
+            log.error("YAML composer error")
+            raise exceptions.PrerequisiteError(e) from e
+
     def generate(self):
         log.info(f"Generating {c.num(self.parameters.count)} meteoroids")
         self.count = 0
@@ -41,6 +60,12 @@ class Population():
 
         while (self.count < self.parameters.count):
             self.generateMeteoroid()
+
+        log.info("Needed {iterations} candidate{s}, effective area {area}".format(
+            iterations      = c.num(self.iterations),
+            area            = c.num(f"{self.parameters.count / self.iterations * 100:5.2f}%"),
+            s               = 's' if self.iterations > 1 else '',
+        ))
             
     def generateMeteoroid(self):
         mass                = self.massDistribution.sample()
@@ -77,8 +102,7 @@ class Population():
             processes       = min(self.count, processes),
             action          = "Simulating meteors",
         )
-        log.info("Total mass {mass}, effective area {area}".format(
-            area            = c.num(f"{self.parameters.count / self.iterations * 100:5.2f}%"),
+        log.info("Total mass {mass}".format(
             mass            = c.num("{:6f} kg".format(sum(map(lambda x: x.initMass, self.meteors)))),
         ))
 
@@ -90,7 +114,8 @@ class Population():
     def saveMetadata(self, directory):
         yaml.dump({
             'count':            self.count,
-            'generated':        datetime.datetime.now().isoformat(),
+            'iterations':       self.iterations,
+            'timestamp':        datetime.datetime.now().isoformat(),
             'distributions':    {
                 'mass':             self.massDistribution.asDict(),
                 'density':          self.densityDistribution.asDict(),
@@ -101,34 +126,11 @@ class Population():
             },
         }, open(os.path.join(directory, 'meteors.yaml'), 'w'), default_flow_style = False)
 
+
 def initialize(queuex, fpsx, spfx):
     global fps, spf, queue
     fps, spf, queue = fpsx, spfx, queuex
 
-def worker(args):
-    queue, = args
-    position            = pd.sample()
-    velocity            = vd.sample()
-    timestamp           = td.sample()
-    velocityECEF        = coord.Vector3D.fromNumpyVector((coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocity.toNumpyVector()))
-    entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
-    queue.put(1)
-
-    if random.random() < entryAngleSin:
-        meteor = Meteor(
-            timestamp       = timestamp,
-            mass            = md.sample(),
-            density         = dd.sample(),
-            velocity        = velocityECEF,
-            position        = position,
-            ablationHeat    = ah,
-            heatTransfer    = ht,
-            dragCoefficient = dc,
-        )
-        meteor.flyRK4(fps, spf)
-        return meteor
-    else:
-        return None
 
 def simulate(meteor):
     meteor.flyRK4(fps, spf)

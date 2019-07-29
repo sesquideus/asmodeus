@@ -167,7 +167,7 @@ class Meteor:
                               angle           = self.entryAngle,
                               density         = atmosphere.airDensity(self.position.elevation()),
                               speed           = self.velocity.norm(),
-                              acceleration    = -dvdt.norm(),
+                              acceleration    = dvdt.norm(),
                               lumEff          = radiometry.luminousEfficiency(self.velocity.norm()),
                               ablation        = dmdt,
                               mass            = self.mass,

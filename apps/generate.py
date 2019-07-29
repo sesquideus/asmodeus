@@ -23,8 +23,6 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
 
     def createArgparser(self):
         super().createArgparser()
-        self.argparser.add_argument('config',                   type = argparse.FileType('r'))
-        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
         self.argparser.add_argument('-c', '--count',            type = int)
 
     def buildConfig(self):
@@ -41,8 +39,8 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
         self.protectOverwrite('meteors')
 
     def configure(self):
-        self.population = Population(self.config.meteors)
         self.root = self.dataset.path('meteors')
+        self.population = Population(self.config.meteors)
 
     def runSpecific(self):
         self.population.generate()

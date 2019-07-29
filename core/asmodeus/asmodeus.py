@@ -1,12 +1,10 @@
 import argparse
 import sys
-import dotmap
 import multiprocessing as mp
 import logging
 import time
-import yaml
 
-from core import dataset, exceptions
+from core import dataset, exceptions, configuration
 from utilities import colour as c
 
 from models.observer import Observer
@@ -23,7 +21,7 @@ class Asmodeus():
         self.args = self.argparser.parse_args()
 
         try:
-            self.buildConfig()
+            self.loadConfig()
             self.dataset = dataset.Dataset(self.args.dataset)
             self.overrideConfig()
             self.prepareDataset()
@@ -37,8 +35,9 @@ class Asmodeus():
         except exceptions.OverwriteError as e:
             log.critical(f"Target directory {e} already exists (use {c.param('-O')} or {c.param('--overwrite')} to overwrite the existing dataset)")
             sys.exit(-1)
-        except exceptions.PrerequisiteError:
-            log.critical("Missing prerequisites, aborting")
+        except exceptions.PrerequisiteError as e:
+            log.critical(f"Missing prerequisites: {e}")
+            log.critical("Aborting")
             sys.exit(-1)
 
         log.info("Initialization complete")
@@ -46,27 +45,16 @@ class Asmodeus():
     def createArgparser(self):
         self.argparser = argparse.ArgumentParser(description = "All-Sky Meteor Observation and Detection Efficiency Simulator")
         self.argparser.add_argument('dataset',                  type = str)
+        self.argparser.add_argument('config',                   type = argparse.FileType('r'))
+        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
         self.argparser.add_argument('-d', '--debug',            action = 'store_true')
         self.argparser.add_argument('-l', '--logfile',          type = argparse.FileType('w'))
-
-    @classmethod
-    def loadConfigFile(self, file):
-        try:
-            config = yaml.safe_load(file)
-        except FileNotFoundError as e:
-            log.error("Could not load configuration file {}: {}".format(file, e))
-            raise exceptions.CommandLineError()
-        except yaml.composer.ComposerError as e:
-            log.error("YAML composer error")
-            raise exceptions.ConfigurationError(e) from e
-
-        return dotmap.DotMap(config, _dynamic = False)
 
     def prepareDataset(self):
         raise NotImplementedError(f"You need to define the {c.name('prepareDataset')} method for every ASMODEUS subclass.")
 
-    def buildConfig(self):
-        raise NotImplementedError(f"You need to define the {c.name('buildConfig')} method for every ASMODEUS subclass.")
+    def loadConfig(self):
+        self.config = configuration.loadYAML(self.args.config)
 
     def protectOverwrite(self, *path):
         if self.dataset.exists(*path) and not self.config.overwrite:
@@ -121,23 +109,9 @@ class Asmodeus():
                 log.critical(f"{c.script(f'asmodeus-{self.name}')} aborted")
             log.info("-" * 50)
 
-    def loadObservers(self):
-        self.observers = []
-        for oid, obs in self.config.observations.observers.items():
-            self.observers.append(Observer(oid, self.dataset, **obs.toDict(), streaks = self.config.observations.streaks))
-
-        log.info("Loaded {count} observer{s}:".format(
-            count   = len(self.observers),
-            s       = 's' if len(self.observers) > 1 else ''
-        ))
-
-        for o in self.observers:
-            log.info(f"    {o}")
-
     def overrideWarning(self, parameter, old, new):
         log.warning(f"Overriding {c.param(parameter)} ({c.over(old)} -> {c.over(new)})")
 
- 
     def finalize(self):
         log.debug("Wrapping everything up...")
         self.ok = True

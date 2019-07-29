@@ -19,6 +19,12 @@ class Dataset():
 
     def exists(self, *path):
         return os.path.exists(self.path(*path))
+
+    def isDir(self, *path):
+        return os.path.isdir(self.path(*path))
+
+    def listDir(self, *path):
+        return os.listdir(self.path(*path))
     
     def remove(self, *path):
         directory = self.path(*path)
@@ -54,7 +60,7 @@ class Dataset():
 
 
 class DataManager():
-    def __init__(self, name, root = ''):
+    def __init__(self, name, root = 'dataset'):
         self.name = name
         self.root = os.path.realpath(root)
 
@@ -71,7 +77,7 @@ class DataManager():
         return os.listdir(self.path(*path))
 
     def checkMeteors(self):
-        return self.exists('meteors') and self.exists('meteors.yaml')
+        return os.path.isdir(self.path('meteors')) and self.exists('meteors.yaml')
 
     def meteorFiles(self):
         return self.list('meteors')
