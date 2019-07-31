@@ -1,5 +1,5 @@
 # What is it?
-ASMODEUS is an universal all-sky meteor simulator. 
+ASMODEUS is a universal all-sky meteor simulator. 
 
 Its original purpose was to determine and correct observation bias introduced by imperfections
 of all-sky camera systems and to use the corrected data to estimate the total meteoroid flux.
@@ -60,7 +60,8 @@ ASMODEUS can be used to fit the meteor distributions to another (observational) 
 
     > ./asmodeus-multifit <dataset> <other-dataset> <multifit-config-file>
 
-The program outputs the optimal values of parameters. Currently this is not implemented!
+The program outputs the optimal values of parameters. Currently this is not implemented,
+but older versions supported this in a limited way.
 
 # Thanks
 I would like to thank Juraj Tóth as the advisor of my master thesis, which required this program to be written,
