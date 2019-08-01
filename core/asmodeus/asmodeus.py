@@ -22,8 +22,8 @@ class Asmodeus():
 
         try:
             self.loadConfig()
-            self.dataset = dataset.Dataset(self.args.dataset)
             self.overrideConfig()
+            self.dataset = dataset.DataManager(self.args.dataset, overwrite = self.config.overwrite)
             self.prepareDataset()
             self.configure()
         except exceptions.CommandLineError as e:
@@ -33,7 +33,8 @@ class Asmodeus():
             log.critical(f"Terminating due to a configuration error: {e}")
             sys.exit(-1)
         except exceptions.OverwriteError as e:
-            log.critical(f"Target directory {e} already exists (use {c.param('-O')} or {c.param('--overwrite')} to overwrite the existing dataset)")
+            log.critical(e)
+            log.critical(f"Target directory already exists (use {c.param('-O')} or {c.param('--overwrite')} to overwrite the existing dataset)")
             sys.exit(-1)
         except exceptions.PrerequisiteError as e:
             log.critical(f"Missing prerequisites: {e}")
@@ -54,23 +55,11 @@ class Asmodeus():
         raise NotImplementedError(f"You need to define the {c.name('prepareDataset')} method for every ASMODEUS subclass.")
 
     def loadConfig(self):
-        self.config = configuration.loadYAML(self.args.config)
-
-    def protectOverwrite(self, *path):
-        if self.dataset.exists(*path) and not self.config.overwrite:
-            raise exceptions.OverwriteError(c.path(self.dataset.path(*path)))
-        else:
-            self.dataset.reset(*path)
-
-    def requireStage(self, stage, program):
         try:
-            self.dataset.require(stage)
-        except FileNotFoundError:
-            log.error("Could not load meteors from {s} -- did you run {gen}?".format(
-                s   = c.path(self.dataset.path(stage)),
-                gen = c.script(program),
-            ))
-            raise exceptions.PrerequisiteError()
+            self.config = configuration.loadYAML(self.args.config)
+        except FileNotFoundError as e:
+            log.error(f"Could not load YAML file {c.path(fileObject)}: {e}")
+            raise exceptions.CommandLineError("Invalid configuration file")
 
     def overrideConfig(self):
         log.setLevel(logging.DEBUG if self.args.debug else logging.INFO)

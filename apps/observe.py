@@ -36,11 +36,11 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
             self.config.observations.streaks = True
 
     def prepareDataset(self):
-        self.requireStage('meteors', 'asmodeus-generate')
-        self.protectOverwrite('sightings')
+        self.population = self.dataset.loadPopulation()
+        self.dataset.resetSightings()
 
     def configure(self):
-        self.campaign = Campaign(self.dataset, self.population, self.config.observations.observers)
+        self.campaign = Campaign(self.dataset, self.config.observations.observers)
 
     def runSpecific(self):
         self.markTime()

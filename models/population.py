@@ -10,13 +10,19 @@ import multiprocessing as mp
 
 from core.parallel      import parallel
 from core               import exceptions, configuration
-from core.dataset       import Dataset
 from distribution       import PositionDistribution, VelocityDistribution, MassDistribution, DensityDistribution, TimeDistribution, DragCoefficientDistribution
 from models.meteor      import Meteor
 from physics            import coord
 from utilities          import colour as c
 
 log = logging.getLogger('root')
+
+
+class PopulationGrid():
+    pass
+
+class PopulationRandom():
+    pass
 
 
 class Population():
@@ -33,26 +39,6 @@ class Population():
             self.dragCoefficientDistribution    = DragCoefficientDistribution.fromConfig(self.parameters.shape.dragCoefficient).logInfo()
         except AttributeError as e:
             raise exceptions.ConfigurationError(e) from e
-
-    @classmethod
-    def fromDataset(cls, dataset):
-        try:
-            config = configuration.loadYAML(open(dataset.path('meteors.yaml'), 'r'))
-
-            if not dataset.isDir('meteors'):
-                raise exceptions.PrerequisiteError("There is no {c.path('meteors')} directory in dataset {c.name(dataset.name)}")
-
-            if len(dataset.listDir('meteors')) != config.count:
-                raise exceptions.PrerequisiteError("YAML file does not match contents")
-
-            
-
-        except FileNotFoundError as e:
-            log.error(f"Could not load configuration file {c.path(filename)}: {e}")
-            raise exceptions.PrerequisiteError(e) from e
-        except yaml.composer.ComposerError as e:
-            log.error("YAML composer error")
-            raise exceptions.PrerequisiteError(e) from e
 
     def generate(self):
         log.info(f"Generating {c.num(self.parameters.count)} meteoroids")

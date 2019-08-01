@@ -66,7 +66,7 @@ class Distribution():
 
     def asDict(self):
         return {
-            'name':         self.name,
+            'distribution': self.name,
             'parameters':   self.params,
         }
 

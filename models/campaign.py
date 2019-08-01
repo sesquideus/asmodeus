@@ -14,7 +14,7 @@ log = logging.getLogger('root')
 class Campaign():
     def __init__(self, dataset, config):
         self.dataset = dataset
-        self.loadObservers(config.observations.observers)
+        self.loadObservers(config)
 
     def loadObservers(self, parameters):
         self.observers = [Observer(oid, obs) for oid, obs in parameters.items()]

@@ -35,8 +35,7 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
             self.config.meteors.count = self.args.count
 
     def prepareDataset(self):
-        self.protectOverwrite()
-        self.protectOverwrite('meteors')
+        self.dataset.resetMeteors()
 
     def configure(self):
         self.root = self.dataset.path('meteors')
