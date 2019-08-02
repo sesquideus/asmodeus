@@ -84,13 +84,13 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
         ))
         super().finalize()
 
-def init(queuex, observerx, streaksx):
+def init(_queue, _observer, _streaks):
     global queue
-    queue = queuex
+    queue = _queue
     global observer
-    observer = observerx
+    observer = _observer
     global streaks
-    streaks = streaksx
+    streaks = _streaks
 
 def observe(args):
     filename, out = args

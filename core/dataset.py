@@ -107,10 +107,12 @@ class DataManager():
             filename = self.path('meteors.yaml')
             config = configuration.loadYAML(open(filename, 'r'))
             population = Population(config.distributions)
+            population.load(self)
         except FileNotFoundError as e:
             log.error(f"Cannot find file {c.path(filename)}")
             raise exceptions.PrerequisiteError() from e
 
+        log.info(f"Population loaded successfully")
         return population
 
     def resetMeteors(self):

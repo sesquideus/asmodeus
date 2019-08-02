@@ -27,6 +27,9 @@ class PopulationRandom():
 
 class Population():
     def __init__(self, parameters):
+        self.initialize(parameters)
+        
+    def initialize(self, parameters):
         self.parameters = parameters
         
         try:
@@ -39,6 +42,16 @@ class Population():
             self.dragCoefficientDistribution    = DragCoefficientDistribution.fromConfig(self.parameters.shape.dragCoefficient).logInfo()
         except AttributeError as e:
             raise exceptions.ConfigurationError(e) from e
+
+    def load(self, dataset):
+        log.info("Loading meteors from dataset {c.name(dataset.name)}")
+        filename = dataset.path('meteors.yaml')
+        config = configuration.loadYAML(open(filename, 'r'))
+
+        self.initialize(config.distributions)
+        self.count = config.count
+        self.iterations = config.iterations
+        self.meteors = [Meteor.load(dataset.path('meteors', filename)) for filename in dataset.list('meteors')]
 
     def generate(self):
         log.info(f"Generating {c.num(self.parameters.count)} meteoroids")
@@ -106,11 +119,15 @@ class Population():
             'timestamp':        datetime.datetime.now().isoformat(),
             'distributions':    {
                 'mass':             self.massDistribution.asDict(),
-                'density':          self.densityDistribution.asDict(),
-                'timestamp':        self.temporalDistribution.asDict(),
+                'time':             self.temporalDistribution.asDict(),
                 'position':         self.positionDistribution.asDict(),
-                'dragCoefficient':  self.dragCoefficientDistribution.asDict(),
                 'velocity':         self.velocityDistribution.asDict(),
+                'material':         {
+                    'density':          self.densityDistribution.asDict(),
+                },
+                'shape':        {
+                    'dragCoefficient':  self.dragCoefficientDistribution.asDict(),
+                },
             },
         }, open(os.path.join(directory, 'meteors.yaml'), 'w'), default_flow_style = False)
 
