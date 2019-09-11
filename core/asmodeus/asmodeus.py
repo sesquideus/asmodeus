@@ -16,7 +16,7 @@ class Asmodeus():
     def __init__(self):
         self.ok = False
         self.startTime = time.time()
-        log.info("Initializing {}".format(c.script("asmodeus-{}".format(self.name))))
+        log.info(f"Initializing {c.script(f'asmodeus-{self.name}')}")
         self.createArgparser()
         self.args = self.argparser.parse_args()
 
@@ -63,6 +63,7 @@ class Asmodeus():
 
     def overrideConfig(self):
         log.setLevel(logging.DEBUG if self.args.debug else logging.INFO)
+
         if self.args.debug:
             log.warning(f"Debug output is {c.over('active')}")
 

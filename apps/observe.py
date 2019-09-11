@@ -28,25 +28,32 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
     def createArgparser(self):
         super().createArgparser()
         self.argparser.add_argument('-s', '--streaks',          action = 'store_true')
+        self.argparser.add_argument('-t', '--period',           type = float)
 
     def overrideConfig(self):
         super().overrideConfig()
+
         if self.args.streaks:
             self.overrideWarning('streaks', self.config.observations.streaks, self.args.streaks)
             self.config.observations.streaks = True
 
+        if self.args.period:
+            self.overrideWarning('reporting period', 1.0, self.args.period)
+            self.config.mp.report = self.args.period
+
     def prepareDataset(self):
-        self.population = self.dataset.loadPopulation()
         self.dataset.resetSightings()
 
     def configure(self):
-        self.campaign = Campaign(self.dataset, self.config.observations.observers)
+        self.campaign = Campaign(self.dataset, self.config.campaign)
 
     def runSpecific(self):
         self.markTime()
 
         self.campaign.loadPopulation()
-        self.campaign.observe()
+        self.campaign.observe(processes = self.config.mp.processes, report = self.config.mp.report)
+
+        return
 
         meteorFiles = self.dataset.list('meteors')
         self.count = 0

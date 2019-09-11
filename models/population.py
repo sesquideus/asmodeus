@@ -27,9 +27,7 @@ class PopulationRandom():
 
 class Population():
     def __init__(self, parameters):
-        self.initialize(parameters)
-        
-    def initialize(self, parameters):
+        log.debug(f"Initializing the population")
         self.parameters = parameters
         
         try:
@@ -43,15 +41,18 @@ class Population():
         except AttributeError as e:
             raise exceptions.ConfigurationError(e) from e
 
-    def load(self, dataset):
-        log.info("Loading meteors from dataset {c.name(dataset.name)}")
+    @classmethod
+    def load(cls, dataset):
+        log.info(f"Loading saved meteors from dataset {c.name(dataset.name)}")
         filename = dataset.path('meteors.yaml')
         config = configuration.loadYAML(open(filename, 'r'))
 
-        self.initialize(config.distributions)
-        self.count = config.count
-        self.iterations = config.iterations
-        self.meteors = [Meteor.load(dataset.path('meteors', filename)) for filename in dataset.list('meteors')]
+        population = Population(config.distributions)
+        population.count = config.count
+        population.iterations = config.iterations
+        population.meteors = [Meteor.load(dataset.path('meteors', filename)) for filename in dataset.list('meteors')]
+
+        return population
 
     def generate(self):
         log.info(f"Generating {c.num(self.parameters.count)} meteoroids")

@@ -5,6 +5,7 @@ import time
 import multiprocessing as mp
 
 from models.observer    import Observer
+from models.observation import Observation
 from models.population  import Population
 from utilities          import colour as c
 
@@ -13,8 +14,11 @@ log = logging.getLogger('root')
 
 class Campaign():
     def __init__(self, dataset, config):
+        log.debug(f"Creating a campaign with dataset {c.name(dataset.name)}")
+        log.debug(config)
         self.dataset = dataset
-        self.loadObservers(config)
+        self.config = config
+        self.loadObservers(config.observers)
 
     def loadObservers(self, parameters):
         self.observers = [Observer(oid, obs) for oid, obs in parameters.items()]
@@ -28,13 +32,14 @@ class Campaign():
             log.info(f"    {o}")
 
     def loadPopulation(self):
-        self.population = Population.fromDataset(self.dataset)
+        self.population = Population.load(self.dataset)
 
-    def observe(self):
+    def observe(self, *, processes = 1, report = 1):
         log.info("Computing observations for campaign")
+        self.observations = [Observation(self.dataset, observer, self.population, self.config.streaks) for observer in self.observers]
 
-        for observer in self.observers:
-            observer.observe(self.population)
+        for observation in self.observations:
+            observation.observe(self.config, processes = processes, report = report)
 
     def setDiscriminators(self, discriminators):
         self.discriminators = discriminators

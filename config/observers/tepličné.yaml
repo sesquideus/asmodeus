@@ -1,8 +1,4 @@
-mp:
-    processes:                  4
-    report:                     1
-
-observations:
+campaign:
     streaks:                    False
     observers:
         teplicne:

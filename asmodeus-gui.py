@@ -8,7 +8,7 @@ import PyQt5.QtWidgets as QW
 import PyQt5.QtGui as QG
 from PyQt5.QtCore import Qt
 
-from generate import AsmodeusGenerate
+from apps.generate import AsmodeusGenerate
 
 class AsmoGUI():
 
@@ -45,6 +45,8 @@ class WindowGenerate(QW.QDialog):
         combo.addItem('Uniform')
         combo.addItem('Pareto')
         combo.move(50, 50)
+
+        layout.addWidget(combo)
 
         self.buttons = QW.QDialogButtonBox(QW.QDialogButtonBox.Ok | QW.QDialogButtonBox.Cancel, Qt.Horizontal, self)
         self.buttons.accepted.connect(self.accept)

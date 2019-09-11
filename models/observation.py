@@ -12,16 +12,22 @@ from models             import observer
 from physics            import coord
 from utilities          import colour as c
 
+log = logging.getLogger('root')
+
 
 class Observation():
     def __init__(self, dataset, observer, population, parameters):
+        log.debug(f"Initializing a new observation for dataset {c.name(dataset.name)} with observer {c.name(observer.name)}")
         self.dataset        = dataset
         self.observer       = observer
         self.population     = population
         self.parameters     = parameters
 
-    def observe(self):
-        log.info(f"Calculating {c.num(self.population.count)} observations using {c.num(self.config.mp.processes)} processes")
+    def observe(self, *, streaks, processes = 1, report = 1):
+        log.info(f"Calculating {c.num(self.population.count)} observations"
+            f"using {c.num(self.config.mp.processes)} processes,"
+            f"""meteors saved as {c.over(f"{'streaks' if streaks else 'points'}")}"""
+        )
 
         meteorFiles = self.dataset.list('meteors')
         self.count = 0
@@ -36,9 +42,10 @@ class Observation():
             observe,
             argList,
             initializer = initialize,
-            initargs    = (observer, self.config.observations.streaks),
+            initargs    = (observer, streaks),
+            processes   = processes,
             action      = "Observing meteors",
-            period      = self.config.mp.report
+            period      = self.config.mp.report,
         )
         self.createDataframe()
         self.saveDataframe()

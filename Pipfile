@@ -5,10 +5,8 @@ name = "pypi"
 
 [packages]
 requests = "*"
-namedtupled = "*"
 dotmap = "*"
 colorama = "*"
-"jinja2" = "*"
 numpy = "*"
 astropy = "*"
 dill = "*"
@@ -20,6 +18,8 @@ matplotlib = "*"
 tqdm = "*"
 numba = "*"
 pandas = "*"
+pyqt5 = "*"
+pylzma = "*"
 
 [requires]
 python_version = "3.7"
