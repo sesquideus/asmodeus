@@ -17,11 +17,12 @@ def parallel(function, args, *, initializer = None, initargs = (), processes = 1
     results = pool.map_async(function, args, chunksize)
 
     while not results.ready():
+        size = queue.qsize()
         log.info("{action}: {count} of {total} ({perc})".format(
             action      = action,
-            count       = c.num(f"{queue.qsize():6d}"),
+            count       = c.num(f"{size:6d}"),
             total       = c.num(f"{total:6d}"),
-            perc        = c.num(f"{queue.qsize() / total * 100:6.2f}%"),
+            perc        = c.num(f"{size / total * 100:6.2f}%"),
         ))
         time.sleep(period)
 

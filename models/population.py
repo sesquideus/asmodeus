@@ -11,18 +11,23 @@ import multiprocessing as mp
 from core.parallel      import parallel
 from core               import exceptions, configuration
 from distribution       import PositionDistribution, VelocityDistribution, MassDistribution, DensityDistribution, TimeDistribution, DragCoefficientDistribution
-from models.meteor      import Meteor
+from models             import Meteor
 from physics            import coord
 from utilities          import colour as c
 
 log = logging.getLogger('root')
 
 
-class PopulationGrid():
+class Generator():
     pass
 
-class PopulationRandom():
+class GeneratorGrid(Generator):
+    def __init__(self, config):
+        pass
+
+class GeneratorRealistic(Generator):
     pass
+
 
 
 class Population():
@@ -51,6 +56,8 @@ class Population():
         population.count = config.count
         population.iterations = config.iterations
         population.meteors = [Meteor.load(dataset.path('meteors', filename)) for filename in dataset.list('meteors')]
+        
+        log.info(f"Loaded the population")
 
         return population
 
@@ -68,6 +75,10 @@ class Population():
             area            = c.num(f"{self.parameters.count / self.iterations * 100:5.2f}%"),
             s               = 's' if self.iterations > 1 else '',
         ))
+
+        return
+
+        self.meteors = self.generator.generate()
             
     def generateMeteoroid(self):
         mass                = self.massDistribution.sample()
@@ -94,7 +105,7 @@ class Population():
             ))
             self.count += 1
 
-    def simulate(self, processes, fps, spf):
+    def simulate(self, fps, spf, *, processes = 1, period = 1):
         log.info(f"Simulating atmospheric entry: using {c.num(processes)} processes at {c.num(fps)} frames per second, with {c.num(spf)} steps per frame")
         self.meteors = parallel(
             simulate,
@@ -102,18 +113,22 @@ class Population():
             initializer     = initialize,
             initargs        = (fps, spf),
             processes       = min(self.count, processes),
+            period          = period,
             action          = "Simulating meteors",
         )
         log.info("Total mass {mass}".format(
             mass            = c.num("{:6f} kg".format(sum(map(lambda x: x.initMass, self.meteors)))),
         ))
 
-    def save(self, directory):
-        log.debug(f"Saving the population to {c.path(directory)}")
-        for meteor in self.meteors:
-            meteor.save(directory)
+    def save(self, dataset):
+        log.debug(f"Saving the population to {c.path(dataset)}")
 
-    def saveMetadata(self, directory):
+        for meteor in self.meteors:
+            meteor.save(dataset.path('meteors'))
+
+        self.saveMetadata(dataset)
+
+    def saveMetadata(self, dataset):
         yaml.dump({
             'count':            self.count,
             'iterations':       self.iterations,
@@ -130,7 +145,7 @@ class Population():
                     'dragCoefficient':  self.dragCoefficientDistribution.asDict(),
                 },
             },
-        }, open(os.path.join(directory, 'meteors.yaml'), 'w'), default_flow_style = False)
+        }, open(dataset.path('meteors.yaml'), 'w'), default_flow_style = False)
 
 
 def initialize(queuex, fpsx, spfx):

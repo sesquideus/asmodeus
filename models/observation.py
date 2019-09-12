@@ -6,9 +6,12 @@ import random
 
 import time
 import multiprocessing as mp
+import pandas
 
 from core.parallel      import parallel
-from models             import observer
+from models.observer    import Observer
+from models.meteor      import Meteor
+from models.sighting    import Sighting, PointSighting
 from physics            import coord
 from utilities          import colour as c
 
@@ -16,17 +19,17 @@ log = logging.getLogger('root')
 
 
 class Observation():
-    def __init__(self, dataset, observer, population, parameters):
-        log.debug(f"Initializing a new observation for dataset {c.name(dataset.name)} with observer {c.name(observer.name)}")
+    def __init__(self, dataset, observer, population, config):
+        log.debug(f"Creating a new observation for dataset {c.name(dataset.name)} with observer {c.name(observer.name)}")
         self.dataset        = dataset
         self.observer       = observer
         self.population     = population
-        self.parameters     = parameters
+        self.config         = config
 
-    def observe(self, *, streaks, processes = 1, report = 1):
-        log.info(f"Calculating {c.num(self.population.count)} observations"
-            f"using {c.num(self.config.mp.processes)} processes,"
-            f"""meteors saved as {c.over(f"{'streaks' if streaks else 'points'}")}"""
+    def observe(self, *, processes = 1, report = 1):
+        log.info(f"Calculating {c.num(self.population.count)} observations "
+            f"using {c.num(processes)} processes, "
+            f"""meteors saved as {c.over(f"{'streaks' if self.config.streaks else 'points'}")}"""
         )
 
         meteorFiles = self.dataset.list('meteors')
@@ -42,28 +45,28 @@ class Observation():
             observe,
             argList,
             initializer = initialize,
-            initargs    = (observer, streaks),
+            initargs    = (self.observer, self.config.streaks),
             processes   = processes,
             action      = "Observing meteors",
-            period      = self.config.mp.report,
+            period      = report,
         )
         self.createDataframe()
+
+    def save(self):
+        log.debug(f"""Saving the observed population as {c.over(f"{'streaks' if self.config.streaks else 'points'}")} to {c.path(self.dataset.name)}""")
+        directory = self.dataset.create('sightings', self.observer.id)
+
         self.saveDataframe()
 
-    def save(self, directory):
-        pass
+     #   for sighting in self.sightings:
+     #       sighting.save(directory, streak = self.config.streaks)
         
     def createDataframe(self):
-        if self.parameters.streaks:
-            self.dataframe = pandas.DataFrame.from_records(
-                [frame.asTuple() for sighting in self.sightings for frame in sighting.frames],
-                columns     = PointSighting.columns,
-            )
-        else:
-            self.dataframe = pandas.DataFrame.from_records(
-                [sighting.asTuple() for sighting in self.sightings],
-                columns     = PointSighting.columns,
-            )
+        log.info(f"Creating a dataframe...")
+        self.dataframe = pandas.DataFrame.from_records(
+            [frame.asTuple() for sighting in self.sightings for frame in sighting.frames],
+            columns     = Sighting.columns,
+        )
         log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
 
     def loadDataframe(self):
@@ -74,16 +77,15 @@ class Observation():
         self.dataframe['mjd'] = Time(self.dataframe.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
         self.dataframe['logInitMass'] = np.log10(self.dataframe.initMass.to_numpy(dtype = 'float'))
 
-        log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
+        log.info(f"Created a dataframe with {c.num(len(self.dataframe.index))} rows")
 
     def saveDataframe(self):
-        filename = self.dataset.path('sightings', self.id, 'sky.tsv')
-        log.info(f"Saving a TSV file for observer {c.name(self.id)} {c.path(filename)}")
-        self.dataframe.to_csv(filename, sep = '\t')
+        filename = self.dataset.path('sightings', self.observer.id, 'sky.tsv')
+        log.info(f"Saving a TSV file for observer {c.name(self.observer.id)} {c.path(filename)}")
+        self.dataframe.to_csv(filename, sep = '\t', float_format = '%6g')
 
     def saveMetadata(self, directory):
         pass
-
         
     def makeKDEs(self):
         log.info(f"Creating KDEs for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
@@ -244,9 +246,8 @@ def observe(args):
     queue.put(1)
     meteor = Meteor.load(filename)
     sighting = Sighting(observer, meteor)
-    sighting.save(out, streak = streaks)
 
-    if streaks:
-        return sighting
-    else:
-        return sighting.asPoint()
+    if not streaks:
+        sighting.reduceToPoint()
+
+    return sighting

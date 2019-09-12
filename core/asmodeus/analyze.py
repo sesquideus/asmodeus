@@ -14,21 +14,6 @@ log = logging.getLogger('root')
 class AsmodeusAnalyze(Asmodeus):
     name = 'analyze'
 
-    def createArgparser(self):
-        super().createArgparser()
-        self.argparser.add_argument('observers',                type = argparse.FileType('r'))
-        self.argparser.add_argument('analyses',                 type = argparse.FileType('r'))
-        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
-
-    def buildConfig(self):
-        observerConfig = self.loadConfigFile(self.args.observers)
-        analysesConfig = self.loadConfigFile(self.args.analyses)
-
-        self.config = dotmap.DotMap({
-            'observations': observerConfig.observations.toDict(),
-            'analyses':  analysesConfig.toDict(),
-        }, _dynamic = False)
-
     def prepareDataset(self):
         self.requireStage('sightings', 'asmodeus-observe')
 

@@ -90,7 +90,10 @@ class DataManager():
 
     def create(self, *path, exist_ok = False):
         log.debug(f"Creating new dataset subdirectory {c.path(self.path(*path))}")
-        os.makedirs(self.path(*path), exist_ok = exist_ok)
+
+        path = self.path(*path)
+        os.makedirs(path, exist_ok = exist_ok)
+        return path
 
     def reset(self, *path):
         self.remove(*path)

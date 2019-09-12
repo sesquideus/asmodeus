@@ -46,6 +46,17 @@ class Observer():
             position    = self.position.strGeodetic(),
         )
 
+    def asDict(self):
+        return {
+            'name':     self.name,
+            'position': {
+                'latitude':     self.position.latitude(),
+                'longitude':    self.position.longitude(),
+                'altitude':     self.position.elevation(),
+            },
+            'horizon':  self.horizon,
+        }
+
     def loadSightings(self):
         log.info(f"Loading sightings from {c.path(self.dataset.path('sightings'))}")
 

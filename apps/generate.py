@@ -45,7 +45,7 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
         self.population.generate()
 
         self.markTime()
-        self.population.simulate(self.config.mp.processes, self.config.meteors.integrator.fps, self.config.meteors.integrator.spf)
+        self.population.simulate(self.config.meteors.integrator.fps, self.config.meteors.integrator.spf, processes = self.config.mp.processes, period = self.config.mp.report)
         log.info("{num} meteors were generated in {time} seconds ({rate} meteors per second)".format(
             num     = c.num(self.population.parameters.count),
             time    = c.num(f"{self.stopTime():.6f}"),
@@ -53,8 +53,7 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
         ))
         
         self.markTime()
-        self.population.save(self.root)
-        self.population.saveMetadata(self.dataset.path())
+        self.population.save(self.dataset)
 
         log.info("{num} meteors were saved to {dir} in {time} seconds ({rate} meteors per second)".format(
             num     = c.num(self.population.parameters.count),

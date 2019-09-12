@@ -23,6 +23,12 @@ class Asmodeus():
         try:
             self.loadConfig()
             self.overrideConfig()
+
+            log.debug(f"Full configuration is")
+            if log.getEffectiveLevel() == logging.DEBUG:
+                self.config.pprint()
+
+
             self.dataset = dataset.DataManager(self.args.dataset, overwrite = self.config.overwrite)
             self.prepareDataset()
             self.configure()

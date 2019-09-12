@@ -1,6 +1,8 @@
 import logging
 import pickle
 import io
+import copy
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,13 +13,29 @@ log = logging.getLogger('root')
 
 
 class Sighting():
+    columns = [
+        'timestamp',
+        'altitude',
+        'azimuth',
+        'distance',
+        'elevation',
+        'entryAngle',
+        'speed',
+        'angSpeed',
+        'initMass',
+        'mass',
+        'lumPower',
+        'fluxDensity',
+        'absMag',
+        'appMag',
+    ]
+
     def __init__(self, observer, meteor):
         self.observer           = observer
         self.meteor             = meteor
 
         self.timestamp          = self.meteor.timestamp
         self.id                 = "{}{}".format(self.observer.id, self.timestamp)
-        self.sighted            = None
 
         self.frames             = [SightingFrame(self.observer, meteorFrame) for meteorFrame in self.meteor.frames]
 
@@ -28,6 +46,9 @@ class Sighting():
         for frame in self.frames:
             if self.brightest is None or self.brightest.apparentMagnitude > frame.apparentMagnitude:
                 self.brightest = frame
+
+        self.massInitial        = self.first.frame.mass
+        self.velocityInfinity   = self.first.frame.velocity
 
     @staticmethod
     def load(filename):
@@ -40,23 +61,19 @@ class Sighting():
             'simulationTime':   (self.last.frame.timestamp - self.first.frame.timestamp).total_seconds(),
         }
 
-    def asPoint(self):
-        return PointSighting(self)
+    def reduceToPoint(self):
+        singleFrame = copy.copy(self.brightest)
 
-    def save(self, filename, *, streak = False):
-        if streak:
-            self.saveStreak(filename)
-        else:
-            self.savePoint(filename)
+        self.frames     = [singleFrame]
+        self.first      = singleFrame
+        self.last       = singleFrame
+        self.brightest  = singleFrame
 
-    def saveStreak(self, filename):
-        pickle.dump(self, io.FileIO(filename, 'wb'))
-
-    def savePoint(self, filename):
-        pickle.dump(PointSighting(self), io.FileIO(filename, 'wb'))
+    def save(self, directory, *, streak = False):
+        pickle.dump(self, io.FileIO(os.path.join(directory, f"{self.id}.pickle"), 'wb'))
 
     def applyBias(self, *discriminators):
-        self.sighted = self.asPoint().applyBias(*discriminators)
+        self.sighted = self.applyBias(*discriminators)
         return self.sighted
 
     def __str__(self):

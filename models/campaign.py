@@ -1,8 +1,7 @@
 import logging
 import random
-
-import time
-import multiprocessing as mp
+import yaml
+import datetime
 
 from models.observer    import Observer
 from models.observation import Observation
@@ -19,6 +18,7 @@ class Campaign():
         self.dataset = dataset
         self.config = config
         self.loadObservers(config.observers)
+        log.debug(f"Campaign initialized")
 
     def loadObservers(self, parameters):
         self.observers = [Observer(oid, obs) for oid, obs in parameters.items()]
@@ -36,10 +36,24 @@ class Campaign():
 
     def observe(self, *, processes = 1, report = 1):
         log.info("Computing observations for campaign")
-        self.observations = [Observation(self.dataset, observer, self.population, self.config.streaks) for observer in self.observers]
+        self.observations = [Observation(self.dataset, observer, self.population, self.config) for observer in self.observers]
 
         for observation in self.observations:
-            observation.observe(self.config, processes = processes, report = report)
+            observation.observe(processes = processes, report = report)
+
+    def save(self):
+        for observation in self.observations:
+            observation.save()
+
+        self.saveMetadata()
+
+    def saveMetadata(self):
+        yaml.dump({
+            'count':            self.population.count,
+            'timestamp':        datetime.datetime.now().isoformat(),
+            'observers':        {observer.id: observer.asDict() for observer in self.observers},
+        }, open(self.dataset.path('campaign.yaml'), 'w'), default_flow_style = False)
+
 
     def setDiscriminators(self, discriminators):
         self.discriminators = discriminators
