@@ -19,7 +19,6 @@ tqdm = "*"
 numba = "*"
 pandas = "*"
 pyqt5 = "*"
-pylzma = "*"
 
 [requires]
 python_version = "3.7"
