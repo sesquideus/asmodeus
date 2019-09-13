@@ -14,9 +14,6 @@ log = logging.getLogger('root')
 class AsmodeusAnalyze(Asmodeus):
     name = 'analyze'
 
-    def prepareDataset(self):
-        self.requireStage('sightings', 'asmodeus-observe')
-
     def configure(self):
         self.loadObservers()
         try:

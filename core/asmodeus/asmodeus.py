@@ -96,14 +96,16 @@ class Asmodeus():
         try:
             self.runSpecific()
             self.finalize()
+        except exceptions.PrerequisiteError as e:
+            log.critical(f"Terminating due to missing prerequisites")
         except exceptions.ConfigurationError as e:
             log.critical(f"Terminating due to a configuration error: {e}")
         finally:
             if self.ok:
                 log.info(f"{c.script(f'asmodeus-{self.name}')} finished successfully in {self.runTime():.6f} s")
+                log.info("-" * 50)
             else:
                 log.critical(f"{c.script(f'asmodeus-{self.name}')} aborted")
-            log.info("-" * 50)
 
     def overrideWarning(self, parameter, old, new):
         log.warning(f"Overriding {c.param(parameter)} ({c.over(old)} -> {c.over(new)})")

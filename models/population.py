@@ -47,19 +47,34 @@ class Population():
             raise exceptions.ConfigurationError(e) from e
 
     @classmethod
-    def load(cls, dataset):
+    def load(cls, dataset, *, processes = 1, period = 1):
         log.info(f"Loading saved meteors from dataset {c.name(dataset.name)}")
         filename = dataset.path('meteors.yaml')
-        config = configuration.loadYAML(open(filename, 'r'))
 
-        population = Population(config.distributions)
-        population.count = config.count
-        population.iterations = config.iterations
-        population.meteors = [Meteor.load(dataset.path('meteors', filename)) for filename in dataset.list('meteors')]
+        try:
+            config = configuration.loadYAML(open(filename, 'r'))
+
+            population = Population(config.distributions)
+            population.count = config.count
+            population.iterations = config.iterations
+            population.meteors = parallel(
+                load,
+                dataset.list('meteors'),
+                initializer     = initLoadSave,
+                initargs        = (dataset,),
+                processes       = processes,
+                period          = period,
+                action          = "Loading meteor pickles",
+            )
         
-        log.info(f"Loaded the population")
-
-        return population
+            log.info(f"Loaded the population")
+            return population
+        except FileNotFoundError as e:
+            log.critical(f"Could not load sighting metadata for dataset {c.name(dataset.name)} (file {c.path(filename)} is missing)")
+            raise exceptions.PrerequisiteError
+        except yaml.composer.ComposerError as e:
+            log.critical(f"Could not parse sighting metadata file for dataset {c.name(dataset.name)} (file {c.path(filename)} is not valid YAML)")
+            raise exceptions.PrerequisiteError
 
     def generate(self):
         log.info(f"Generating {c.num(self.parameters.count)} meteoroids")
@@ -110,7 +125,7 @@ class Population():
         self.meteors = parallel(
             simulate,
             self.meteors,
-            initializer     = initialize,
+            initializer     = initSimulate,
             initargs        = (fps, spf),
             processes       = min(self.count, processes),
             period          = period,
@@ -120,9 +135,9 @@ class Population():
             mass            = c.num("{:6f} kg".format(sum(map(lambda x: x.initMass, self.meteors)))),
         ))
 
-    def save(self, dataset):
+    def save(self, dataset, *, processes = 1, period = 1):
         log.debug(f"Saving the population to {c.path(dataset)}")
-
+        
         for meteor in self.meteors:
             meteor.save(dataset.path('meteors'))
 
@@ -147,10 +162,25 @@ class Population():
             },
         }, open(dataset.path('meteors.yaml'), 'w'), default_flow_style = False)
 
+def initLoadSave(_queue, _dataset):
+    global queue, dataset
+    queue, dataset = _queue, _dataset
 
-def initialize(queuex, fpsx, spfx):
-    global fps, spf, queue
-    fps, spf, queue = fpsx, spfx, queuex
+
+def load(filename):
+    queue.put(1)
+    return Meteor.load(dataset.path('meteors', filename))
+
+
+""" Currently unused (it is faster do have one process do it) """
+def save(meteor):
+    queue.put(1)
+    return meteor.save(dataset.path('meteors'))
+
+
+def initSimulate(_queue, _fps, _spf):
+    global queue, fps, spf
+    queue, fps, spf = _queue, _fps, _spf
 
 
 def simulate(meteor):

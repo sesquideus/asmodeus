@@ -132,6 +132,9 @@ class DataManager():
     def resetSightings(self):
         self.protectedReset('sightings')
 
+    def resetScatters(self):
+        self.protectedReset('scatters')
+
     def meteorFiles(self):
         return self.list('meteors')
         

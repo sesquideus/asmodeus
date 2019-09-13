@@ -26,7 +26,7 @@ class Observation():
         self.population     = population
         self.config         = config
 
-    def observe(self, *, processes = 1, report = 1):
+    def observe(self, *, processes = 1, period = 1):
         log.info(f"Calculating {c.num(self.population.count)} observations "
             f"using {c.num(processes)} processes, "
             f"""meteors saved as {c.over(f"{'streaks' if self.config.streaks else 'points'}")}"""
@@ -44,11 +44,11 @@ class Observation():
         self.sightings = parallel(
             observe,
             argList,
-            initializer = initialize,
+            initializer = initObserve,
             initargs    = (self.observer, self.config.streaks),
             processes   = processes,
             action      = "Observing meteors",
-            period      = report,
+            period      = period,
         )
         self.createDataframe()
 
@@ -236,9 +236,9 @@ class Observation():
         return f"Observation by observer {c.name(self.observer)}"
 
 
-def initialize(queuex, observerx, streaksx):
+def initObserve(_queue, _observer, _streaks):
     global queue, observer, streaks
-    queue, observer, streaks = queuex, observerx, streaksx
+    queue, observer, streaks = _queue, _observer, _streaks
 
 def observe(args):
     filename, out = args

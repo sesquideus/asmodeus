@@ -25,9 +25,6 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
         super().createArgparser()
         self.argparser.add_argument('-c', '--count',            type = int)
 
-    def buildConfig(self):
-        self.config = self.loadConfigFile(self.args.config)
-
     def overrideConfig(self):
         super().overrideConfig()
         if self.args.count:
@@ -38,7 +35,6 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
         self.dataset.resetMeteors()
 
     def configure(self):
-        self.root = self.dataset.path('meteors')
         self.population = Population(self.config.meteors)
 
     def runSpecific(self):
@@ -53,7 +49,7 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
         ))
         
         self.markTime()
-        self.population.save(self.dataset)
+        self.population.save(self.dataset, processes = self.config.mp.processes, period = self.config.mp.report)
 
         log.info("{num} meteors were saved to {dir} in {time} seconds ({rate} meteors per second)".format(
             num     = c.num(self.population.parameters.count),

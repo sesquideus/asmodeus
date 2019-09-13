@@ -31,15 +31,15 @@ class Campaign():
         for o in self.observers:
             log.info(f"    {o}")
 
-    def loadPopulation(self):
-        self.population = Population.load(self.dataset)
+    def loadPopulation(self, *, processes = 1, period = 1):
+        self.population = Population.load(self.dataset, processes = processes, period = period)
 
-    def observe(self, *, processes = 1, report = 1):
+    def observe(self, *, processes = 1, period = 1):
         log.info("Computing observations for campaign")
         self.observations = [Observation(self.dataset, observer, self.population, self.config) for observer in self.observers]
 
         for observation in self.observations:
-            observation.observe(processes = processes, report = report)
+            observation.observe(processes = processes, period = period)
 
     def save(self):
         for observation in self.observations:

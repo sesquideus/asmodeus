@@ -32,6 +32,7 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
     def overrideConfig(self):
         super().overrideConfig()
 
+        self.config.observations.streaks = False
         if self.args.streaks:
             self.overrideWarning('streaks', self.config.observations.streaks, self.args.streaks)
             self.config.observations.streaks = True
@@ -45,8 +46,8 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
     def runSpecific(self):
         self.markTime()
 
-        self.campaign.loadPopulation()
-        self.campaign.observe(processes = self.config.mp.processes, report = self.config.mp.report)
+        self.campaign.loadPopulation(processes = self.config.mp.processes, period = self.config.mp.report)
+        self.campaign.observe(processes = self.config.mp.processes, period = self.config.mp.report)
         self.campaign.save()
 
     def finalize(self):
