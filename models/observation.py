@@ -12,6 +12,7 @@ from core.parallel      import parallel
 from models.observer    import Observer
 from models.meteor      import Meteor
 from models.sighting    import Sighting, PointSighting
+from models.dataframe   import Dataframe
 from physics            import coord
 from utilities          import colour as c
 
@@ -40,7 +41,7 @@ class Observation():
             self.dataset.path('sightings', self.observer.id, meteorFile),
         ) for meteorFile in meteorFiles]
         total = len(argList)
-
+        
         self.sightings = parallel(
             observe,
             argList,
@@ -50,43 +51,30 @@ class Observation():
             action      = "Observing meteors",
             period      = period,
         )
-        self.createDataframe()
+        log.info(f"{c.num(self.population.count)} observations were calculated")
 
     def save(self):
-        log.debug(f"""Saving the observed population as {c.over(f"{'streaks' if self.config.streaks else 'points'}")} to {c.path(self.dataset.name)}""")
         directory = self.dataset.create('sightings', self.observer.id)
+        self.asDataframe().save()
+        #log.debug(f"""Saving the observed population as {c.over(f"{'streaks' if self.config.streaks else 'points'}")} to {c.path(self.dataset.name)}""")
 
-        self.saveDataframe()
-
-     #   for sighting in self.sightings:
-     #       sighting.save(directory, streak = self.config.streaks)
+        #for sighting in self.sightings:
+        #sighting.save(directory, streak = self.config.streaks)
         
-    def createDataframe(self):
-        log.info(f"Creating a dataframe...")
-        self.dataframe = pandas.DataFrame.from_records(
-            [frame.asTuple() for sighting in self.sightings for frame in sighting.frames],
-            columns     = Sighting.columns,
-        )
-        log.info(f"Dataframe created with {c.num(len(self.dataframe.index))} rows")
-
-    def loadDataframe(self):
-        filename = self.dataset.path('sightings', self.id, 'sky.tsv')
-        log.info(f"Loading a dataframe from {c.path(filename)}")
-        
-        self.dataframe = pandas.read_csv(filename, sep = '\t') 
-        self.dataframe['mjd'] = Time(self.dataframe.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
-        self.dataframe['logInitMass'] = np.log10(self.dataframe.initMass.to_numpy(dtype = 'float'))
-
-        log.info(f"Created a dataframe with {c.num(len(self.dataframe.index))} rows")
-
-    def saveDataframe(self):
-        filename = self.dataset.path('sightings', self.observer.id, 'sky.tsv')
-        log.info(f"Saving a TSV file for observer {c.name(self.observer.id)} {c.path(filename)}")
-        self.dataframe.to_csv(filename, sep = '\t', float_format = '%6g')
+    def asDataframe(self):
+        return Dataframe.fromObservation(self)
 
     def saveMetadata(self, directory):
         pass
         
+    def asDict(self):
+        return {
+            'observer':     self.observer.id,
+        }
+
+
+
+
     def makeKDEs(self):
         log.info(f"Creating KDEs for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', 'kdes', self.id, exist_ok = True)
@@ -94,12 +82,7 @@ class Observation():
         for stat, params in self.settings.kdes.quantities.items():       
             self.makeKDE(stat, **params)
 
-    def applyBias(self):
-        log.info(f"Applying bias DPFs")
-        self.dataframe['visible'] = self.dataframe.apply(self.biasFunction, axis = 1)
-        self.visible = self.dataframe[self.dataframe.visible]
-        log.info(f"Bias applied, {c.num(len(self.visible.index))}/{c.num(len(self.dataframe.index))} sightings marked as detected")
-
+   
     def computeKDE(self, stat):
         return scipy.stats.gaussian_kde(self.visible[stat])
 
@@ -172,65 +155,6 @@ class Observation():
         bins = np.linspace(params.min, params.max, count + 1)
         hist, edges = np.histogram(self.visible[stat], bins = bins, range = (params.min, params.max), density = True)
         return hist, edges
-
-    def emptyFigure(self):
-        pyplot.rcParams['font.family'] = "Minion Pro"
-        pyplot.rcParams['mathtext.fontset'] = "dejavuserif"
-        figure, axes = pyplot.subplots()
-        figure.tight_layout(rect = (0.07, 0.05, 1, 0.97))
-        figure.set_size_inches(8, 5)
-        figure.set_dpi(300)
-        axes.grid(linewidth = 0.2, linestyle = ':')
-        axes.xaxis.set_major_formatter(ScalarFormatter(useOffset = False))
-        axes.yaxis.set_major_formatter(ScalarFormatter(useOffset = False))
-
-        return figure, axes
-
-    def makeScatters(self):
-        log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
-        self.dataset.create('analyses', 'scatters', self.id, exist_ok = True)
-
-        for scatter in self.settings.scatters:
-            self.crossScatter(scatter)
-
-    def crossScatter(self, scatter):
-        """
-            Render a cross-scatter plot of four variables using a scatter dotmap
-            scatter: dotmap in shape
-            -   x:          <property to plot on x axis>
-                y:          <property to plot on y axis>
-                colour:     <property to use for colouring the dots>
-                size:       <property to determine dot size>
-        """
-        log.info(f"Creating a scatter plot for {c.param(scatter.x):>20} × {c.param(scatter.y):>20} (colour {c.param(scatter.colour):>20})")
-
-        try:
-            xparams = self.settings.quantities[scatter.x]
-            yparams = self.settings.quantities[scatter.y]
-            cparams = self.settings.quantities[scatter.colour]
-            figure, axes = self.emptyFigure()
-
-            axes.tick_params(axis = 'both', which = 'major', labelsize = 12)
-            axes.set_xlim(xparams.min, xparams.max)
-            axes.set_ylim(yparams.min, yparams.max)
-            axes.set_xlabel(xparams.name, fontdict = {'fontsize': 12})
-            axes.set_ylabel(yparams.name, fontdict = {'fontsize': 12})
-            axes.set_title(f"{self.name} – {xparams.name} × {yparams.name}", fontdict = {'fontsize': 14})
-            
-            sc = axes.scatter(
-                self.visible[scatter.x],
-                self.visible[scatter.y],
-                c           = self.visible[scatter.colour],
-                s           = 3 * np.exp(-self.visible.appMag / 3),
-                cmap        = scatter.get('cmap', 'viridis_r'),
-                alpha       = 1,
-                linewidths  = 0,
-            )
-            axes.legend([sc], [cparams.name])
-            figure.savefig(self.dataset.path('analyses', 'scatters', self.id, f"{scatter.x}-{scatter.y}-{scatter.colour}.png"))
-            pyplot.close(figure)
-        except KeyError as e:
-            log.error(f"Invalid scatter configuration parameter {c.param(e)}") 
 
     def __str__(self):
         return f"Observation by observer {c.name(self.observer)}"

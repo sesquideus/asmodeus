@@ -23,6 +23,7 @@ class State:
     def __str__(self):
         return f"{self.position} {self.velocity} {self.mass}"
 
+
 class Diff:
     def __init__(self, drdt, dvdt, dmdt):
         self.drdt = drdt
@@ -35,9 +36,9 @@ def rungekutta(state, diff, dt, dragCoefficient, shapeFactor, density, heatTrans
     new = state + diff * dt
     new[6] = max(new[6], 1e-9)
 
-    #print(state)
-    #print(diff, dt)
-    #print(new)
+    # print(state)
+    # print(diff, dt)
+    # print(new)
     airRho = atmosphere.airDensity(np.linalg.norm(state[0:3]) - 6371000)
     speed = np.linalg.norm(state[3:6])
     drag = -(dragCoefficient * shapeFactor * airRho * speed / (state[6]**(1 / 3) * density**(2 / 3))) 

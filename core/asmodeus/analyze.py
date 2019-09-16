@@ -7,6 +7,7 @@ from discriminator import MagnitudeDiscriminator, AltitudeDiscriminator, Angular
 from utilities import colour as c
 
 from core.asmodeus import Asmodeus
+from models.campaign import Campaign
 
 log = logging.getLogger('root')
 
@@ -15,30 +16,24 @@ class AsmodeusAnalyze(Asmodeus):
     name = 'analyze'
 
     def configure(self):
-        self.loadObservers()
+        self.campaign = Campaign.load(self.dataset, statistics = self.config.statistics)
+
         try:
-            bias = self.config.analyses.bias
-            self.discriminators = {
+            bias = self.config.bias
+            discriminators = {
                 'appMag':       MagnitudeDiscriminator.fromConfig(bias.magnitude),
                 'altitude':     AltitudeDiscriminator.fromConfig(bias.altitude),
                 'angSpeed':     AngularSpeedDiscriminator.fromConfig(bias.angularSpeed),
             }
 
-            log.info(f"Loaded {c.num(len(self.discriminators))} discriminators:")
-            for disc in self.discriminators.values():
-                disc.logInfo()
+            log.info(f"Loaded {c.num(len(discriminators))} discriminators:")
+            for discriminator in discriminators.values():
+                discriminator.logInfo()
 
+            self.campaign.setDiscriminators(discriminators)
+            
         except AttributeError as e:
-            raise exceptions.ConfigurationError(e)
+            raise exceptions.ConfigurationError(e) from e
 
     def runSpecific(self):
-        for observer in self.observers:
-            self.markTime()
-            self.prepareObserver(observer)
-            self.runAnalysis(observer)
-
-    def prepareObserver(self, observer):
-        observer.settings = self.config.analyses.statistics
-        observer.setDiscriminators(self.discriminators)
-        observer.loadDataframe()
-        observer.applyBias()
+        self.campaign.filterVisible()

@@ -4,9 +4,6 @@ import io
 import copy
 import os
 
-import numpy as np
-import pandas as pd
-
 from models.sightingframe import SightingFrame
 
 log = logging.getLogger('root')
@@ -69,7 +66,7 @@ class Sighting():
         self.last       = singleFrame
         self.brightest  = singleFrame
 
-    def save(self, directory, *, streak = False):
+    def save(self, directory):
         pickle.dump(self, io.FileIO(os.path.join(directory, f"{self.id}.pickle"), 'wb'))
 
     def applyBias(self, *discriminators):
@@ -77,29 +74,10 @@ class Sighting():
         return self.sighted
 
     def __str__(self):
-        return "<Sighting by {observer} at {timestamp}>".format(
-            observer        = self.observer.id,
-            timestamp       = self.timestamp,
-        )
+        return f"<Sighting by {self.observer.id} at {self.timestamp}>"
+
 
 class PointSighting():
-    columns = [
-        'timestamp',
-        'altitude',
-        'azimuth',
-        'distance',
-        'elevation',
-        'entryAngle',
-        'speed',
-        'angSpeed',
-        'initMass',
-        'mass',
-        'lumPower',
-        'fluxDensity',
-        'absMag',
-        'appMag',
-    ]
-
     def __init__(self, sighting):
         self.id                 = sighting.id
         self.timestamp          = sighting.brightest.frame.timestamp

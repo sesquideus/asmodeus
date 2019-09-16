@@ -2,21 +2,11 @@ import logging
 import itertools
 import functools
 import os
-import math
 import numpy as np
-import scipy.stats
-import pandas
 
-from matplotlib import pyplot
-from matplotlib.ticker import ScalarFormatter
-from pprint import pprint as pp
-from astropy.time import Time
-
-from core                       import exceptions
 from physics                    import coord
-from models.sighting            import Sighting, PointSighting
-from models.sightingframe       import SightingFrame
-from utilities                  import colour as c, utilities as utils
+from models.sighting            import Sighting
+from utilities                  import colour as c
 
 log = logging.getLogger('root')
 
@@ -24,7 +14,7 @@ log = logging.getLogger('root')
 class Observer():
     def __init__(self, id, parameters):
         self.id                 = id
-        self.name               = id
+        self.name               = parameters.name
         self.position           = coord.Vector3D.fromGeodetic(parameters.latitude, parameters.longitude, parameters.altitude)
         self.horizon            = parameters.horizon
 
@@ -41,20 +31,15 @@ class Observer():
         return coord.Vector3D.fromNumpyVector(self.earthToAltAzMatrix @ (point - self.position).toNumpyVector())
 
     def __str__(self):
-        return "{id} at {position}".format(
-            id          = c.name(self.id),
-            position    = self.position.strGeodetic(),
-        )
+        return f"{c.name(self.name)} ({c.name(self.id)}) at {self.position.strGeodetic()}"
 
     def asDict(self):
         return {
-            'name':     self.name,
-            'position': {
-                'latitude':     self.position.latitude(),
-                'longitude':    self.position.longitude(),
-                'altitude':     self.position.elevation(),
-            },
-            'horizon':  self.horizon,
+            'name':         self.name,
+            'latitude':     self.position.latitude(),
+            'longitude':    self.position.longitude(),
+            'altitude':     self.position.elevation(),
+            'horizon':      self.horizon,
         }
 
     def loadSightings(self):
@@ -75,7 +60,6 @@ class Observer():
 
 
 
-   
     def minimize(self, settings):
         log.info("Employing {method} method, {rep} evaluation repetition{s}".format(
             method      = c.name(settings.method),

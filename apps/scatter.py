@@ -9,5 +9,6 @@ class AsmodeusScatter(asmodeus.AsmodeusAnalyze):
     def prepareDataset(self):
         self.dataset.resetScatters()
 
-    def runAnalysis(self, observer):
-        observer.makeScatters()
+    def runSpecific(self):
+        super().runSpecific()
+        self.campaign.makeScatters()

@@ -1,8 +1,4 @@
-mp:
-    processes:                  4
-    report:                     1
-
-observations:
+campaign:
     streaks:                    False
     observers:
         ago:
@@ -10,18 +6,22 @@ observations:
             longitude:          17.2738
             altitude:           538
             horizon:            15
+            name:               'AGO'
         arbo:
             latitude:           48.3235
             longitude:          18.3685
             altitude:           201
             horizon:            15
+            name:               'Arborétum'
         vazec:
             latitude:           49.0543
             longitude:          19.9899
             altitude:           812
             horizon:            15
+            name:               'Važec'
         knm:
             latitude:           49.3073
             longitude:          18.7655
             altitude:           414
             horizon:            15
+            name:               'Kysucké Nové Mesto'

@@ -26,9 +26,9 @@ class Discriminator():
     def compute(self, value):
         rnd = random.random()
         prob = self.function(value)
-        log.debug("{name} {value}: random value {rnd}, probability {prob} ({comment})".format(
+        log.debug("{name:<25} {value}: random value {rnd}, threshold {prob} ({comment})".format(
             name    = c.param(self.property.capitalize()),
-            value   = c.num(value),
+            value   = c.num(f"{value:9.6f}"),
             rnd     = c.num('{:.6f}'.format(rnd)),
             prob    = c.num('{:.6f}'.format(prob)),
             comment = c.ok('accepted') if rnd < prob else c.err('rejected'),

@@ -6,7 +6,10 @@ meteors:
     count:                      100000
 
     shape:
-        dragCoefficient:        0.6                         # 0.6 for a spherical body
+        dragCoefficient:
+            distribution:       'constant'
+            parameters:
+                value:          0.6                         # 0.6 for a spherical body
         shapeFactor:            1.21                        # 1.21 for a spherical body
 
     material:
@@ -25,13 +28,14 @@ meteors:
             #shape:              1.80                        # Shape of the distribution, corresponds to s-index (N(m) \propto m^-s)
 
     position:
-        distribution:           'rectangle'                 # Name of the distribution, currently only 'rectangle'
+        distribution:           'pillow'                    # Name of the distribution, currently only 'rectangle'
         parameters:
             south:              46                          # Southern bound, degrees of latitude
             north:              52                          # Northern bound, degrees of latitude
             west:               15                          # Western bound, degrees of longitude
             east:               25                          # Eastern bound, degrees of longitude
-            elevation:          130000                      # Initial elevation of meteors, in m
+            top:                150000                      # Initial elevation of meteors, in m
+            bottom:             130000
 
     velocity:
         distribution:           'shower'                    # Currently only 'shower'
@@ -48,5 +52,5 @@ meteors:
 
     integrator:                                             
         name:                   'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
-        fps:                    20                          # Frames per second
+        fps:                    200                         # Frames per second
         spf:                    1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time

@@ -32,10 +32,10 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
     def overrideConfig(self):
         super().overrideConfig()
 
-        self.config.observations.streaks = False
+        self.config.campaign.streaks = False
         if self.args.streaks:
-            self.overrideWarning('streaks', self.config.observations.streaks, self.args.streaks)
-            self.config.observations.streaks = True
+            self.overrideWarning('streaks', self.config.campaign.streaks, self.args.streaks)
+            self.config.campaign.streaks = True
 
     def prepareDataset(self):
         self.dataset.resetSightings()
@@ -61,27 +61,3 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
             dir     = c.path(self.dataset.path('sightings')),
         ))
         super().finalize()
-
-def init(_queue, _observer, _streaks):
-    global queue
-    queue = _queue
-    global observer
-    observer = _observer
-    global streaks
-    streaks = _streaks
-
-def observe(args):
-    filename, out = args
-
-    queue.put(1)
-    meteor = Meteor.load(filename)
-    sighting = Sighting(observer, meteor)
-    #sighting.save(out, streak = streaks)
-
-    if sighting.brightest.altAz.latitude() < observer.horizon:
-        return None
-
-    if streaks:
-        return sighting
-    else:
-        return sighting.asPoint()

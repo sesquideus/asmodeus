@@ -1,11 +1,13 @@
 import logging
-import random
 import yaml
 import datetime
+
+from core               import configuration, exceptions
 
 from models.observer    import Observer
 from models.observation import Observation
 from models.population  import Population
+from models.dataframe   import Dataframe
 from utilities          import colour as c
 
 log = logging.getLogger('root')
@@ -13,18 +15,39 @@ log = logging.getLogger('root')
 
 class Campaign():
     def __init__(self, dataset, config):
-        log.debug(f"Creating a campaign with dataset {c.name(dataset.name)}")
-        log.debug(config)
+        log.debug(f"Creating a campaign with dataset {c.name(dataset.name)}, full config is")
+        if log.getEffectiveLevel() == logging.DEBUG:
+            config.pprint()
+
         self.dataset = dataset
         self.config = config
         self.loadObservers(config.observers)
         log.debug(f"Campaign initialized")
 
+    @classmethod
+    def load(cls, dataset, *, statistics = None):
+        log.info(f"Loading a campaign from dataset {c.name(dataset.name)}")
+        filename = dataset.path('campaign.yaml')
+
+        try:
+            config = configuration.loadYAML(open(filename, 'r'))
+            campaign = Campaign(dataset, config)
+            campaign.statistics = statistics
+            campaign.loadDataframes()
+            return campaign
+        except FileNotFoundError as e:
+            log.critical(f"Could not load campaign metadata for dataset {c.name(dataset.name)} (file {c.path(filename)} is missing)")
+            raise exceptions.PrerequisiteError from e
+        except yaml.composer.ComposerError as e:
+            log.critical(f"Could not parse campaign metadata file for dataset {c.name(dataset.name)} (file {c.path(filename)} is not valid YAML)")
+            raise exceptions.PrerequisiteError from e
+
     def loadObservers(self, parameters):
+        log.debug("Loading observers")
         self.observers = [Observer(oid, obs) for oid, obs in parameters.items()]
 
         log.info("Loaded {count} observer{s}:".format(
-            count   = len(self.observers),
+            count   = c.num(len(self.observers)),
             s       = 's' if len(self.observers) > 1 else ''
         ))
 
@@ -33,6 +56,12 @@ class Campaign():
 
     def loadPopulation(self, *, processes = 1, period = 1):
         self.population = Population.load(self.dataset, processes = processes, period = period)
+
+    def loadDataframes(self):
+        self.dataframes = [Dataframe.load(self.dataset, observer) for observer in self.observers]
+
+        for dataframe in self.dataframes:
+            dataframe.settings = self.statistics
 
     def observe(self, *, processes = 1, period = 1):
         log.info("Computing observations for campaign")
@@ -52,10 +81,17 @@ class Campaign():
             'count':            self.population.count,
             'timestamp':        datetime.datetime.now().isoformat(),
             'observers':        {observer.id: observer.asDict() for observer in self.observers},
+            'observations':     {observation.observer.id: observation.asDict() for observation in self.observations},
         }, open(self.dataset.path('campaign.yaml'), 'w'), default_flow_style = False)
-
 
     def setDiscriminators(self, discriminators):
         self.discriminators = discriminators
         self.biasFunction = lambda row: all([disc.compute(row[prop]) for prop, disc in self.discriminators.items()])
 
+    def filterVisible(self):
+        for dataframe in self.dataframes:
+            dataframe.applyBias(self.biasFunction)
+
+    def makeScatters(self):
+        for dataframe in self.dataframes:
+            dataframe.makeScatters()
