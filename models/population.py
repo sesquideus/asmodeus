@@ -172,8 +172,8 @@ def load(filename):
     return Meteor.load(dataset.path('meteors', filename))
 
 
-""" Currently unused (it is faster to have one process do it) """
 def save(meteor):
+    """ Currently unused (it is faster to have one process do it) """
     queue.put(1)
     return meteor.save(dataset.path('meteors'))
 
