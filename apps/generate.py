@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
     Asmodeus, script 1: generate
 
@@ -5,11 +6,6 @@
     Requires: nothing
     Outputs: meteors
 """
-
-import argparse
-import datetime
-import random
-import yaml
 
 from core                   import asmodeus, logger
 from models                 import Population
@@ -27,33 +23,41 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
 
     def overrideConfig(self):
         super().overrideConfig()
+
+        self.config.parameters.generator.count = 1
         if self.args.count:
-            self.overrideWarning('count', self.config.meteors.count, self.args.count)
-            self.config.meteors.count = self.args.count
+            self.overrideWarning('count', self.config.generator.parameters.count, self.args.count)
+            self.config.generator.parameters.count = self.args.count
 
     def prepareDataset(self):
         self.dataset.resetMeteors()
 
     def configure(self):
-        self.population = Population(self.config.meteors)
+        self.population = Population(self.config.generator)
 
     def runSpecific(self):
         self.population.generate()
 
         self.markTime()
-        self.population.simulate(self.config.meteors.integrator.fps, self.config.meteors.integrator.spf, processes = self.config.mp.processes, period = self.config.mp.report)
+        self.population.simulate(
+            self.config.integrator.fps,
+            self.config.integrator.spf,
+            processes   = self.config.mp.processes,
+            period      = self.config.mp.report
+        )
+
         log.info("{num} meteors were generated in {time} seconds ({rate} meteors per second)".format(
-            num     = c.num(self.population.parameters.count),
+            num     = c.num(self.population.count),
             time    = c.num(f"{self.stopTime():.6f}"),
-            rate    = c.num(f"{self.population.parameters.count / self.stopTime():.3f}"),
+            rate    = c.num(f"{self.population.count / self.stopTime():.3f}"),
         ))
-        
+
         self.markTime()
         self.population.save(self.dataset, processes = self.config.mp.processes, period = self.config.mp.report)
 
         log.info("{num} meteors were saved to {dir} in {time} seconds ({rate} meteors per second)".format(
-            num     = c.num(self.population.parameters.count),
+            num     = c.num(self.population.count),
             time    = c.num(f"{self.stopTime():.6f}"),
-            rate    = c.num(f"{self.population.parameters.count / self.stopTime():.3f}"),
+            rate    = c.num(f"{self.population.count / self.stopTime():.3f}"),
             dir     = c.path(self.dataset.path('meteors')),
         ))

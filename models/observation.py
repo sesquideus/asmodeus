@@ -11,7 +11,7 @@ import pandas
 from core.parallel      import parallel
 from models.observer    import Observer
 from models.meteor      import Meteor
-from models.sighting    import Sighting, PointSighting
+from models.sighting    import Sighting
 from models.dataframe   import Dataframe
 from physics            import coord
 from utilities          import colour as c

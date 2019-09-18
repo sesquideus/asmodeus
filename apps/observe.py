@@ -8,15 +8,9 @@
     Outputs: sightings
 """
 
-import argparse
-
 from core               import asmodeus, logger
-from core.parallel      import parallel
 from utilities          import colour as c
 
-from models.meteor      import Meteor
-from models.sighting    import Sighting
-from models.population  import Population
 from models.campaign    import Campaign
 
 log = logger.setupLog('root')
@@ -57,7 +51,7 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
             rate    = c.num("{:.3f}".format(self.campaign.population.count / self.runTime())),
         ))
         log.info("Observations were saved as {target} to {dir}".format(
-            target  = c.over('streaks' if self.config.observations.streaks else 'points'),
+            target  = c.over('streaks' if self.config.campaign.streaks else 'points'),
             dir     = c.path(self.dataset.path('sightings')),
         ))
         super().finalize()

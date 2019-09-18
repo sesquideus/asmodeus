@@ -25,60 +25,62 @@ plot:
         pixels:                 4000
 
 statistics:                                                 # Histograms to be plotted for simulation data
-    quantities: &quantities
-        altitude: &altitude
+    quantities:                 &quantities
+        altitude:               &altitude
             min:                0
             max:                90
             bin:                1
             name:               'altitude'
-            xaxis:              'number'
-        azimuth: &azimuth
+        azimuth:                &azimuth
             min:                0
             max:                360
             bin:                5
             name:               'azimuth'
-            xaxis:              'number'
-        appMag: &appMag
+        appMag:                 &appMag
             min:                -15
             max:                10
             bin:                0.25
             name:               'apparent magnitude'
-            xaxis:              'number'
-        absMag: &absMag
+        absMag:                 &absMag
             min:                -15
             max:                10
             bin:                0.25
             name:               'absolute magnitude'
-            xaxis:              'number'
-        angSpeed: &angSpeed
+        angSpeed:               &angSpeed
             min:                0
             max:                40
             bin:                1
             name:               'angular speed'
-            xaxis:              'number'
-        logInitMass: &logInitMass
+        logMassInitial:         &logMassInitial
             min:                -6.5
             max:                1
             bin:                0.1
             name:               'log initial mass'
-            xaxis:              'number'
-        mjd: &mjd
+        logMass:                &logMass
+            min:                -8
+            max:                1
+            bin:                0.1
+            name:               'log mass'
+        mjd:                    &mjd
             min:                57611.791666
             max:                57612.083333
             bin:                0.0069444444
             name:               'MJD'
-            xaxis:              'number'
-        elevation: &elevation
+        elevation:              &elevation
             min:                75000
             max:                135000
             bin:                1000
             name:               'elevation'
-            xaxis:              'number'
-        entryAngle: &entryAngle
+        entryAngle:             &entryAngle
             min:                0
             max:                90
             bin:                2
             name:               'entry angle'
+        time:                   &time
+            min:                0
+            max:                10
+            bin:                0.1
+            name:               'flight time'
 #        timestamp:
 #            min:                2016-08-11T19:00:00
 #            max:                2016-08-12T02:00:00
@@ -91,25 +93,30 @@ statistics:                                                 # Histograms to be p
     kdes:
         quantities:             *quantities
     scatters:
-        -   {x:            mjd, y:         appMag, colour: appMag}
-        -   {x:            mjd, y:       altitude, colour: appMag}
-        -   {x:            mjd, y:       angSpeed, colour: appMag}
-        -   {x:            mjd, y:      elevation, colour: appMag}
-        -   {x:            mjd, y:     entryAngle, colour: appMag}
+      #  -   {x:            mjd, y:         appMag, colour: appMag}
+      #  -   {x:            mjd, y:       altitude, colour: appMag}
+      #  -   {x:            mjd, y:       angSpeed, colour: appMag}
+      #  -   {x:            mjd, y:      elevation, colour: appMag}
+      #  -   {x:            mjd, y:     entryAngle, colour: appMag}
         -   {x:         appMag, y:         absMag, colour: appMag}
         -   {x:         absMag, y:      elevation, colour: appMag}
         -   {x:         absMag, y:     entryAngle, colour: appMag}
-        -   {x:         absMag, y:     entryAngle, colour: logInitMass}
+        -   {x:         absMag, y:     entryAngle, colour: logMassInitial}
         -   {x:       altitude, y:       angSpeed, colour: appMag}
         -   {x:     entryAngle, y:       angSpeed, colour: appMag}
         -   {x:      elevation, y:     entryAngle, colour: appMag}
         -   {x:     entryAngle, y:       altitude, colour: appMag}
-        -   {x:     entryAngle, y:    logInitMass, colour: appMag}
-        -   {x:    logInitMass, y:         absMag, colour: appMag}
-        -   {x:    logInitMass, y:         appMag, colour: appMag}
-        -   {x:    logInitMass, y:       altitude, colour: appMag}
-        -   {x:    logInitMass, y:      elevation, colour: appMag}
-        -   {x:    logInitMass, y:     entryAngle, colour: absMag}
+        -   {x:     entryAngle, y: logMassInitial, colour: appMag}
+        -   {x:           time, y:        logMass, colour: appMag}
+        -   {x:           time, y:      elevation, colour: appMag}
+        -   {x:           time, y:         absMag, colour: appMag}
+        -   {x:           time, y:       angSpeed, colour: appMag}
+
+     #   -   {x: logMassInitial, y:         absMag, colour: appMag}
+     #   -   {x: logMassInitial, y:         appMag, colour: appMag}
+     #   -   {x: logMassInitial, y:       altitude, colour: appMag}
+     #   -   {x: logMassInitial, y:      elevation, colour: appMag}
+     #   -   {x: logMassInitial, y:     entryAngle, colour: absMag}
 
 
 optimize:                                                   # Exhaustive search of the parameter space

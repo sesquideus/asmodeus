@@ -41,7 +41,8 @@ class Dataframe():
 
     def expand(self):
         self.data['mjd'] = Time(self.data.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
-        self.data['logInitMass'] = np.log10(self.data.initMass.to_numpy(dtype = 'float'))
+        self.data['logMass'] = np.log10(self.data.mass.to_numpy(dtype = 'float'))
+        self.data['logMassInitial'] = np.log10(self.data.massInitial.to_numpy(dtype = 'float'))
 
     def save(self):
         filename = self.dataset.path('sightings', self.observer.id, 'sky.tsv')
@@ -56,7 +57,7 @@ class Dataframe():
 
     def makeScatters(self):
         log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
-        self.dataset.create('analyses', 'scatters', self.observer.id, exist_ok = True)
+        self.dataset.create('scatters', self.observer.id, exist_ok = True)
 
         for scatter in self.settings.scatters:
             self.crossScatter(scatter)
@@ -70,12 +71,16 @@ class Dataframe():
                 colour:     <property to use for colouring the dots>
                 size:       <property to determine dot size>
         """
-        log.info(f"Creating a scatter plot for {c.param(scatter.x):>20} × {c.param(scatter.y):>20} (colour {c.param(scatter.colour):>20})")
+        log.info(f"Creating a scatter plot for {c.param(scatter.x):>24} × {c.param(scatter.y):>24} (colour {c.param(scatter.colour):>24})")
 
         try:
             xparams = self.settings.quantities[scatter.x]
             yparams = self.settings.quantities[scatter.y]
             cparams = self.settings.quantities[scatter.colour]
+            log.debug(f"x axis: {xparams}")
+            log.debug(f"y axis: {yparams}")
+            log.debug(f"colour: {cparams}")
+
             figure, axes = self.emptyFigure()
 
             axes.tick_params(axis = 'both', which = 'major', labelsize = 12)
@@ -95,7 +100,7 @@ class Dataframe():
                 linewidths  = 0,
             )
             axes.legend([sc], [cparams.name])
-            figure.savefig(self.dataset.path('analyses', 'scatters', self.observer.id, f"{scatter.x}-{scatter.y}-{scatter.colour}.png"), dpi = 300)
+            figure.savefig(self.dataset.path('scatters', self.observer.id, f"{scatter.x}-{scatter.y}-{scatter.colour}.png"), dpi = 300)
             pyplot.close(figure)
         except KeyError as e:
             log.error(f"Invalid scatter configuration parameter {c.param(e)}")

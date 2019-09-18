@@ -6,6 +6,7 @@ import os
 import numpy as np
 import numba
 import pickle
+import copy
 
 import models.frame
 
@@ -59,6 +60,7 @@ class Meteor:
         self.velocity           = velocity
 
         self.timestamp          = timestamp
+        self.time               = 0.0
 
         self.dragCoefficient    = dragCoefficient
         self.shapeFactor        = kwargs.get('shapeFactor',     1.21)
@@ -69,7 +71,7 @@ class Meteor:
 
         self.id                 = self.timestamp.strftime("%Y%m%d-%H%M%S-%f")
         self.frames             = []
-        self.initMass           = self.mass
+        self.massInitial        = self.mass
 
         log.debug(self.__str__())
 
@@ -161,7 +163,7 @@ class Meteor:
                           "{latitude:6.4f} N, {longitude:6.4f} E, {elevation:6.0f} m, {angle:6.2f}° | {density:9.3e} kg/m³ | "
                           "{speed:7.1f} m/s, {acceleration:13.3f} m/s², τ {lumEff:6.4f} | "
                           "{mass:6.2e} kg, {ablation:9.3e} kg/s {radius:7.3f} mm | I {lp:10.3e} W, M {absmag:6.2f}m".format(
-                              time            = frame * dt,
+                              time            = self.time,
                               latitude        = self.position.latitude(),
                               longitude       = self.position.longitude(),
                               elevation       = self.position.elevation(),
@@ -185,20 +187,24 @@ class Meteor:
 
             # Advance time by dt
             self.timestamp += datetime.timedelta(seconds = dt)
+            self.time += dt
 
             # If all mass has been ablated away, the particle is pronounced dead
             if self.mass < 0:
                 log.debug("Burnt to death")
                 break
 
+            # If the particle flew above 200 km, it will likely leave Earth altogether
             if self.position.elevation() > 200000:
                 log.debug("Flew away")
                 break
 
+            # If the velocity is very low, it is a meteorite
             if self.velocity.norm() < 200:
                 log.debug("Survived with final mass {:12.6f} kg".format(self.mass))
                 break
 
+            # If the elevation is below zero, we have an impact
             if self.position.elevation() < 0:
                 log.debug("IMPACT")
                 break

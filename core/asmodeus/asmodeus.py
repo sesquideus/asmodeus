@@ -23,11 +23,11 @@ class Asmodeus():
         try:
             self.loadConfig()
             self.overrideConfig()
+            self.config._dynamic = False
 
             log.debug(f"Full configuration is")
             if log.getEffectiveLevel() == logging.DEBUG:
                 self.config.pprint()
-
 
             self.dataset = dataset.DataManager(self.args.dataset, overwrite = self.config.overwrite)
             self.prepareDataset()
@@ -61,11 +61,7 @@ class Asmodeus():
         raise NotImplementedError(f"You need to define the {c.name('prepareDataset')} method for every ASMODEUS subclass.")
 
     def loadConfig(self):
-        try:
-            self.config = configuration.loadYAML(self.args.config)
-        except FileNotFoundError as e:
-            log.error(f"Could not load YAML file {c.path(fileObject)}: {e}")
-            raise exceptions.CommandLineError("Invalid configuration file")
+        self.config = configuration.loadYAML(self.args.config)
 
     def overrideConfig(self):
         log.setLevel(logging.DEBUG if self.args.debug else logging.INFO)

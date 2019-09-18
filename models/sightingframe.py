@@ -64,6 +64,7 @@ class SightingFrame():
     def asTuple(self):
         return (
             self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            self.frame.time,
             self.altAz.latitude(),
             self.altAz.longitude(),
             self.altAz.norm(),
@@ -71,7 +72,7 @@ class SightingFrame():
             self.frame.entryAngle,
             self.frame.speed,
             self.angularSpeed,
-            self.frame.mass,
+            self.frame.massInitial,
             self.frame.mass,
             self.frame.luminousPower,
             self.fluxDensity,
