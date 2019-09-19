@@ -21,7 +21,7 @@ generator:
         mass:
             distribution:           'pareto'                    # Particle mass distribution. Possible values 'pareto', 'exponential' or a number
             parameters:
-                minimum:            0.000001                    # Minimum particle mass, in kg
+                minimum:            0.001                       # Minimum particle mass, in kg
                 shape:              1.80                        # Shape of the distribution, corresponds to s-index (N(m) \propto m^-s)
 
         position:
@@ -49,5 +49,5 @@ generator:
 
 integrator:                                             
     name:                           'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
-    fps:                            20                          # Frames per second
+    fps:                            200                         # Frames per second
     spf:                            1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time

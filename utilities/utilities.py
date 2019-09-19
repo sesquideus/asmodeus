@@ -4,6 +4,7 @@ import sys
 import jinja2
 import itertools
 import numpy as np
+import dotmap
 
 from utilities import colour as c
 
@@ -75,3 +76,10 @@ def generateParameterSpace(**parameters):
         output.append(r)
 
     return output
+
+
+def dictProduct(**kwargs):
+    keys = kwargs.keys()
+    
+    for instance in itertools.product(*kwargs.values()):
+        yield dict(zip(keys, instance))

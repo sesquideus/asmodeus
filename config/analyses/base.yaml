@@ -67,8 +67,8 @@ statistics:                                                 # Histograms to be p
             bin:                0.0069444444
             name:               'MJD'
         elevation:              &elevation
-            min:                75000
-            max:                135000
+            min:                50000
+            max:                130000
             bin:                1000
             name:               'elevation'
         entryAngle:             &entryAngle
@@ -78,7 +78,7 @@ statistics:                                                 # Histograms to be p
             name:               'entry angle'
         time:                   &time
             min:                0
-            max:                10
+            max:                3
             bin:                0.1
             name:               'flight time'
 #        timestamp:

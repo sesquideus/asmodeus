@@ -1,19 +1,14 @@
 import datetime
-import io
-import os
 import logging
 import random
 
 import time
-import multiprocessing as mp
 import pandas
 
 from core.parallel      import parallel
-from models.observer    import Observer
 from models.meteor      import Meteor
 from models.sighting    import Sighting
 from models.dataframe   import Dataframe
-from physics            import coord
 from utilities          import colour as c
 
 log = logging.getLogger('root')
@@ -28,7 +23,8 @@ class Observation():
         self.config         = config
 
     def observe(self, *, processes = 1, period = 1):
-        log.info(f"Calculating {c.num(self.population.count)} observations "
+        log.info(
+            f"Calculating {c.num(self.population.count)} observations "
             f"using {c.num(processes)} processes, "
             f"""meteors saved as {c.over(f"{'streaks' if self.config.streaks else 'points'}")}"""
         )
@@ -40,8 +36,7 @@ class Observation():
             self.dataset.path('meteors', meteorFile),
             self.dataset.path('sightings', self.observer.id, meteorFile),
         ) for meteorFile in meteorFiles]
-        total = len(argList)
-        
+
         self.sightings = parallel(
             observe,
             argList,
@@ -56,17 +51,17 @@ class Observation():
     def save(self):
         directory = self.dataset.create('sightings', self.observer.id)
         self.asDataframe().save()
-        #log.debug(f"""Saving the observed population as {c.over(f"{'streaks' if self.config.streaks else 'points'}")} to {c.path(self.dataset.name)}""")
+        # log.debug(f"""Saving the observed population as {c.over(f"{'streaks' if self.config.streaks else 'points'}")} to {c.path(self.dataset.name)}""")
 
-        #for sighting in self.sightings:
-        #sighting.save(directory, streak = self.config.streaks)
-        
+        # for sighting in self.sightings:
+        # sighting.save(directory, streak = self.config.streaks)
+
     def asDataframe(self):
         return Dataframe.fromObservation(self)
 
     def saveMetadata(self, directory):
         pass
-        
+ 
     def asDict(self):
         return {
             'observer':     self.observer.id,
@@ -74,7 +69,7 @@ class Observation():
 
 
 
-
+    """
     def makeKDEs(self):
         log.info(f"Creating KDEs for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', 'kdes', self.id, exist_ok = True)
@@ -158,6 +153,7 @@ class Observation():
 
     def __str__(self):
         return f"Observation by observer {c.name(self.observer)}"
+    """
 
 
 def initObserve(_queue, _observer, _streaks):

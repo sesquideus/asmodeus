@@ -1,111 +1,13 @@
 import datetime
 import logging
-import random
 import yaml
 
 from core.parallel      import parallel
 from core               import exceptions, configuration
-from distribution       import PositionDistribution, VelocityDistribution, MassDistribution, DensityDistribution, TimeDistribution, DragCoefficientDistribution
-from models             import Meteor
-from physics            import coord
+from models             import Meteor, Generator
 from utilities          import colour as c
 
 log = logging.getLogger('root')
-
-
-class Generator():
-    @classmethod
-    def fromConfig(cls, config):
-        config._dynamic = False
-        config.pprint()
-        return {
-            'grid':     GeneratorGrid,
-            'random':   GeneratorRandom,
-        }[config.method](config.parameters)
-
-class GeneratorGrid(Generator):
-    def __init__(self, config):
-        self.config = config
-        pass
-
-    def generate(self):
-        pass
-
-class GeneratorRandom(Generator):
-    method  = 'random'
-
-    def __init__(self, parameters):
-        self.parameters = parameters
-
-        self.massDistribution               = MassDistribution.fromConfig(self.parameters.mass).logInfo()
-        self.positionDistribution           = PositionDistribution.fromConfig(self.parameters.position).logInfo()
-        self.velocityDistribution           = VelocityDistribution.fromConfig(self.parameters.velocity).logInfo()
-        self.densityDistribution            = DensityDistribution.fromConfig(self.parameters.material.density).logInfo()
-        self.temporalDistribution           = TimeDistribution.fromConfig(self.parameters.time).logInfo()
-        self.dragCoefficientDistribution    = DragCoefficientDistribution.fromConfig(self.parameters.shape.dragCoefficient).logInfo()
-
-    def generateOne(self):
-        mass                = self.massDistribution.sample()
-        density             = self.densityDistribution.sample()
-        timestamp           = self.temporalDistribution.sample()
-        position            = self.positionDistribution.sample()
-        dragCoefficient     = self.dragCoefficientDistribution.sample()
-        velocityEquatorial  = self.velocityDistribution.sample()
-
-        velocityECEF        = coord.Vector3D.fromNumpyVector(
-                                (coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector())
-                            )
-        entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
-
-        self.iterations += 1
-        if entryAngleSin > random.random():
-            self.meteors.append(Meteor(
-                mass            = mass,
-                density         = density,
-                timestamp       = timestamp,
-                velocity        = velocityECEF,
-                position        = position,
-                ablationHeat    = self.parameters.material.ablationHeat,
-                heatTransfer    = self.parameters.material.heatTransfer,
-                dragCoefficient = dragCoefficient,
-            ))
-            self.count += 1
-
-    def generate(self):
-        log.info(f"Generating {c.num(self.parameters.count)} meteoroids")
-        self.count = 0
-        self.iterations = 0
-        self.meteors = []
-
-        while (self.count < self.parameters.count):
-            self.generateOne()
-
-        log.info("Needed {iterations} candidate{s}, effective area {area}".format(
-            iterations      = c.num(self.iterations),
-            area            = c.num(f"{self.parameters.count / self.iterations * 100:5.2f}%"),
-            s               = 's' if self.iterations > 1 else '',
-        ))
-
-        return self.meteors
-
-    def asDict(self):
-        return {
-            'method':           self.method,
-            'count':            self.count,
-            'iterations':       self.iterations,
-            'parameters':       {
-                'mass':             self.massDistribution.asDict(),
-                'time':             self.temporalDistribution.asDict(),
-                'position':         self.positionDistribution.asDict(),
-                'velocity':         self.velocityDistribution.asDict(),
-                'material':         {
-                    'density':          self.densityDistribution.asDict(),
-                },
-                'shape':        {
-                    'dragCoefficient':  self.dragCoefficientDistribution.asDict(),
-                },
-            },
-        }
 
 
 class Population():
@@ -155,8 +57,8 @@ class Population():
         self.iterations = self.generator.iterations
 
     def simulate(self, fps, spf, *, processes = 1, period = 1):
-        log.info(f"Simulating atmospheric entry: using {c.num(processes)} processes at {c.num(fps)} frames per second, \
-            with {c.num(spf)} steps per frame")
+        log.info(f"Simulating atmospheric entry: using {c.num(processes)} processes at {c.num(fps)} frames per second, "
+                 f"with {c.num(spf)} steps per frame")
         self.meteors = parallel(
             simulate,
             self.meteors,

@@ -30,7 +30,10 @@ class SightingFrame():
         self.absoluteMagnitude  = self.frame.absoluteMagnitude
 
     def __str__(self):
-        return "{timestamp} | {truePos}, {trueSpeed:7.0f} m/s | {altaz}, {angSpeed:6.3f}°/s | {mass:6.4e} kg, {fluxDensity:8.3e} W/m2, {magnitude:6.2f} m".format(
+        return "{timestamp} | {truePos}, \
+            {trueSpeed:7.0f} m/s | {altaz}, \
+            {angSpeed:6.3f}°/s | {mass:6.4e} kg, \
+            {fluxDensity:8.3e} W/m2, {magnitude:6.2f} m".format(
             timestamp           = self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
             mass                = self.frame.mass,
             angSpeed            = self.angularSpeed,

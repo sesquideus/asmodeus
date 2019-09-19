@@ -23,7 +23,7 @@ class Asmodeus():
         try:
             self.loadConfig()
             self.overrideConfig()
-            self.config._dynamic = False
+            configuration.makeStatic(self.config)
 
             log.debug(f"Full configuration is")
             if log.getEffectiveLevel() == logging.DEBUG:

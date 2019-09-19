@@ -17,3 +17,9 @@ def loadYAML(fileObject):
 
     return dotmap.DotMap(config)
 
+
+def makeStatic(config):
+    for k in config._map:
+        if isinstance(config[k], dotmap.DotMap):
+            makeStatic(config[k])
+        config._dynamic = False
