@@ -24,8 +24,8 @@ class Sighting():
         'mass',
         'lumPower',
         'fluxDensity',
-        'absMag',
         'appMag',
+        'absMag',
     ]
 
     def __init__(self, observer, meteor):
