@@ -8,16 +8,14 @@ generator:
             density:            625
             heatTransfer:       0.5
             ablationHeat:       6000000
-        mass:                   0.001
+        mass:
+            min:                0.000001
+            max:                1
+            count:              301
+            spacing:            log
         position:
-            latitude:          
-                min:            42
-                max:            52
-                count:          51
-            longitude:
-                min:            15
-                max:            25
-                count:          51
+            latitude:           49
+            longitude:          20
             elevation:          130000
         velocity:
             ra:                 43
@@ -27,6 +25,6 @@ generator:
 
 integrator:                                             
     name:                       'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
-    fps:                        100                         # Frames per second
+    fps:                        500                         # Frames per second
     spf:                        1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time
 

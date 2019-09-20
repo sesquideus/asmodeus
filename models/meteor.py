@@ -45,7 +45,6 @@ def rungekutta(state, diff, dt, dragCoefficient, shapeFactor, density, heatTrans
     ablation = -(heatTransfer * shapeFactor * airRho * speed**3 * (state[6] / density)**(2 / 3) / (2 * ablationHeat))
 
     x = np.array([new[3], new[4], new[5], drag * new[3], drag * new[4], drag * new[5], ablation])
-    #print(x)
     return x
 
 
@@ -172,7 +171,7 @@ class Meteor:
                               lumEff          = radiometry.luminousEfficiency(self.velocity.norm()),
                               ablation        = dmdt,
                               mass            = self.mass,
-                              radius          = ((3 * self.mass) / (4 * np.pi * self.density))**(1/3) * 1000,
+                              radius          = ((3 * self.mass) / (4 * np.pi * self.density)) + (1 / 3) * 1000,
                               lp              = self.luminousPower,
                               absmag          = radiometry.absoluteMagnitude(self.luminousPower),
                           ))

@@ -1,9 +1,4 @@
-import datetime
 import logging
-import random
-
-import time
-import pandas
 
 from core.parallel      import parallel
 from models.meteor      import Meteor
@@ -61,23 +56,20 @@ class Observation():
 
     def saveMetadata(self, directory):
         pass
- 
+
     def asDict(self):
         return {
             'observer':     self.observer.id,
         }
-
-
 
     """
     def makeKDEs(self):
         log.info(f"Creating KDEs for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', 'kdes', self.id, exist_ok = True)
 
-        for stat, params in self.settings.kdes.quantities.items():       
+        for stat, params in self.settings.kdes.quantities.items():
             self.makeKDE(stat, **params)
 
-   
     def computeKDE(self, stat):
         return scipy.stats.gaussian_kde(self.visible[stat])
 
@@ -103,7 +95,7 @@ class Observation():
         sizes       = 8 * np.exp(-self.visible.appMag / 2)
 
         figure, axes = pyplot.subplots(subplot_kw = {'projection': 'polar'})
-        
+
         figure.tight_layout(rect = (0, 0, 1, 1))
         figure.set_size_inches(8, 8)
         figure.set_dpi(300)
@@ -124,7 +116,7 @@ class Observation():
         log.info(f"Creating histograms for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', 'histograms', self.id, exist_ok = True)
 
-        for stat, params in self.settings.histograms.quantities.items():       
+        for stat, params in self.settings.histograms.quantities.items():
             self.makeHistogram(stat, params)
 
     def makeHistogram(self, stat, params):
@@ -159,6 +151,7 @@ class Observation():
 def initObserve(_queue, _observer, _streaks):
     global queue, observer, streaks
     queue, observer, streaks = _queue, _observer, _streaks
+
 
 def observe(args):
     filename, out = args

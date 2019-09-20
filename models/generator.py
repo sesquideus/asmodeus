@@ -1,11 +1,11 @@
 import logging
 import random
-import itertools
 import dotmap
 
 import numpy as np
 
-from distribution       import PositionDistribution, VelocityDistribution, MassDistribution, DensityDistribution, TimeDistribution, DragCoefficientDistribution
+from distribution       import PositionDistribution, VelocityDistribution, MassDistribution, \
+    DensityDistribution, TimeDistribution, DragCoefficientDistribution
 from models             import Meteor
 from physics            import coord
 from utilities          import colour as c, utilities
@@ -46,7 +46,7 @@ class GeneratorGrid(Generator):
         self.meteors = []
         space = utilities.dictProduct(
             mass                = self.getSpace(self.parameters.mass),
-                        
+
             density             = self.getSpace(self.parameters.material.density),
             heatTransfer        = self.getSpace(self.parameters.material.heatTransfer),
             ablationHeat        = self.getSpace(self.parameters.material.ablationHeat),
@@ -170,4 +170,3 @@ class GeneratorRandom(Generator):
                 },
             },
         }
-

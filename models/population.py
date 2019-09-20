@@ -68,7 +68,8 @@ class Population():
             period          = period,
             action          = "Simulating meteors",
         )
-        log.info("Total mass {mass}".format(
+        log.info("Generated {frames} frames, total mass {mass}".format(
+            frames          = c.num(sum(map(lambda x: len(x.frames), self.meteors))),
             mass            = c.num("{:6f} kg".format(sum(map(lambda x: x.massInitial, self.meteors)))),
         ))
 

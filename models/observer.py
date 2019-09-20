@@ -1,5 +1,4 @@
 import logging
-import itertools
 import functools
 import os
 import numpy as np
@@ -19,10 +18,10 @@ class Observer():
         self.horizon            = parameters.horizon
 
         self.earthToAltAzMatrix = functools.reduce(np.dot, [
-                                    np.fliplr(np.eye(3)),
-                                    coord.rotMatrixY(-self.position.latitude()),
-                                    coord.rotMatrixZ(-self.position.longitude()),
-                                ])
+            np.fliplr(np.eye(3)),
+            coord.rotMatrixY(-self.position.latitude()),
+            coord.rotMatrixZ(-self.position.longitude()),
+        ])
 
     def altAz(self, point: coord.Vector3D) -> coord.Vector3D:
         """
@@ -53,20 +52,14 @@ class Observer():
         log.info(f"Loaded {c.num(len(dicts))} sightings")
         self.createDataframe()
 
-
-
-
-
-
-
-
+    """
     def minimize(self, settings):
         log.info("Employing {method} method, {rep} evaluation repetition{s}".format(
             method      = c.name(settings.method),
             rep         = c.num(settings.repeat),
             s           = '' if settings.repeat == 1 else 's',
         ))
-        self.minimizeExhaustive(settings)                                                                      
+        self.minimizeExhaustive(settings)
 
     def minimizeExhaustive(self, settings):
         for key, quantity in settings.quantities.items():
@@ -109,3 +102,4 @@ class Observer():
                 params      = "\t".join("{:6.3f}".format(parameter) for name, parameter in sorted(parameters.items())),
                 chisq       = chiSquare,
             ), file = open(resultFile, 'a'))
+    """

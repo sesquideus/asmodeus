@@ -23,9 +23,10 @@ class Dataframe():
         log.info(f"Loading a dataframe from {c.path(filename)}")
 
         dataframe = Dataframe(dataset, observer)
-        dataframe.data = pandas.read_csv(filename, sep = '\t')
+        dataframe.data = pandas.read_csv(filename, sep = '\t', low_memory = False)
         dataframe.expand()
         log.info(f"Created a dataframe with {c.num(len(dataframe.data.index))} rows")
+
         return dataframe
 
     @classmethod
@@ -40,6 +41,7 @@ class Dataframe():
         return dataframe
 
     def expand(self):
+        self.data['appMag'] = self.data.appMag.astype(float)
         self.data['mjd'] = Time(self.data.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
         self.data['logMass'] = np.log10(self.data.mass.to_numpy(dtype = 'float'))
         self.data['logMassInitial'] = np.log10(self.data.massInitial.to_numpy(dtype = 'float'))

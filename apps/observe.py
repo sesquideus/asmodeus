@@ -33,6 +33,7 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
 
     def prepareDataset(self):
         self.dataset.resetSightings()
+        self.dataset.remove('scatters')
 
     def configure(self):
         self.campaign = Campaign(self.dataset, self.config.campaign)

@@ -72,8 +72,8 @@ statistics:                                                 # Histograms to be p
             bin:                1000
             name:               'elevation'
         entryAngle:             &entryAngle
-            min:                0
-            max:                90
+            min:                40
+            max:                60
             bin:                2
             name:               'entry angle'
         time:                   &time
@@ -81,6 +81,11 @@ statistics:                                                 # Histograms to be p
             max:                3
             bin:                0.1
             name:               'flight time'
+        speed:                  &speed
+            min:                0
+            max:                80000
+            bin:                1000
+            name:               'speed'
 #        timestamp:
 #            min:                2016-08-11T19:00:00
 #            max:                2016-08-12T02:00:00
@@ -98,19 +103,17 @@ statistics:                                                 # Histograms to be p
       #  -   {x:            mjd, y:       angSpeed, colour: appMag}
       #  -   {x:            mjd, y:      elevation, colour: appMag}
       #  -   {x:            mjd, y:     entryAngle, colour: appMag}
-        -   {x:         appMag, y:         absMag, colour: appMag}
+        -   {x:         appMag, y:         absMag, colour: speed}
         -   {x:         absMag, y:      elevation, colour: appMag}
-        -   {x:         absMag, y:     entryAngle, colour: appMag}
-        -   {x:         absMag, y:     entryAngle, colour: logMassInitial}
         -   {x:       altitude, y:       angSpeed, colour: appMag}
         -   {x:     entryAngle, y:       angSpeed, colour: appMag}
         -   {x:      elevation, y:     entryAngle, colour: appMag}
         -   {x:     entryAngle, y:       altitude, colour: appMag}
-        -   {x:     entryAngle, y: logMassInitial, colour: appMag}
         -   {x:           time, y:        logMass, colour: appMag}
         -   {x:           time, y:      elevation, colour: appMag}
         -   {x:           time, y:         absMag, colour: appMag}
         -   {x:           time, y:       angSpeed, colour: appMag}
+        -   {x:          speed, y:           time, colour: absMag}
 
      #   -   {x: logMassInitial, y:         absMag, colour: appMag}
      #   -   {x: logMassInitial, y:         appMag, colour: appMag}
