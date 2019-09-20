@@ -1,5 +1,6 @@
-import sys, math
-import numpy as np
+import sys
+import math
+import numba
 
 from physics import constants
 
@@ -20,12 +21,13 @@ airMass = airMassKastenYoung
 def attenuate(flux, airMass):
     return flux * math.exp(constants.attenuationOneAirMass * airMass)
 
+#@numba.njit
 def airDensityLogMSIS(altitude):
     if altitude >= 300000:
         return 0
 
-    f, i = math.modf(altitude / 500)
-    i = int(i)
+    i = int(altitude // 500)
+    f = (altitude - 500 * i) / 500
 
     logs = [
         -6.717961707349481,

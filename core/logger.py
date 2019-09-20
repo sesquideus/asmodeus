@@ -20,7 +20,7 @@ class AsmodeusFormatter(logging.Formatter):
 
     def formatTime(self, record, format):
         ct = self.converter(record.created)
-        return "{}.{:03d}".format(time.strftime("%H:%M:%S", ct), int(record.msecs))
+        return f"{time.strftime('%H:%M:%S', ct)}.{int(record.msecs):03d}"
 
 
 def setupLog(name, **kwargs):

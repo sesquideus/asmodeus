@@ -2,7 +2,7 @@ from colorama import Fore, Style
 
 
 def colour(what, how):
-    return "{}{}{}".format(how, what, Style.RESET_ALL)
+    return f"{how}{what}{Style.RESET_ALL}"
 
 
 def ok(what):
@@ -11,6 +11,10 @@ def ok(what):
 
 def num(what):
     return colour(what, Fore.CYAN)
+
+
+def act(what):
+    return colour(what, Fore.YELLOW)
 
 
 def warn(what):

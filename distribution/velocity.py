@@ -8,13 +8,15 @@ log = logging.getLogger('root')
 
 
 class VelocityDistribution(base.Distribution):
+    quantity = 'initial velocity'
+
     def __init__(self, name, **kwargs):
-        self.quantity = 'initial velocity'
         self.functions = {
-            'shower':       self.shower,
+            'shower':       self.__class__.shower,
         }
         super().__init__(name, **kwargs)
 
+    @classmethod
     def shower(cls, *, ra, dec, speed):
         return lambda: -coord.Vector3D(
             math.cos(math.radians(dec)) * math.cos(math.radians(ra)),

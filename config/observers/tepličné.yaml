@@ -1,0 +1,9 @@
+campaign:
+    streaks:                    False
+    observers:
+        teplicne:
+            name:               'Tepličné'
+            latitude:           48.68231
+            longitude:          19.8575
+            altitude:           692
+            horizon:            15

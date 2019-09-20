@@ -1,6 +1,8 @@
 import math, numbers
 import numpy as np
+
 from astropy.time import Time
+
 
 class Vector3D:
     def __init__(self, x, y, z):
@@ -19,6 +21,9 @@ class Vector3D:
             self.y + other.y,
             self.z + other.z
         )
+
+    def __radd__(self, other):
+        return self.__add__(other)
 
     def __iadd__(self, other):
         if not isinstance(other, Vector3D):
@@ -54,6 +59,8 @@ class Vector3D:
                 self.y * other,
                 self.z * other,
             )
+        else:
+            raise TypeError("Vector3D: cannot __mul__ {}".format(type(other)))
 
     def __imul__(self, other):
         if not isinstance(other, numbers.Number):
@@ -134,17 +141,19 @@ class Vector3D:
         )
 
     def strGeodetic(self):
-        return "{lat:9.6f}° {ns} {lon:9.6f}° {ew} {ele:6.0f} m".format(
+        return "{lat:9.6f}° {ns}, {lon:9.6f}° {ew}, {ele:6.0f} m".format(
             lat     = self.latitude(),
             ns      = 'N' if self.latitude() > 0 else 'S',
             lon     = self.longitude(),
             ew      = 'E' if self.longitude() > 0 else 'W',
             ele     = self.elevation(),
         )
+
+def cosSin(angle):
+    return np.cos(np.radians(angle)), np.sin(np.radians(angle))
    
 def rotMatrixX(angle):
-    c = np.cos(np.radians(angle))
-    s = np.sin(np.radians(angle))
+    c, s = cosSin(angle)
     return np.ndarray((3, 3), dtype = float, buffer = np.array([
         1,  0,  0,
         0,  c, -s,
@@ -152,8 +161,7 @@ def rotMatrixX(angle):
     ]))
 
 def rotMatrixY(angle):
-    c = np.cos(np.radians(angle))
-    s = np.sin(np.radians(angle))
+    c, s = cosSin(angle)
     return np.ndarray((3, 3), dtype = float, buffer = np.array([
         c,  0, -s,
         0,  1,  0,
@@ -161,24 +169,21 @@ def rotMatrixY(angle):
     ]))
 
 def rotMatrixZ(angle):
-    c = np.cos(np.radians(angle))
-    s = np.sin(np.radians(angle))
+    c, s = cosSin(angle)
     return np.ndarray((3, 3), dtype = float, buffer = np.array([
         c, -s,  0,
         s,  c,  0,
         0,  0,  1,
     ]))
 
-def obliquity():
-    return math.radians(23.439)
 
 def fastSun(time):
+    obliquity           = 0.40908772
     mjd                 = Time(time).jd - 2451545.0
     meanLongitude       = math.radians((280.459 + 0.98564736 * mjd) % 360.0)
     meanAnomaly         = math.radians((357.529 + 0.98560028 * mjd) % 360.0)
 
-    eclipticLongitude   = meanLongitude + math.radians(1.915) * math.sin(meanAnomaly) + math.radians(0.02) * math.sin(2 * meanAnomaly)
-    eclipticLatitude    = 0.0
+    eclipticLongitude   = meanLongitude + 0.0334230551756 * math.sin(meanAnomaly) + 3.490658503988e-4 * math.sin(2 * meanAnomaly)
 
     rightAscension      = (math.degrees(math.atan2(math.cos(obliquity()) * math.sin(eclipticLongitude), math.cos(eclipticLongitude)))) % 360
     declination         = math.degrees(math.asin(math.sin(obliquity()) * math.sin(eclipticLongitude)))
@@ -186,8 +191,7 @@ def fastSun(time):
 
     return Vector3D.fromSpherical(declination, rightAscension, distance)
 
-def earthRotationAngle(time):
-    mjd                 = Time(time).jd - 2451545.0
-    era                 = 360 * ((0.779057273264 + 1.00273781191135448 * mjd) % 1)
-    return -era
 
+def earthRotationAngle(time):
+    mjd = Time(time).jd - 2451545.0
+    return -360 * ((0.779057273264 + 1.00273781191135448 * mjd) % 1)

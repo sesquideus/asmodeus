@@ -32,5 +32,6 @@ class AltitudeDiscriminator(base.Discriminator):
     def sinexp(cls, *, exponent: float):
         return lambda altitude: math.sin(math.radians(altitude))**exponent
 
+    @classmethod
     def default(cls):
         return cls.all

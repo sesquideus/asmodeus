@@ -13,8 +13,8 @@ class Distribution():
         self.name   = name
         self.params = kwargs
         try:
-            self.sample = self.functions.get(name, self.default)(**kwargs)
-        except KeyError:
+            self.sample = self.functions.get(name)(**kwargs)
+        except TypeError:
             self.errorUnknown(name)
             raise exceptions.ConfigurationError()
 
@@ -37,6 +37,10 @@ class Distribution():
         return lambda: value
 
     @classmethod
+    def uniform(self, *, min, max) -> (lambda: float):
+        return lambda: random.uniform(min, max)
+
+    @classmethod
     def gauss(cls, *, mean = 0, sigma = 1) -> (lambda: float):
         return lambda: random.gauss(mean, sigma)
 
@@ -45,7 +49,7 @@ class Distribution():
         raise NotImplementedError("No default distribution defined")
 
     def logInfo(self):
-        log.info("  {quantity} distribution is {name}{params}".format(
+        log.info("    {quantity} distribution is {name}{params}".format(
             quantity    = c.param(self.quantity.capitalize()),
             name        = c.name(self.name),
             params      = "" if self.params is None else " ({})".format(u.formatParameters(self.params)),
@@ -57,5 +61,12 @@ class Distribution():
         return self
 
     def errorUnknown(self, name):
-        log.error("Unknown {} distribution \"{}\"".format(self.quantity, name))
+        log.error(f'Unknown {self.quantity} distribution "{name}"')
         return self
+
+    def asDict(self):
+        return {
+            'distribution': self.name,
+            'parameters':   self.params,
+        }
+

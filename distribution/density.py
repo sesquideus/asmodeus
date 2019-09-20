@@ -5,13 +5,14 @@ log = logging.getLogger('root')
 
 
 class DensityDistribution(base.Distribution):
+    quantity           = 'meteoroid density'
+
     def __init__(self, name, **kwargs):
-        self.quantity           = 'meteoroid density'
         self.functions          = {
-            'asteroidal':       self.asteroidal,
-            'iron':             self.iron,
-            'constant':         self.constant,
-            'gauss':            self.gauss,
+            'asteroidal':       self.__class__.asteroidal,
+            'iron':             self.__class__.iron,
+            'constant':         self.__class__.constant,
+            'gauss':            self.__class__.gauss,
         }
         super().__init__(name, **kwargs)
 

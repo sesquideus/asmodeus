@@ -2,9 +2,9 @@ mp:
     processes:                  4
 
 meteors:
-    count:                      1000
+    count:                      10000
     shape:
-        dragCoefficient:        0.5                         # 0.6 for a spherical body
+        dragCoefficient:        0.6                         # 0.6 for a spherical body
         shapeFactor:            1.21                        # 1.21 for a spherical body
     material:
         density:                
@@ -22,10 +22,10 @@ meteors:
     position:
         distribution:           'rectangle'                 # Name of the distribution, currently only 'rectangle'
         parameters:
-            south:              45                          # Southern bound, degrees of latitude
-            north:              53                          # Northern bound, degrees of latitude
-            west:               13                          # Western bound, degrees of longitude
-            east:               27                          # Eastern bound, degrees of longitude
+            south:              46                          # Southern bound, degrees of latitude
+            north:              52                          # Northern bound, degrees of latitude
+            west:               15                          # Western bound, degrees of longitude
+            east:               25                          # Eastern bound, degrees of longitude
             elevation:          130000                      # Initial elevation of meteors, in m
     velocity:
         distribution:           'shower'                    # Currently only 'shower'
@@ -42,29 +42,37 @@ meteors:
         name:                   'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
         fps:                    20                          # Frames per second
         spf:                    1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time
+        report:                 1
 
 observations:
     streaks:                    False
-    minAltitude:                0
+    minAltitude:                15
     observers:
         teplicne:
             latitude:           48.68231
             longitude:          19.8575
             altitude:           692
 
-bias:
+biasFunctions:
     magnitude:
-        discriminator:          'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
-        parameters:
-            limit:              0.5                         # Limiting magnitude m0
-            width:              0.35                        # Width of the function
-    angularSpeed:
-        discriminator:          'all'                       # Angular speed detection efficiency profile, possible values 'flat' or 'linear'
-        parameters:
+        sigmoid: &sigmoid
+            discriminator:      'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
+            parameters:                        
+                limit:          5.5                         # Limiting magnitude m0
+                width:          0.35                        # Width of the function
+        all: &all
+            discriminator:      'all'                       # Angular speed detection efficiency profile, possible values 'flat' or 'linear'
+            parameters:
     altitude:
-        discriminator:          'sinexp'                       # Altitude detection efficiency profile, possible values 'step' or 'linear' or 'sinexp'
-        parameters:
-            exponent:           0.1                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
+        sinexp: &sinexp
+            discriminator:      'sinexp'                    # Altitude detection efficiency profile, possible values 'step' or 'linear' or 'sinexp'
+            parameters:
+                exponent:       0.0                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
+
+bias:
+    magnitude: *sigmoid
+    angularSpeed: *all
+    altitude: *all
 
 plot:
     sky:
@@ -80,11 +88,11 @@ plot:
             elevation:          True
 
 statistics:                                                 # Histograms to be plotted for simulation data
-    histograms: 
+    quantities: &quantities
         altitude:
             min:                0
             max:                90
-            bin:                5
+            bin:                1
             name:               'altitude'
             xaxis:              'number'
         azimuth:
@@ -93,24 +101,33 @@ statistics:                                                 # Histograms to be p
             bin:                15
             name:               'azimuth'
             xaxis:              'number'
-        apparentMagnitude:
+        appMag:
             min:                -12
             max:                12
             bin:                0.25
             name:               'apparent magnitude'
             xaxis:              'number'
-        angularSpeed:
+        angSpeed:
             min:                0
             max:                40
             bin:                1
             name:               'angular speed'
             xaxis:              'number'
-        timestamp:
-            min:                2016-08-11T19:00:00
-            max:                2016-08-12T02:00:00
-            bin:                600
-            name:               'time'
-            xaxis:              time
+    histograms:
+        *quantities
+    kdes:
+        *quantities
+    scatters:
+        -   x:                  'appMag'
+            y:                  'altitude'
+            cmap:               'viridis'     
+
+#        timestamp:
+#            min:                2016-08-11T19:00:00
+#            max:                2016-08-12T02:00:00
+#            bin:                600
+#            name:               'time'
+#            xaxis:              time
 
 optimize:                                                   # Exhaustive search of the parameter space
     method:                     exhaustive

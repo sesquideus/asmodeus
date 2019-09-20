@@ -3,6 +3,7 @@ import sys
 import logging
 import datetime
 import numpy as np
+import matplotlib.pyplot as pp
 
 log = logging.getLogger('root')
 
@@ -19,7 +20,7 @@ class Histogram:
     def bin(self, value):
         b = int(math.floor(self.binCount * (value - self.lower) / (self.upper - self.lower)))
         if b < 0 or b >= self.binCount:
-            raise KeyError("Value {value} out of range ({lower} - {upper})".format(
+            raise KeyError("Value {value} outside permissible range ({lower} - {upper})".format(
                 value   = value,
                 lower   = self.lower,
                 upper   = self.upper,
@@ -57,6 +58,17 @@ class Histogram:
                 key         = self.formatKey(self.key(bin)),
                 value       = self.formatValue(count),
             ), file = file)
+
+    def render(self, file):
+        figure = pp.figure(figsize = (6, 4), dpi = 300)
+        figure.suptitle(self.name, fontname = 'Cabin')
+
+        axes = figure.add_subplot(1, 1, 1)
+
+        #axes.set_ylim(bottom = 0, top = None)
+        axes.bar(np.arange(self.lower, self.upper, self.binWidth), self.bins, self.binWidth, align = 'edge')
+        pp.grid(True, 'both', linestyle = ':', linewidth = 0.25)
+        pp.savefig(file, bbox_inches = 'tight') 
 
     @staticmethod
     def processTSV(file, name, min, max, step, column):

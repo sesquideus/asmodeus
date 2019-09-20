@@ -2,30 +2,29 @@ mp:
     processes:                  4
 
 meteors:
-    count:                      1
+    count:                      10
     shape:
         dragCoefficient:        0.7                         # 0.6 for a spherical body
         shapeFactor:            1.21                        # 1.21 for a spherical body
     material:
         density:                
-            distribution:       'gauss'
+            distribution:       constant
             parameters:         
-                mean:           620
-                sigma:          10
+                value:          2800
         heatTransfer:           0.5                         # Heat transfer coefficient, default 0.5
         ablationHeat:           6000000                     # Specific enthalpy of vaporization, in J/kg
     mass:
         distribution:           'constant'                    # Particle mass distribution. Possible values 'pareto', 'exponential' or a number
         parameters:
-            value:              0.1
+            value:              0.01
     position:
         distribution:           'rectangle'                 # Name of the distribution, currently only 'rectangle'
         parameters:
-            south:              45                          # Southern bound, degrees of latitude
-            north:              53                          # Northern bound, degrees of latitude
-            west:               13                          # Western bound, degrees of longitude
-            east:               27                          # Eastern bound, degrees of longitude
-            elevation:          130000                      # Initial elevation of meteors, in m
+            south:              48                          # Southern bound, degrees of latitude
+            north:              48                          # Northern bound, degrees of latitude
+            west:               20                          # Western bound, degrees of longitude
+            east:               20                          # Eastern bound, degrees of longitude
+            elevation:          150000                      # Initial elevation of meteors, in m
     velocity:
         distribution:           'shower'                    # Currently only 'shower'
         parameters:
@@ -35,8 +34,8 @@ meteors:
     time:
         distribution:           'uniform'
         parameters:
-            begin:              2016-08-11T19:00:00         # Beginning of the interval, ISO8601
-            end:                2016-08-12T02:00:00         # End of the interval, ISO8601
+            begin:              2016-08-12T00:00:00         # Beginning of the interval, ISO8601
+            end:                2016-08-12T00:01:00         # End of the interval, ISO8601
     integrator:                                             
         name:                   'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
         fps:                    20                          # Frames per second

@@ -1,0 +1,47 @@
+mp:
+    processes: 4
+    report: 1
+
+meteors:
+    count:                      1
+
+    shape:
+        dragCoefficient:       
+            distribution:       constant
+            parameters:
+                value:          0.5
+        shapeFactor:            1.21                        # 1.21 for a spherical body
+
+    material:
+        density:                
+            distribution:       constant                    # Density profile (see configuration/density.py). Possible values 'cometary', 'asteroid', 'iron', or a number (kg/m3)
+            parameters:
+                value:              635
+        heatTransfer:           0.5                         # Heat transfer coefficient, default 0.5
+        ablationHeat:           6000000                     # Specific enthalpy of vaporization, in J/kg
+
+    mass:
+        distribution:           'constant'                  # Particle mass distribution. Possible values 'pareto' or a number
+        parameters:
+            value:              0.07
+    position:
+        distribution:           constant
+        parameters:
+            latitude:           49.5036                     # Southern bound, degrees of latitude
+            longitude:          14.4436                     # Eastern bound, degrees of longitude
+            elevation:          170180                      # Initial elevation of meteors, in m
+    velocity:
+        distribution:           'shower'                    # Currently only 'shower'
+        parameters:
+            ra:                 46.756                      # Right ascension in degrees
+            dec:                59.552                      # Declination in degrees
+            speed:              59810                       # Entry speed in m/s
+    time:
+        distribution:           constant
+        parameters:
+            value:              2012-08-12T22:29:46         # Beginning of the interval, ISO8601
+
+    integrator:                                                 # Properties of the integrator
+        name: 'rk4'                                             # Integrator to be used. Allowed values are 'rk4' and 'euler'.
+        fps: 2000                                                 # Frames per second.
+        spf: 1                                                # Steps per frame. Higher values mean more precise trajectories

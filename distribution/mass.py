@@ -8,12 +8,13 @@ log = logging.getLogger('root')
 
 
 class MassDistribution(base.Distribution):
+    quantity = 'meteoroid mass'
+
     def __init__(self, name, **kwargs):
-        self.quantity = 'meteoroid mass'
         self.functions = {
-            'pareto':       self.pareto,
-            'exponential':  self.exponential,
-            'constant':     self.constant,
+            'pareto':       self.__class__.pareto,
+            'exponential':  self.__class__.exponential,
+            'constant':     self.__class__.constant,
         }
         super().__init__(name, **kwargs)
 
@@ -26,9 +27,20 @@ class MassDistribution(base.Distribution):
         return lambda: np.random.exponential(shape)
 
     @classmethod
-    def constant(cls, *, value: float) -> (lambda: float):
-        return lambda: value
-
-    @classmethod
     def power(cls, *, shape: float, minimum: float) -> (lambda: float):
         return lambda: (minimum**(shape + 1) * random.random())**(1 / (shape + 1))
+
+# Maybe it is a good idea to do this with mixins
+"""
+class MassDistributionMixin():
+    self.quantity = 'meteoroid mass'
+
+
+class ParetoDistribution(base.Distribution, MassDistributionMixin):
+    def __init__(self, *, shape, minimum):
+        self.shape = shape
+        self.minimum = minimum
+
+    def sample(self):
+        return (np.random.pareto(self.shape - 1) + 1) * self.minimum
+"""

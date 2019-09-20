@@ -28,28 +28,30 @@ class SightingFrame():
 
         self.apparentMagnitude  = radiometry.apparentMagnitude(self.fluxDensity)
         self.absoluteMagnitude  = self.frame.absoluteMagnitude
-        self.sighted            = False
 
-        log.debug("{timestamp} | {truePos}, {trueSpeed:7.0f} m/s | {altaz}, {angSpeed:6.3f}°/s | {mass:6.4e} kg, {fluxDensity:8.3e} W/m2, {magnitude:6.2f} m".format(
-            timestamp           = frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
-            mass                = frame.mass,
+    def __str__(self):
+        return "{timestamp} | {truePos}, \
+            {trueSpeed:7.0f} m/s | {altaz}, \
+            {angSpeed:6.3f}°/s | {mass:6.4e} kg, \
+            {fluxDensity:8.3e} W/m2, {magnitude:6.2f} m".format(
+            timestamp           = self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
+            mass                = self.frame.mass,
             angSpeed            = self.angularSpeed,
             fluxDensity         = self.fluxDensity,
             magnitude           = self.apparentMagnitude,
             altaz               = self.altAz.strSpherical(),
             truePos             = self.frame.position.strGeodetic(),
             trueSpeed           = self.frame.velocity.norm(),
-        ))
+        )
 
     def asDict(self):
         return {
-            'timestamp'         : self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
-            'lifeTime'          : self.frame.lifeTime,
-            'trackLength'       : self.frame.trackLength,
+            'timestamp'         : self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f"),
             'altitude'          : self.altAz.latitude(),
             'azimuth'           : self.altAz.longitude(),
             'distance'          : self.altAz.norm(),
             'elevation'         : self.frame.position.elevation(),
+            'entryAngle'        : self.frame.entryAngle,
             'speed'             : self.frame.speed,
             'angularSpeed'      : self.angularSpeed,
             'mass'              : self.frame.mass,
@@ -62,27 +64,24 @@ class SightingFrame():
     def asDotMap(self):
         return dotmap.DotMap(self.asDict())
 
-    def asTSV(self):
-        return "{timestamp}\t{lifeTime:6.3f}\t{trackLength:7.0f}\t" \
-            "{altitude:6.3f}\t{azimuth:7.3f}\t{distance:6.0f}\t" \
-            "{elevation:7.0f}\t{speed:6.0f}\t{angularSpeed:7.3f}\t" \
-            "{mass:12.6e}\t{luminousPower:9.3e}\t{fluxDensity:9.3e}\t" \
-            "{appmag:6.2f}\t{absmag:6.2f}".format(
-                timestamp           = self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
-                lifeTime            = self.frame.lifeTime,
-                trackLength         = self.frame.trackLength,
-                altitude            = self.altAz.latitude(),
-                azimuth             = self.altAz.longitude(),
-                distance            = self.altAz.norm(),
-                elevation           = self.frame.position.elevation(),
-                speed               = self.frame.speed,
-                angularSpeed        = self.angularSpeed,
-                mass                = self.frame.mass,
-                luminousPower       = self.frame.luminousPower,
-                fluxDensity         = self.fluxDensity,
-                appmag              = self.apparentMagnitude,
-                absmag              = self.absoluteMagnitude,
-            )
+    def asTuple(self):
+        return (
+            self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            self.frame.time,
+            self.altAz.latitude(),
+            self.altAz.longitude(),
+            self.altAz.norm(),
+            self.frame.position.elevation(),
+            self.frame.entryAngle,
+            self.frame.speed,
+            self.angularSpeed,
+            self.frame.massInitial,
+            self.frame.mass,
+            self.frame.luminousPower,
+            self.fluxDensity,
+            self.apparentMagnitude,
+            self.absoluteMagnitude,
+        )
 
     def save(self):
         return pickle.dumps(self)
