@@ -15,6 +15,18 @@ log = logging.getLogger('root')
 class AsmodeusAnalyze(Asmodeus):
     name = 'analyze'
 
+    def createArgparser(self):
+        super().createArgparser()
+        self.argparser.add_argument('-b', '--skip-bias',          action = 'store_true')
+
+    def overrideConfig(self):
+        super().overrideConfig()
+
+        self.config.bias.do = True
+        if self.args.skip_bias:
+            self.overrideWarning('bias effects', self.config.bias.do, not self.args.skip_bias)
+            self.config.bias.do = False
+
     def configure(self):
         self.campaign = Campaign.load(self.dataset, statistics = self.config.statistics)
 
@@ -36,4 +48,4 @@ class AsmodeusAnalyze(Asmodeus):
             raise exceptions.ConfigurationError(e) from e
 
     def runSpecific(self):
-        self.campaign.filterVisible()
+        self.campaign.filterVisible(bias = self.config.bias.do)

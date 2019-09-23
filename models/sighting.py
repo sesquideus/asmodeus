@@ -22,6 +22,7 @@ class Sighting():
         'angSpeed',
         'massInitial',
         'mass',
+        'density',
         'lumPower',
         'fluxDensity',
         'appMag',

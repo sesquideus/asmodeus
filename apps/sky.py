@@ -7,8 +7,8 @@ class AsmodeusSky(asmodeus.AsmodeusAnalyze):
     name = 'sky'
 
     def prepareDataset(self):
-        super().prepareDataset()
-        self.protectOverwrite('plots')
+        self.dataset.resetSkyPlots()
 
-    def runAnalysis(self, observer):
-        observer.plotSky()
+    def runSpecific(self):
+        super().runSpecific()
+        self.campaign.makeSkyPlots()

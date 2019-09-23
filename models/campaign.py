@@ -88,10 +88,20 @@ class Campaign():
         self.discriminators = discriminators
         self.biasFunction = lambda row: all([disc.compute(row[prop]) for prop, disc in self.discriminators.items()])
 
-    def filterVisible(self):
-        for dataframe in self.dataframes:
-            dataframe.applyBias(self.biasFunction)
+    def filterVisible(self, bias = True):
+        if bias:
+            log.warning(f"Applying bias effects")            
+            for dataframe in self.dataframes:
+                dataframe.applyBias(self.biasFunction)
+        else:
+            log.warning(f"Bias effects deactivated, passing all meteors")
+            for dataframe in self.dataframes:
+                dataframe.skipBias()
 
     def makeScatters(self):
         for dataframe in self.dataframes:
             dataframe.makeScatters()
+
+    def makeSkyPlots(self):
+        for dataframe in self.dataframes:
+            dataframe.makeSkyPlot()

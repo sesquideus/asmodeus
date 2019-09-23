@@ -31,7 +31,7 @@ class Dataframe():
 
     @classmethod
     def fromObservation(cls, observation):
-        log.info(f"Creating a dataframe from observation")
+        log.info(f"Creating a dataframe from observation (observer {c.name(observation.observer.name)})")
         dataframe = Dataframe(observation.dataset, observation.observer)
         dataframe.data = pandas.DataFrame.from_records(
             [frame.asTuple() for sighting in observation.sightings for frame in sighting.frames],
@@ -45,6 +45,7 @@ class Dataframe():
         self.data['mjd'] = Time(self.data.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
         self.data['logMass'] = np.log10(self.data.mass.to_numpy(dtype = 'float'))
         self.data['logMassInitial'] = np.log10(self.data.massInitial.to_numpy(dtype = 'float'))
+        self.data['logDensity'] = np.log10(self.data.density.to_numpy(dtype = 'float'))
 
     def save(self):
         filename = self.dataset.path('sightings', self.observer.id, 'sky.tsv')
@@ -52,14 +53,17 @@ class Dataframe():
         self.data.to_csv(filename, sep = '\t', float_format = '%6g')
 
     def applyBias(self, biasFunction):
-        log.info(f"Applying bias DPFs")
+        log.info(f"Applying bias DPFs on dataframe for observer {c.name(self.observer.name)}")
         self.data['visible'] = self.data.apply(biasFunction, axis = 1)
         self.visible = self.data[self.data.visible]
         log.info(f"Bias applied, {c.num(len(self.visible.index))}/{c.num(len(self.data.index))} sightings marked as detected")
 
+    def skipBias(self):
+        self.visible = self.data
+
     def makeScatters(self):
         log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
-        self.dataset.create('scatters', self.observer.id, exist_ok = True)
+        self.dataset.create('analyses', 'scatters', self.observer.id, exist_ok = True)
 
         for scatter in self.settings.scatters:
             self.crossScatter(scatter)
@@ -86,8 +90,8 @@ class Dataframe():
             figure, axes = self.emptyFigure()
 
             axes.tick_params(axis = 'both', which = 'major', labelsize = 12)
-            axes.set_xlim(xparams.min, xparams.max)
-            axes.set_ylim(yparams.min, yparams.max)
+            #axes.set_xlim(xparams.min, xparams.max)
+            #axes.set_ylim(yparams.min, yparams.max)
             axes.set_xlabel(xparams.name, fontdict = {'fontsize': 12})
             axes.set_ylabel(yparams.name, fontdict = {'fontsize': 12})
             axes.set_title(f"{self.observer.name} – {xparams.name} × {yparams.name}", fontdict = {'fontsize': 14})
@@ -102,10 +106,39 @@ class Dataframe():
                 linewidths  = 0,
             )
             axes.legend([sc], [cparams.name])
-            figure.savefig(self.dataset.path('scatters', self.observer.id, f"{scatter.x}-{scatter.y}-{scatter.colour}.png"), dpi = 300)
+            figure.savefig(self.dataset.path('analyses', 'scatters', self.observer.id, f"{scatter.x}-{scatter.y}-{scatter.colour}.png"), dpi = 300)
             pyplot.close(figure)
         except KeyError as e:
             log.error(f"Invalid scatter configuration parameter {c.param(e)}")
+
+    def makeSkyPlot(self):
+        log.info(f"Creating {c.name('sky plot')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
+        self.dataset.create('analyses', 'skyplots', self.observer.id, exist_ok = True)
+
+        path = self.dataset.path('analyses', 'skyplots', self.observer.id, 'sky.png')
+
+        azimuths    = np.radians(self.visible.azimuth)
+        altitudes   = 90 - self.visible.altitude
+        colours     = -self.visible.appMag
+        sizes       = 8 * np.exp(-self.visible.appMag / 2)
+
+        figure, axes = pyplot.subplots(subplot_kw = {'projection': 'polar'})
+
+        figure.tight_layout(rect = (0, 0, 1, 1))
+        figure.set_size_inches(8, 8)
+
+        axes.xaxis.set_ticks(np.linspace(0, 2 * np.pi, 25))
+        axes.yaxis.set_ticklabels([])
+        axes.yaxis.set_ticks(np.linspace(0, 90, 7))
+        axes.set_ylim(0, 90.5)
+        axes.set_facecolor('black')
+        axes.grid(linewidth = 0.2, color = 'white')
+
+        axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'hot', alpha = 1, linewidths = 0)
+
+        figure.savefig(path, facecolor = 'black', dpi = 300)
+
+
 
     def emptyFigure(self):
         pyplot.rcParams['font.family'] = "Minion Pro"

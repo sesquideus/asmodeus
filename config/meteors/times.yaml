@@ -16,11 +16,11 @@ generator:
         velocity:
             ra:                 43
             dec:                56
-            speed:
-                min:            13000
-                max:            172000
-                count:          160
-        time:                   2016-08-12T00:00:00
+            speed:              59000
+        time:                   
+            min:                2016-08-11T18:00:00
+            max:                2016-08-12T06:00:00
+            count:              25
 
 integrator:                                             
     name:                       'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.

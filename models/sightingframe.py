@@ -77,6 +77,7 @@ class SightingFrame():
             self.angularSpeed,
             self.frame.massInitial,
             self.frame.mass,
+            self.frame.density,
             self.frame.luminousPower,
             self.fluxDensity,
             self.apparentMagnitude,

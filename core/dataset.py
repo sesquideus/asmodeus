@@ -53,22 +53,15 @@ class DataManager():
         else:
             raise exceptions.OverwriteError(f"Refusing to overwrite {c.path(self.path(*path))}")
 
-    def loadPopulation(self):
-        try:
-            filename = self.path('meteors.yaml')
-            config = configuration.loadYAML(open(filename, 'r'))
-            population = Population(config.distributions)
-            population.load(self)
-        except FileNotFoundError as e:
-            log.error(f"Cannot find file {c.path(filename)}")
-            raise exceptions.PrerequisiteError() from e
-
-        log.info(f"Population loaded successfully")
-        return population
-
     def resetMeteors(self):
         self.protectedReset()
         self.protectedReset('meteors')
+        self.remove('meteors.yaml')
+        
+        self.remove('sightings')
+        self.remove('campaign.yaml')
+
+        self.remove('analyses')
 
     def validateSightings(self):
         """ We will validate the sightings directory here """
@@ -79,9 +72,15 @@ class DataManager():
 
     def resetSightings(self):
         self.protectedReset('sightings')
+        self.remove('campaign.yaml')
+
+        self.remove('analyses')
 
     def resetScatters(self):
-        self.protectedReset('scatters')
+        self.protectedReset('analyses', 'scatters')
+    
+    def resetSkyPlots(self):
+        self.protectedReset('analyses', 'skyplots')
 
     def meteorFiles(self):
         return self.list('meteors')

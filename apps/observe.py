@@ -32,8 +32,8 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
             self.config.campaign.streaks = True
 
     def prepareDataset(self):
-        self.dataset.resetSightings()
-        self.dataset.remove('scatters')
+        self.dataset.protectedReset('sightings')
+        self.dataset.remove('analyses')
 
     def configure(self):
         self.campaign = Campaign(self.dataset, self.config.campaign)

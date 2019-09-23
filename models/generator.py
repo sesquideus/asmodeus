@@ -1,9 +1,12 @@
 import logging
 import random
 import dotmap
-
+import numbers
+import datetime
 import numpy as np
+import pandas
 
+from core               import exceptions
 from distribution       import PositionDistribution, VelocityDistribution, MassDistribution, \
     DensityDistribution, TimeDistribution, DragCoefficientDistribution
 from models             import Meteor
@@ -29,18 +32,24 @@ class GeneratorGrid(Generator):
     def __init__(self, parameters):
         self.parameters = parameters
 
+    def getSpaceRange(self, *, min, max, count, spacing = 'linear', time = False):
+        space = {
+            'linear':   np.linspace,
+            'log':      np.geomspace,
+        }[spacing]
+
+        if isinstance(min, datetime.datetime):
+            return pandas.date_range(min, max, count).to_pydatetime()
+        else:
+            return space(min, max, count, dtype = float)
+    
     def getSpace(self, definition):
         if isinstance(definition, dotmap.DotMap):
-            space = np.linspace
-            try:
-                if definition.spacing == 'log':
-                    space = np.geomspace
-            except KeyError:
-                pass
-
-            return space(definition.min, definition.max, num = definition.count, dtype = float)
-        else:
+            return self.getSpaceRange(**definition.toDict())
+        elif isinstance(definition, numbers.Number) or isinstance(definition, datetime.datetime):
             return [definition]
+        else:
+            raise exceptions.ConfigurationError(f"Parameter space definition must be either a number or a dictionary with min, max and count defined")
 
     def generate(self):
         self.meteors = []

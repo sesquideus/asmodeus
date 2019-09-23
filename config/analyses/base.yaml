@@ -72,13 +72,13 @@ statistics:                                                 # Histograms to be p
             bin:                1000
             name:               'elevation'
         entryAngle:             &entryAngle
-            min:                40
-            max:                60
+            min:                20
+            max:                80
             bin:                2
             name:               'entry angle'
         time:                   &time
             min:                0
-            max:                3
+            max:                5
             bin:                0.1
             name:               'flight time'
         speed:                  &speed
@@ -86,6 +86,16 @@ statistics:                                                 # Histograms to be p
             max:                80000
             bin:                1000
             name:               'speed'
+        density:
+            min:                0
+            max:                10000
+            bin:                500
+            name:               'density'
+        logDensity:
+            min:                0
+            max:                5
+            bin:                0.1
+            name:               'log density'
 #        timestamp:
 #            min:                2016-08-11T19:00:00
 #            max:                2016-08-12T02:00:00
@@ -98,22 +108,24 @@ statistics:                                                 # Histograms to be p
     kdes:
         quantities:             *quantities
     scatters:
-      #  -   {x:            mjd, y:         appMag, colour: appMag}
-      #  -   {x:            mjd, y:       altitude, colour: appMag}
-      #  -   {x:            mjd, y:       angSpeed, colour: appMag}
-      #  -   {x:            mjd, y:      elevation, colour: appMag}
-      #  -   {x:            mjd, y:     entryAngle, colour: appMag}
-        -   {x:         appMag, y:         absMag, colour: speed}
-        -   {x:         absMag, y:      elevation, colour: appMag}
-        -   {x:       altitude, y:       angSpeed, colour: appMag}
-        -   {x:     entryAngle, y:       angSpeed, colour: appMag}
-        -   {x:      elevation, y:     entryAngle, colour: appMag}
-        -   {x:     entryAngle, y:       altitude, colour: appMag}
-        -   {x:           time, y:        logMass, colour: appMag}
-        -   {x:           time, y:      elevation, colour: appMag}
-        -   {x:           time, y:         absMag, colour: appMag}
-        -   {x:           time, y:       angSpeed, colour: appMag}
-        -   {x:          speed, y:           time, colour: absMag}
+        -   {x:            mjd, y:         appMag, colour: density}
+        -   {x:            mjd, y:       altitude, colour: density}
+        -   {x:            mjd, y:       angSpeed, colour: density}
+        -   {x:            mjd, y:      elevation, colour: density}
+        -   {x:            mjd, y:     entryAngle, colour: density}
+        -   {x:         appMag, y:         absMag, colour: density}
+        -   {x:         absMag, y:      elevation, colour: density}
+        -   {x:       altitude, y:       angSpeed, colour: density}
+        -   {x:     entryAngle, y:       angSpeed, colour: density}
+        -   {x:      elevation, y:     entryAngle, colour: density}
+        -   {x:     entryAngle, y:       altitude, colour: density}
+        -   {x:           time, y:        logMass, colour: density}
+        -   {x:           time, y:      elevation, colour: density}
+        -   {x:           time, y:         absMag, colour: density}
+        -   {x:           time, y:       angSpeed, colour: density}
+        -   {x:          speed, y:           time, colour: density}
+        -   {x:           time, y:     logDensity, colour: logDensity}
+        -   {x:     logDensity, y:      elevation, colour: logDensity}
 
      #   -   {x: logMassInitial, y:         absMag, colour: appMag}
      #   -   {x: logMassInitial, y:         appMag, colour: appMag}

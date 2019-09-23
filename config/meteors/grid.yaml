@@ -11,13 +11,13 @@ generator:
         mass:                   0.001
         position:
             latitude:          
-                min:            42
-                max:            52
-                count:          51
+                min:            40
+                max:            55
+                count:          76
             longitude:
-                min:            15
-                max:            25
-                count:          51
+                min:            11
+                max:            26
+                count:          76
             elevation:          130000
         velocity:
             ra:                 43
