@@ -43,7 +43,7 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
             self.config.integrator.fps,
             self.config.integrator.spf,
             processes   = self.config.mp.processes,
-            period      = self.config.mp.report
+            period      = self.config.mp.report,
         )
 
         log.info("{num} meteors were generated in {time} seconds ({rate} meteors per second)".format(

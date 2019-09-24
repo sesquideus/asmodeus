@@ -1,0 +1,8 @@
+campaign:
+    observers:
+        northpole:
+            name:               'North pole'
+            latitude:           90
+            longitude:          0
+            altitude:           0
+            horizon:            0

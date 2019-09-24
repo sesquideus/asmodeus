@@ -21,30 +21,34 @@ class Asmodeus():
         self.args = self.argparser.parse_args()
 
         try:
-            self.loadConfig()
-            self.overrideConfig()
-            configuration.makeStatic(self.config)
+            try:
+                self.loadConfig()
+                self.overrideConfig()
+                configuration.makeStatic(self.config)
 
-            log.debug(f"Full configuration is")
-            if log.getEffectiveLevel() == logging.DEBUG:
-                self.config.pprint()
+                log.debug(f"Full configuration is")
+                if log.getEffectiveLevel() == logging.DEBUG:
+                    self.config.pprint()
 
-            self.dataset = dataset.DataManager(self.args.dataset, overwrite = self.config.overwrite)
-            self.prepareDataset()
-            self.configure()
-        except exceptions.CommandLineError as e:
-            log.critical(f"Incorrect command line arguments: {e}")
-            sys.exit(-1)
-        except exceptions.ConfigurationError as e:
-            log.critical(f"Terminating due to a configuration error: {e}")
-            sys.exit(-1)
-        except exceptions.OverwriteError as e:
-            log.critical(e)
-            log.critical(f"Target directory already exists (use {c.param('-O')} or {c.param('--overwrite')} to overwrite the existing dataset)")
-            sys.exit(-1)
-        except exceptions.PrerequisiteError as e:
-            log.critical(f"Missing prerequisites: {e}")
-            log.critical("Aborting")
+                self.dataset = dataset.DataManager(self.args.dataset, overwrite = self.config.overwrite)
+                self.prepareDataset()
+                self.configure()
+            except exceptions.CommandLineError as e:
+                log.critical(f"Incorrect command line arguments: {e}")
+                raise exceptions.FatalError
+            except exceptions.ConfigurationError as e:
+                log.critical(f"Terminating due to a configuration error: {c.err(e)}")
+                raise exceptions.FatalError
+            except exceptions.OverwriteError as e:
+                log.critical(e)
+                log.critical(f"Target directory already exists (use {c.param('-O')} or {c.param('--overwrite')} to overwrite the existing dataset)")
+                raise exceptions.FatalError
+            except exceptions.PrerequisiteError as e:
+                log.critical(f"Missing prerequisites: {e}")
+                log.critical("Aborting")
+                raise exceptions.FatalError
+        except exceptions.FatalError:
+            log.critical(f"{c.script(f'asmodeus-{self.name}')} aborting during configuration")
             sys.exit(-1)
 
         log.info("Initialization complete")
@@ -101,7 +105,7 @@ class Asmodeus():
                 log.info(f"{c.script(f'asmodeus-{self.name}')} finished successfully in {self.runTime():.6f} s")
                 log.info("-" * 50)
             else:
-                log.critical(f"{c.script(f'asmodeus-{self.name}')} aborted")
+                log.critical(f"{c.script(f'asmodeus-{self.name}')} aborted during runtime")
 
     def overrideWarning(self, parameter, old, new):
         log.warning(f"Overriding {c.param(parameter)} ({c.over(old)} -> {c.over(new)})")

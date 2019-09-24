@@ -5,22 +5,22 @@ generator:
             dragCoefficient:    0.5
             shapeFactor:        1.21
         material:
-            density:            625
+            density:            2625
             heatTransfer:       0.5
             ablationHeat:       6000000
         mass:                   0.001
         position:
-            latitude:           49
-            longitude:          20
-            elevation:          130000
+            latitude:           90
+            longitude:          0
+            elevation:          150000
         velocity:
-            ra:                 43
-            dec:                56
-            speed:              59000
-        time:                   
-            min:                2016-08-11T00:00:00
-            max:                2016-08-11T23:30:00
-            count:              48
+            ra:                 0
+            dec:                
+                min:            10
+                max:            90
+                count:          81
+            speed:              40000
+        time:                   2016-08-12T00:00:00
 
 integrator:                                             
     name:                       'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.

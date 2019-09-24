@@ -25,14 +25,14 @@ class Campaign():
         log.debug(f"Campaign initialized")
 
     @classmethod
-    def load(cls, dataset, *, statistics = None):
+    def load(cls, dataset, *, analyses = None):
         log.info(f"Loading a campaign from dataset {c.name(dataset.name)}")
         filename = dataset.path('campaign.yaml')
 
         try:
             config = configuration.loadYAML(open(filename, 'r'))
             campaign = Campaign(dataset, config)
-            campaign.statistics = statistics
+            campaign.analyses = analyses
             campaign.loadDataframes()
             return campaign
         except FileNotFoundError as e:
@@ -58,10 +58,10 @@ class Campaign():
         self.population = Population.load(self.dataset, processes = processes, period = period)
 
     def loadDataframes(self):
-        self.dataframes = [Dataframe.load(self.dataset, observer) for observer in self.observers]
+        self.dataframes = [Dataframe.load(self.dataset, observer) for observer in self.observers]        
 
         for dataframe in self.dataframes:
-            dataframe.settings = self.statistics
+            dataframe.quantities = self.analyses.quantities
 
     def observe(self, *, processes = 1, period = 1):
         log.info("Computing observations for campaign")
@@ -94,13 +94,13 @@ class Campaign():
             for dataframe in self.dataframes:
                 dataframe.applyBias(self.biasFunction)
         else:
-            log.warning(f"Bias effects deactivated, passing all meteors")
+            log.warning(f"No bias effects active, all meteors meteors will be visible")
             for dataframe in self.dataframes:
                 dataframe.skipBias()
 
     def makeScatters(self):
         for dataframe in self.dataframes:
-            dataframe.makeScatters()
+            dataframe.makeScatters(self.analyses.scatters)
 
     def makeSkyPlots(self):
         for dataframe in self.dataframes:

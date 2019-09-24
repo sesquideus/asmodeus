@@ -29,6 +29,9 @@ class SightingFrame():
         self.apparentMagnitude  = radiometry.apparentMagnitude(self.fluxDensity)
         self.absoluteMagnitude  = self.frame.absoluteMagnitude
 
+        self.isBrightest        = 0
+        self.isAbsBrightest     = 0
+
     def __str__(self):
         return "{timestamp} | {truePos}, \
             {trueSpeed:7.0f} m/s | {altaz}, \
@@ -82,6 +85,8 @@ class SightingFrame():
             self.fluxDensity,
             self.apparentMagnitude,
             self.absoluteMagnitude,
+            self.isBrightest,
+            self.isAbsBrightest,
         )
 
     def save(self):

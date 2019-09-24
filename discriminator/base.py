@@ -21,7 +21,7 @@ class Discriminator():
             self.errorUnknown(e)
             raise exceptions.ConfigurationError()
         except TypeError as e:
-            log.warning(e)
+            raise exceptions.ConfigurationError(e)
 
     def compute(self, value):
         rnd = random.random()

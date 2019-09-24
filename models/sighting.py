@@ -27,27 +27,36 @@ class Sighting():
         'fluxDensity',
         'appMag',
         'absMag',
+        'isBrightest',
+        'isAbsBrightest',
     ]
 
     def __init__(self, observer, meteor):
-        self.observer           = observer
-        self.meteor             = meteor
+        self.observer               = observer
+        self.meteor                 = meteor
 
-        self.timestamp          = self.meteor.timestamp
-        self.id                 = "{}{}".format(self.observer.id, self.timestamp)
+        self.timestamp              = self.meteor.timestamp
+        self.id                     = "{}{}".format(self.observer.id, self.timestamp)
 
-        self.frames             = [SightingFrame(self.observer, meteorFrame) for meteorFrame in self.meteor.frames]
+        self.frames                 = [SightingFrame(self.observer, meteorFrame) for meteorFrame in self.meteor.frames]
 
-        self.first              = self.frames[0]
-        self.last               = self.frames[-1]
-        self.brightest          = None
+        self.first                  = self.frames[0]
+        self.last                   = self.frames[-1]
+        self.brightest              = None
+        self.absBrightest           = None
 
         for frame in self.frames:
             if self.brightest is None or self.brightest.apparentMagnitude > frame.apparentMagnitude:
                 self.brightest = frame
 
-        self.massInitial        = self.first.frame.mass
-        self.velocityInfinity   = self.first.frame.velocity
+            if self.absBrightest is None or self.absBrightest.absoluteMagnitude > frame.absoluteMagnitude:
+                self.absBrightest = frame
+
+        self.brightest.isBrightest = 1
+        self.absBrightest.isAbsBrightest = 1
+
+        self.massInitial            = self.first.frame.mass
+        self.velocityInfinity       = self.first.frame.velocity
 
     @staticmethod
     def load(filename):

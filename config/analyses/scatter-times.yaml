@@ -1,9 +1,4 @@
-plot:
-    sky:
-        dark:                   True
-
-statistics:                                                 # Histograms to be plotted for simulation data
-    quantities:                 &quantities
+quantities:                 &quantities
         altitude:               &altitude
             min:                0
             max:                90
@@ -81,44 +76,15 @@ statistics:                                                 # Histograms to be p
 #            name:               'time'
 #            xaxis:              time
 
-    histograms:
-        quantities:             *quantities
-    kdes:
-        quantities:             *quantities
-  
-     #   -   {x: logMassInitial, y:         absMag, colour: appMag}
-     #   -   {x: logMassInitial, y:         appMag, colour: appMag}
-     #   -   {x: logMassInitial, y:       altitude, colour: appMag}
-     #   -   {x: logMassInitial, y:      elevation, colour: appMag}
-     #   -   {x: logMassInitial, y:     entryAngle, colour: absMag}
-
-
-optimize:                                                   # Exhaustive search of the parameter space
-    method:                     exhaustive
-    repeat:                     1
-    quantities:
-        magnitude:
-            function:           sigmoid
-            parameters:
-                limit:
-                    min:        -6
-                    max:        6
-                    step:       0.5
-                width:
-                    min:        0.05
-                    max:        1
-                    step:       0.05
-        altitude:
-            function:           powersine
-            parameters:
-                exponent:
-                    min:        -1.00
-                    max:        2.00
-                    step:       0.1
-        angularSpeed:
-            function:           power
-            parameters:
-                exponent:
-                    min:        0.5
-                    max:        1.5
-                    step:       0.1
+scatters:
+    -   {x:            mjd, y:      elevation, colour: mjd, cmap: twilight_shifted}
+    -   {x:            mjd, y:     entryAngle, colour: mjd, cmap: twilight_shifted}
+    -   {x:            mjd, y:         absMag, colour: mjd, cmap: twilight_shifted}
+    -   {x:         absMag, y:      elevation, colour: mjd, cmap: twilight_shifted}
+    -   {x:     entryAngle, y:      elevation, colour: mjd, cmap: twilight_shifted}
+    -   {x:           time, y:        logMass, colour: mjd, cmap: twilight_shifted}
+    -   {x:           time, y:      elevation, colour: mjd, cmap: twilight_shifted}
+    -   {x:           time, y:         absMag, colour: mjd, cmap: twilight_shifted}
+    -   {x:          speed, y:           time, colour: mjd, cmap: twilight_shifted}
+    -   {x:     logDensity, y:      elevation, colour: mjd, cmap: twilight_shifted}
+    -   {x:     entryAngle, y:      elevation, colour: mjd, cmap: twilight_shifted}

@@ -54,18 +54,18 @@ class Dataframe():
 
     def applyBias(self, biasFunction):
         log.info(f"Applying bias DPFs on dataframe for observer {c.name(self.observer.name)}")
-        self.data['visible'] = self.data.apply(biasFunction, axis = 1)
+        self.data.visible = self.data.apply(biasFunction, axis = 1)
         self.visible = self.data[self.data.visible]
         log.info(f"Bias applied, {c.num(len(self.visible.index))}/{c.num(len(self.data.index))} sightings marked as detected")
 
     def skipBias(self):
         self.visible = self.data
 
-    def makeScatters(self):
+    def makeScatters(self, settings):
         log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
         self.dataset.create('analyses', 'scatters', self.observer.id, exist_ok = True)
-
-        for scatter in self.settings.scatters:
+    
+        for scatter in settings:
             self.crossScatter(scatter)
 
     def crossScatter(self, scatter):
@@ -80,9 +80,9 @@ class Dataframe():
         log.info(f"Creating a scatter plot for {c.param(scatter.x):>24} × {c.param(scatter.y):>24} (colour {c.param(scatter.colour):>24})")
 
         try:
-            xparams = self.settings.quantities[scatter.x]
-            yparams = self.settings.quantities[scatter.y]
-            cparams = self.settings.quantities[scatter.colour]
+            xparams = self.quantities[scatter.x]
+            yparams = self.quantities[scatter.y]
+            cparams = self.quantities[scatter.colour]
             log.debug(f"x axis: {xparams}")
             log.debug(f"y axis: {yparams}")
             log.debug(f"colour: {cparams}")
@@ -100,7 +100,7 @@ class Dataframe():
                 self.visible[scatter.x],
                 self.visible[scatter.y],
                 c           = self.visible[scatter.colour],
-                s           = 3 * np.exp(-self.visible.appMag / 3),
+                s           = 3 * np.exp(-self.visible.appMag / 3) * (1 + self.visible.isAbsBrightest * 5),
                 cmap        = scatter.get('cmap', 'viridis_r'),
                 alpha       = 1,
                 linewidths  = 0,
@@ -134,7 +134,7 @@ class Dataframe():
         axes.set_facecolor('black')
         axes.grid(linewidth = 0.2, color = 'white')
 
-        axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'hot', alpha = 1, linewidths = 0)
+        axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'plasma', alpha = 1, linewidths = 0)
 
         figure.savefig(path, facecolor = 'black', dpi = 300)
 

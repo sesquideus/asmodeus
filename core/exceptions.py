@@ -9,3 +9,6 @@ class PrerequisiteError(Exception):
 
 class CommandLineError(Exception):
     pass
+
+class FatalError(Exception):
+    pass
