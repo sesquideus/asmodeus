@@ -18,7 +18,8 @@ generator:
             dec:                
                 min:            10
                 max:            90
-                count:          81
+                count:          41
+                spacing:        log
             speed:              40000
         time:                   2016-08-12T00:00:00
 

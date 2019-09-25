@@ -77,36 +77,42 @@ class Dataframe():
                 colour:     <property to use for colouring the dots>
                 size:       <property to determine dot size>
         """
-        log.info(f"Creating a scatter plot for {c.param(scatter.x):>24} × {c.param(scatter.y):>24} (colour {c.param(scatter.colour):>24})")
+        log.info(f"Creating a scatter plot for {c.param(scatter.x.id):>24} × {c.param(scatter.y.id):>24} (colour {c.param(scatter.colour.id):>24})")
 
         try:
-            xparams = self.quantities[scatter.x]
-            yparams = self.quantities[scatter.y]
-            cparams = self.quantities[scatter.colour]
-            log.debug(f"x axis: {xparams}")
-            log.debug(f"y axis: {yparams}")
-            log.debug(f"colour: {cparams}")
+            log.debug(f"x axis: {scatter.x}")
+            log.debug(f"y axis: {scatter.y}")
+            log.debug(f"colour: {scatter.colour}")
 
             figure, axes = self.emptyFigure()
 
             axes.tick_params(axis = 'both', which = 'major', labelsize = 12)
-            #axes.set_xlim(xparams.min, xparams.max)
-            #axes.set_ylim(yparams.min, yparams.max)
-            axes.set_xlabel(xparams.name, fontdict = {'fontsize': 12})
-            axes.set_ylabel(yparams.name, fontdict = {'fontsize': 12})
-            axes.set_title(f"{self.observer.name} – {xparams.name} × {yparams.name}", fontdict = {'fontsize': 14})
+            
+            try:
+                axes.set_xlim(scatter.x.min, scatter.x.max)
+            except KeyError as e:
+                log.debug("No x range set")
+
+            try:
+                axes.set_ylim(scatter.y.min, scatter.y.max)
+            except KeyError as e:
+                log.debug("No y range set")
+
+            axes.set_xlabel(scatter.x.name, fontdict = {'fontsize': 12})
+            axes.set_ylabel(scatter.y.name, fontdict = {'fontsize': 12})
+            axes.set_title(f"{self.observer.name} – {scatter.x.name} × {scatter.y.name}", fontdict = {'fontsize': 14})
 
             sc = axes.scatter(
-                self.visible[scatter.x],
-                self.visible[scatter.y],
-                c           = self.visible[scatter.colour],
+                self.visible[scatter.x.id],
+                self.visible[scatter.y.id],
+                c           = self.visible[scatter.colour.id],
                 s           = 3 * np.exp(-self.visible.appMag / 3) * (1 + self.visible.isAbsBrightest * 5),
                 cmap        = scatter.get('cmap', 'viridis_r'),
                 alpha       = 1,
                 linewidths  = 0,
             )
-            axes.legend([sc], [cparams.name])
-            figure.savefig(self.dataset.path('analyses', 'scatters', self.observer.id, f"{scatter.x}-{scatter.y}-{scatter.colour}.png"), dpi = 300)
+            axes.legend([sc], [scatter.colour.name])
+            figure.savefig(self.dataset.path('analyses', 'scatters', self.observer.id, f"{scatter.x.id}-{scatter.y.id}-{scatter.colour.id}.png"), dpi = 300)
             pyplot.close(figure)
         except KeyError as e:
             log.error(f"Invalid scatter configuration parameter {c.param(e)}")

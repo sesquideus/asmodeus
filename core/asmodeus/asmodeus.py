@@ -55,11 +55,11 @@ class Asmodeus():
 
     def createArgparser(self):
         self.argparser = argparse.ArgumentParser(description = "All-Sky Meteor Observation and Detection Efficiency Simulator")
-        self.argparser.add_argument('dataset',                  type = str)
-        self.argparser.add_argument('config',                   type = argparse.FileType('r'))
-        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true')
-        self.argparser.add_argument('-d', '--debug',            action = 'store_true')
-        self.argparser.add_argument('-l', '--logfile',          type = argparse.FileType('w'))
+        self.argparser.add_argument('dataset',                  type = str,                         help = "name of the dataset")
+        self.argparser.add_argument('config',                   type = argparse.FileType('r'),      help = "main configuration file")
+        self.argparser.add_argument('-O', '--overwrite',        action = 'store_true',              help = "overwrite the dataset if it exists")
+        self.argparser.add_argument('-d', '--debug',            action = 'store_true',              help = "much more verbose logging")
+        self.argparser.add_argument('-l', '--logfile',          type = argparse.FileType('w'),      help = "output log to file")
 
     def prepareDataset(self):
         raise NotImplementedError(f"You need to define the {c.name('prepareDataset')} method for every ASMODEUS subclass.")

@@ -19,7 +19,7 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
 
     def createArgparser(self):
         super().createArgparser()
-        self.argparser.add_argument('-c', '--count',            type = int)
+        self.argparser.add_argument('-c', '--count', type = int, help = "override the total number of meteoroids to generate (only with random generator)")
 
     def overrideConfig(self):
         super().overrideConfig()

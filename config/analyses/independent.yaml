@@ -1,74 +1,66 @@
 quantities:                 &quantities
-        altitude:               &altitude
-            min:                0
-            max:                90
-            bin:                1
-            name:               'altitude'
-        azimuth:                &azimuth
-            min:                0
-            max:                360
-            bin:                5
-            name:               'azimuth'
-        appMag:                 &appMag
-            min:                -15
-            max:                10
-            bin:                0.25
-            name:               'apparent magnitude'
-        absMag:                 &absMag
-            min:                -15
-            max:                10
-            bin:                0.25
-            name:               'absolute magnitude'
-        angSpeed:               &angSpeed
-            min:                0
-            max:                40
-            bin:                1
-            name:               'angular speed'
-        logMassInitial:         &logMassInitial
-            min:                -6.5
-            max:                1
-            bin:                0.1
-            name:               'log initial mass'
-        logMass:                &logMass
-            min:                -8
-            max:                1
-            bin:                0.1
-            name:               'log mass'
-        mjd:                    &mjd
-            min:                57611.791666
-            max:                57612.083333
-            bin:                0.0069444444
-            name:               'MJD'
-        elevation:              &elevation
-            min:                50000
-            max:                130000
-            bin:                1000
-            name:               'elevation'
-        entryAngle:             &entryAngle
-            min:                20
-            max:                80
-            bin:                2
-            name:               'entry angle'
-        time:                   &time
-            min:                0
-            max:                5
-            bin:                0.1
-            name:               'flight time'
-        speed:                  &speed
-            min:                0
-            max:                80000
-            bin:                1000
-            name:               'speed'
-        density:
-            min:                0
-            max:                10000
-            bin:                500
-            name:               'density'
-        logDensity:
-            min:                0
-            max:                5
-            bin:                0.1
-            name:               'log density'
+    altitude:               &altitude
+        id:                 altitude
+        bin:                1
+        name:               'altitude'
+    azimuth:                &azimuth
+        id:                 azimuth
+        bin:                5
+        name:               'azimuth'
+    appMag:                 &appMag
+        id:                 appMag
+        bin:                0.25
+        name:               'apparent magnitude'
+    absMag:                 &absMag
+        id:                 absMag
+        bin:                0.25
+        name:               'absolute magnitude'
+    angSpeed:               &angSpeed
+        id:                 angSpeed
+        bin:                1
+        name:               'angular speed'
+    logMassInitial:         &logMassInitial
+        id:                 logMassInitial
+        bin:                0.1
+        name:               'log initial mass'
+    mass:                   &mass
+        id:                 mass
+        bin:                0.1
+        min:                0
+        max:                0.0012
+        name:               'mass'
+    logMass:                &logMass
+        id:                 logMass
+        bin:                0.1
+        name:               'log mass'
+    mjd:                    &mjd
+        id:                 mjd
+        bin:                0.0069444444
+        name:               'MJD'
+    elevation:              &elevation
+        id:                 elevation
+        bin:                1000
+        name:               'elevation'
+    entryAngle:             &entryAngle
+        id:                 entryAngle
+        bin:                2
+        name:               'entry angle'
+    time:                   &time
+        id:                 time
+        bin:                0.1
+        name:               'flight time'
+    speed:                  &speed
+        id:                 speed
+        bin:                1000
+        name:               'speed'
+    density:                &density
+        id:                 density
+        bin:                500
+        name:               'density'
+    logDensity:             &logDensity
+        id:                 logDensity
+        bin:                0.1
+        name:               'log density'
 #        timestamp:
 #            min:                2016-08-11T19:00:00
 #            max:                2016-08-12T02:00:00
@@ -77,14 +69,13 @@ quantities:                 &quantities
 #            xaxis:              time
 
 scatters:
-    -   {x:            mjd, y:      elevation, colour: mjd, cmap: twilight_shifted}
-    -   {x:            mjd, y:     entryAngle, colour: mjd, cmap: twilight_shifted}
-    -   {x:            mjd, y:         absMag, colour: mjd, cmap: twilight_shifted}
-    -   {x:         absMag, y:      elevation, colour: mjd, cmap: twilight_shifted}
-    -   {x:     entryAngle, y:      elevation, colour: mjd, cmap: twilight_shifted}
-    -   {x:           time, y:        logMass, colour: mjd, cmap: twilight_shifted}
-    -   {x:           time, y:      elevation, colour: mjd, cmap: twilight_shifted}
-    -   {x:           time, y:         absMag, colour: mjd, cmap: twilight_shifted}
-    -   {x:          speed, y:           time, colour: mjd, cmap: twilight_shifted}
-    -   {x:     logDensity, y:      elevation, colour: mjd, cmap: twilight_shifted}
-    -   {x:     entryAngle, y:      elevation, colour: mjd, cmap: twilight_shifted}
+    -   {x:          *time, y:     *elevation, colour: *speed, cmap: twilight_shifted}
+    -   {x:          *time, y:          *mass, colour: *speed, cmap: twilight_shifted}
+    -   {x:          *time, y:       *logMass, colour: *speed, cmap: twilight_shifted}
+    -   {x:          *time, y:        *absMag, colour: *speed, cmap: twilight_shifted}
+    -   {x:          *time, y:    *entryAngle, colour: *speed, cmap: twilight_shifted}
+    -   {x:          *time, y:         *speed, colour: *speed, cmap: twilight_shifted}
+    -   {x:        *absMag, y:     *elevation, colour: *speed, cmap: twilight_shifted}
+    -   {x:    *entryAngle, y:     *elevation, colour: *speed, cmap: twilight_shifted}
+    -   {x:    *logDensity, y:     *elevation, colour: *speed, cmap: twilight_shifted}
+    -   {x:       *logMass, y:        *absMag, colour: *speed, cmap: twilight_shifted}

@@ -17,12 +17,13 @@ class AsmodeusAnalyze(Asmodeus):
 
     def createArgparser(self):
         super().createArgparser()
-        self.argparser.add_argument('-b', '--bias',                 type = argparse.FileType('r'))
+        self.argparser.add_argument('-b', '--bias', type = argparse.FileType('r'), help = "bias configuration file")
 
     def loadConfig(self):
         super().loadConfig()
         if self.args.bias:
             self.bias = configuration.loadYAML(self.args.bias)
+            configuration.makeStatic(self.bias)
 
     def overrideConfig(self):
         super().overrideConfig()

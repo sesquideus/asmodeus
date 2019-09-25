@@ -42,14 +42,16 @@ class GeneratorGrid(Generator):
             return pandas.date_range(min, max, count).to_pydatetime()
         else:
             return space(min, max, count, dtype = float)
-    
     def getSpace(self, definition):
-        if isinstance(definition, dotmap.DotMap):
-            return self.getSpaceRange(**definition.toDict())
-        elif isinstance(definition, numbers.Number) or isinstance(definition, datetime.datetime):
-            return [definition]
-        else:
-            raise exceptions.ConfigurationError(f"Parameter space definition must be either a number or a dictionary with min, max and count defined")
+        try:
+            if isinstance(definition, dotmap.DotMap):
+                return self.getSpaceRange(**definition.toDict())
+            elif isinstance(definition, numbers.Number) or isinstance(definition, datetime.datetime):
+                return [definition]
+            else:
+                raise exceptions.ConfigurationError(f"Parameter space definition must be either a number or a dictionary with min, max and count defined")
+        except TypeError as e:
+            raise exceptions.ConfigurationError(e)
 
     def generate(self):
         self.meteors = []

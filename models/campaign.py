@@ -94,7 +94,7 @@ class Campaign():
             for dataframe in self.dataframes:
                 dataframe.applyBias(self.biasFunction)
         else:
-            log.warning(f"No bias effects active, all meteors meteors will be visible")
+            log.warning(f"No bias effects active, all meteors will be visible")
             for dataframe in self.dataframes:
                 dataframe.skipBias()
 

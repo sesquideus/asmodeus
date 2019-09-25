@@ -21,7 +21,7 @@ class AsmodeusObserve(asmodeus.AsmodeusMultiprocessing):
 
     def createArgparser(self):
         super().createArgparser()
-        self.argparser.add_argument('-s', '--streaks',          action = 'store_true')
+        self.argparser.add_argument('-s', '--streaks', action = 'store_true', help = "Save observations as streaks (all frames will be recorded)")
 
     def overrideConfig(self):
         super().overrideConfig()
