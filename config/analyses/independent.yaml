@@ -2,11 +2,13 @@ quantities:                 &quantities
     altitude:               &altitude
         id:                 altitude
         bin:                1
+        unit:               '°'
         name:               'altitude'
     azimuth:                &azimuth
         id:                 azimuth
         bin:                5
         name:               'azimuth'
+        unit:               '°'
     appMag:                 &appMag
         id:                 appMag
         bin:                0.25
@@ -19,48 +21,58 @@ quantities:                 &quantities
         id:                 angSpeed
         bin:                1
         name:               'angular speed'
+        unit:               '°/s'
     logMassInitial:         &logMassInitial
         id:                 logMassInitial
         bin:                0.1
         name:               'log initial mass'
+        unit:               'kg'
     mass:                   &mass
         id:                 mass
         bin:                0.1
         min:                0
-        max:                0.0012
         name:               'mass'
+        unit:               'kg'
     logMass:                &logMass
         id:                 logMass
         bin:                0.1
         name:               'log mass'
+        unit:               'kg'
     mjd:                    &mjd
         id:                 mjd
         bin:                0.0069444444
         name:               'MJD'
+        unit:               'd'
     elevation:              &elevation
         id:                 elevation
         bin:                1000
         name:               'elevation'
+        unit:               'm'
     entryAngle:             &entryAngle
         id:                 entryAngle
         bin:                2
         name:               'entry angle'
+        unit:               '°'
     time:                   &time
         id:                 time
         bin:                0.1
         name:               'flight time'
+        unit:               's'
     speed:                  &speed
         id:                 speed
         bin:                1000
         name:               'speed'
+        unit:               'm/s'
     density:                &density
         id:                 density
         bin:                500
         name:               'density'
+        unit:               'kg/m³'
     logDensity:             &logDensity
         id:                 logDensity
         bin:                0.1
         name:               'log density'
+        unit:               'kg/m³'
 #        timestamp:
 #            min:                2016-08-11T19:00:00
 #            max:                2016-08-12T02:00:00
@@ -69,13 +81,13 @@ quantities:                 &quantities
 #            xaxis:              time
 
 scatters:
-    -   {x:          *time, y:     *elevation, colour: *speed, cmap: twilight_shifted}
-    -   {x:          *time, y:          *mass, colour: *speed, cmap: twilight_shifted}
-    -   {x:          *time, y:       *logMass, colour: *speed, cmap: twilight_shifted}
-    -   {x:          *time, y:        *absMag, colour: *speed, cmap: twilight_shifted}
-    -   {x:          *time, y:    *entryAngle, colour: *speed, cmap: twilight_shifted}
-    -   {x:          *time, y:         *speed, colour: *speed, cmap: twilight_shifted}
-    -   {x:        *absMag, y:     *elevation, colour: *speed, cmap: twilight_shifted}
-    -   {x:    *entryAngle, y:     *elevation, colour: *speed, cmap: twilight_shifted}
-    -   {x:    *logDensity, y:     *elevation, colour: *speed, cmap: twilight_shifted}
-    -   {x:       *logMass, y:        *absMag, colour: *speed, cmap: twilight_shifted}
+    -   {x:          *time, y:     *elevation, colour: *entryAngle, cmap: twilight_shifted}
+    -   {x:          *time, y:          *mass, colour: *entryAngle, cmap: twilight_shifted}
+    -   {x:          *time, y:       *logMass, colour: *entryAngle, cmap: twilight_shifted}
+    -   {x:          *time, y:        *absMag, colour: *entryAngle, cmap: twilight_shifted}
+    -   {x:          *time, y:    *entryAngle, colour: *entryAngle, cmap: twilight_shifted}
+    -   {x:          *time, y:         *speed, colour: *entryAngle, cmap: twilight_shifted}
+    -   {x:        *absMag, y:     *elevation, colour: *entryAngle, cmap: twilight_shifted}
+    -   {x:    *entryAngle, y:     *elevation, colour: *entryAngle, cmap: twilight_shifted}
+    -   {x:    *logDensity, y:     *elevation, colour: *entryAngle, cmap: twilight_shifted}
+    -   {x:       *logMass, y:        *absMag, colour: *entryAngle, cmap: twilight_shifted}

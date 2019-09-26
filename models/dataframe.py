@@ -98,8 +98,18 @@ class Dataframe():
             except KeyError as e:
                 log.debug("No y range set")
 
-            axes.set_xlabel(scatter.x.name, fontdict = {'fontsize': 12})
-            axes.set_ylabel(scatter.y.name, fontdict = {'fontsize': 12})
+            try:
+                xlabel = f"{scatter.x.name} [{scatter.x.unit}]"
+            except KeyError:
+                xlabel = scatter.x.name
+
+            try:
+                ylabel = f"{scatter.y.name} [{scatter.y.unit}]"
+            except KeyError:
+                ylabel = scatter.y.name
+
+            axes.set_xlabel(xlabel, fontdict = {'fontsize': 12})
+            axes.set_ylabel(ylabel, fontdict = {'fontsize': 12})
             axes.set_title(f"{self.observer.name} – {scatter.x.name} × {scatter.y.name}", fontdict = {'fontsize': 14})
 
             sc = axes.scatter(
