@@ -3,7 +3,7 @@ import pandas
 import numpy as np
 
 from astropy.time               import Time
-from matplotlib                 import pyplot
+from matplotlib                 import pyplot, colors
 from matplotlib.ticker          import ScalarFormatter
 
 from models.sighting            import Sighting
@@ -108,6 +108,27 @@ class Dataframe():
             except KeyError:
                 ylabel = scatter.y.name
 
+            try:
+                if scatter.x.scale == 'log':
+                    axes.set_xscale('log')
+            except KeyError:
+                pass
+
+            try:
+                if scatter.y.scale == 'log':
+                    axes.set_yscale('log')
+            except KeyError:
+                pass
+
+            try:
+                if scatter.colour.scale == 'log':
+                    norm = colors.LogNorm(vmin = self.visible[scatter.colour.id].min(), vmax = self.visible[scatter.colour.id].max())
+                else:
+                    norm = None
+            except KeyError:
+                norm = None
+            
+
             axes.set_xlabel(xlabel, fontdict = {'fontsize': 12})
             axes.set_ylabel(ylabel, fontdict = {'fontsize': 12})
             axes.set_title(f"{self.observer.name} – {scatter.x.name} × {scatter.y.name}", fontdict = {'fontsize': 14})
@@ -120,8 +141,15 @@ class Dataframe():
                 cmap        = scatter.get('cmap', 'viridis_r'),
                 alpha       = 1,
                 linewidths  = 0,
+                norm        = norm,
             )
-            axes.legend([sc], [scatter.colour.name])
+
+            cb = figure.colorbar(sc, extend = 'max', fraction = 0.07, pad = 0.02)
+            try:
+                cb.set_label(f"{scatter.colour.name} [{scatter.colour.unit}]")
+            except:
+                cb.set_label(scatter.colour.name)
+
             figure.savefig(self.dataset.path('analyses', 'scatters', self.observer.id, f"{scatter.x.id}-{scatter.y.id}-{scatter.colour.id}.png"), dpi = 300)
             pyplot.close(figure)
         except KeyError as e:

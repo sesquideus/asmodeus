@@ -45,7 +45,7 @@ class Observer():
         log.info(f"Loading sightings from {c.path(self.dataset.path('sightings'))}")
 
         dicts = {}
-        for sf in os.listdir(self.dataset.path('sightings', self.id)):
+        for sf in sorted(os.listdir(self.dataset.path('sightings', self.id))):
             sighting = Sighting.load(self.dataset.path('sightings', self.id, sf))
             dicts[sighting.id] = sighting.asDict()
 

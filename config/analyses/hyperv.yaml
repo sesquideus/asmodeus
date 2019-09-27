@@ -31,6 +31,7 @@ quantities:                 &quantities
         id:                 mass
         bin:                0.1
         min:                0
+        max:                0.0011
         name:               'mass'
         unit:               'kg'
     logMass:                &logMass
@@ -81,13 +82,13 @@ quantities:                 &quantities
 #            xaxis:              time
 
 scatters:
-    -   {x:          *time, y:     *elevation, colour: *entryAngle, cmap: autumn}
-    -   {x:          *time, y:          *mass, colour: *entryAngle, cmap: autumn}
-    -   {x:          *time, y:       *logMass, colour: *entryAngle, cmap: autumn}
-    -   {x:          *time, y:        *absMag, colour: *entryAngle, cmap: autumn}
-    -   {x:          *time, y:    *entryAngle, colour: *entryAngle, cmap: autumn}
-    -   {x:          *time, y:         *speed, colour: *entryAngle, cmap: autumn}
-    -   {x:        *absMag, y:     *elevation, colour: *entryAngle, cmap: autumn}
-    -   {x:    *entryAngle, y:     *elevation, colour: *entryAngle, cmap: autumn}
-    -   {x:    *logDensity, y:     *elevation, colour: *entryAngle, cmap: autumn}
-    -   {x:       *logMass, y:        *absMag, colour: *entryAngle, cmap: autumn}
+    -   {x:          *time, y:     *elevation, colour: *speed, cmap: autumn}
+    -   {x:          *time, y:          *mass, colour: *speed, cmap: autumn}
+    -   {x:          *time, y:       *logMass, colour: *speed, cmap: autumn}
+    -   {x:          *time, y:        *absMag, colour: *speed, cmap: autumn}
+    -   {x:          *time, y:    *entryAngle, colour: *speed, cmap: autumn}
+    -   {x:          *time, y:         *speed, colour: *speed, cmap: autumn}
+    -   {x:        *absMag, y:     *elevation, colour: *speed, cmap: autumn}
+    -   {x:    *entryAngle, y:     *elevation, colour: *speed, cmap: autumn}
+    -   {x:    *logDensity, y:     *elevation, colour: *speed, cmap: autumn}
+    -   {x:       *logMass, y:        *absMag, colour: *speed, cmap: autumn}

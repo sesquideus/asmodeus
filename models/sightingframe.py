@@ -81,6 +81,7 @@ class SightingFrame():
             self.frame.massInitial,
             self.frame.mass,
             self.frame.density,
+            self.frame.ablationHeat,
             self.frame.luminousPower,
             self.fluxDensity,
             self.apparentMagnitude,

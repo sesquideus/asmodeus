@@ -23,6 +23,7 @@ class Sighting():
         'massInitial',
         'mass',
         'density',
+        'ablationHeat',
         'lumPower',
         'fluxDensity',
         'appMag',
@@ -70,7 +71,7 @@ class Sighting():
         }
 
     def reduceToPoint(self):
-        singleFrame = copy.copy(self.brightest)
+        singleFrame = copy.copy(self.absBrightest)
 
         self.frames     = [singleFrame]
         self.first      = singleFrame

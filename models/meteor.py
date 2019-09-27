@@ -191,13 +191,13 @@ class Meteor:
                 log.debug("Burnt to death")
                 break
 
-            # If the particle flew above 200 km, it will likely leave Earth altogether
-            if self.position.elevation() > 200000:
+            # If the particle flew above 300 km, it will likely leave Earth altogether
+            if self.position.elevation() > 300000:
                 log.debug("Flew away")
                 break
 
             # If the velocity is very low, it is a meteorite
-            if self.velocity.norm() < 200:
+            if self.velocity.norm() < 6500:
                 log.debug("Survived with final mass {:12.6f} kg".format(self.mass))
                 break
 

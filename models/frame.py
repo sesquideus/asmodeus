@@ -14,6 +14,7 @@ class Frame:
         self.mass               = meteor.mass
         self.massInitial        = meteor.massInitial
         self.density            = meteor.density
+        self.ablationHeat       = meteor.ablationHeat
         self.entryAngle         = meteor.entryAngle
 
     def __str__(self):
