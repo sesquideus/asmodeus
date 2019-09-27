@@ -44,7 +44,7 @@ quantities:                 &quantities
     logMass:                &logMass
         id:                 mass
         bin:                0.1
-        name:               'log mass'
+        name:               'mass'
         unit:               'kg'
         scale:              log
     mjd:                    &mjd
@@ -99,6 +99,8 @@ scatters:
     -   {x:          *time, y:         *speed, colour: *ablationHeat, cmap: copper_r}
     -   {x:        *absMag, y:     *elevation, colour: *ablationHeat, cmap: copper_r}
     -   {x:    *entryAngle, y:     *elevation, colour: *ablationHeat, cmap: copper_r}
-    -   {x:       *density, y:     *elevation, colour: *ablationHeat, cmap: copper_r}
-    -   {x:    *logDensity, y:     *elevation, colour: *ablationHeat, cmap: copper_r}
     -   {x:       *logMass, y:        *absMag, colour: *ablationHeat, cmap: copper_r}
+    -   {x:       *logMass, y:        *absMag, colour: *ablationHeat, cmap: copper_r}
+    -   {x:  *ablationHeat, y:        *absMag, colour: *ablationHeat, cmap: copper_r}
+    -   {x:  *ablationHeat, y:          *mass, colour: *ablationHeat, cmap: copper_r}
+    -   {x:  *ablationHeat, y:         *speed, colour: *ablationHeat, cmap: copper_r}

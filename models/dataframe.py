@@ -77,13 +77,8 @@ class Dataframe():
                 colour:     <property to use for colouring the dots>
                 size:       <property to determine dot size>
         """
-        log.info(f"Creating a scatter plot for {c.param(scatter.x.id):>24} × {c.param(scatter.y.id):>24} (colour {c.param(scatter.colour.id):>24})")
 
         try:
-            log.debug(f"x axis: {scatter.x}")
-            log.debug(f"y axis: {scatter.y}")
-            log.debug(f"colour: {scatter.colour}")
-
             figure, axes = self.emptyFigure()
 
             axes.tick_params(axis = 'both', which = 'major', labelsize = 12)
@@ -108,29 +103,45 @@ class Dataframe():
             except KeyError:
                 ylabel = scatter.y.name
 
+            xscale = 'linear'
             try:
                 if scatter.x.scale == 'log':
-                    axes.set_xscale('log')
+                    xscale = 'log'
             except KeyError:
                 pass
 
+            yscale = 'linear'
             try:
                 if scatter.y.scale == 'log':
-                    axes.set_yscale('log')
+                    yscale = 'log'
             except KeyError:
                 pass
 
+            cscale = 'linear'
+            norm = None
             try:
                 if scatter.colour.scale == 'log':
                     norm = colors.LogNorm(vmin = self.visible[scatter.colour.id].min(), vmax = self.visible[scatter.colour.id].max())
-                else:
-                    norm = None
+                    cscale = 'log'
             except KeyError:
                 norm = None
             
+            log.debug(f"x axis: {scatter.x}")
+            log.debug(f"y axis: {scatter.y}")
+            log.debug(f"colour: {scatter.colour}")
+
+            namex = f"{'log' if xscale == 'log' else ''}{scatter.x.id}"
+            namey = f"{'log' if yscale == 'log' else ''}{scatter.y.id}"
+            namec = f"{'log' if cscale == 'log' else ''}{scatter.colour.id}"
+            filename = f"{namex}-{namey}-{namec}.png"
+
+            log.info(f"Creating a scatter plot for {c.param(scatter.x.id):>24} × {c.param(scatter.y.id):>24} (colour {c.param(scatter.colour.id):>24}), saving as {c.path(filename)}")
+
 
             axes.set_xlabel(xlabel, fontdict = {'fontsize': 12})
             axes.set_ylabel(ylabel, fontdict = {'fontsize': 12})
+            axes.set_xscale(xscale)
+            axes.set_yscale(yscale)
             axes.set_title(f"{self.observer.name} – {scatter.x.name} × {scatter.y.name}", fontdict = {'fontsize': 14})
 
             sc = axes.scatter(
@@ -144,13 +155,14 @@ class Dataframe():
                 norm        = norm,
             )
 
-            cb = figure.colorbar(sc, extend = 'max', fraction = 0.07, pad = 0.02)
+            cb = figure.colorbar(sc, extend = 'max', fraction = 0.1, pad = 0.02)
             try:
                 cb.set_label(f"{scatter.colour.name} [{scatter.colour.unit}]")
             except:
                 cb.set_label(scatter.colour.name)
 
-            figure.savefig(self.dataset.path('analyses', 'scatters', self.observer.id, f"{scatter.x.id}-{scatter.y.id}-{scatter.colour.id}.png"), dpi = 300)
+
+            figure.savefig(self.dataset.path('analyses', 'scatters', self.observer.id, filename), dpi = 300)
             pyplot.close(figure)
         except KeyError as e:
             log.error(f"Invalid scatter configuration parameter {c.param(e)}")
