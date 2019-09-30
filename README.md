@@ -3,6 +3,7 @@ ASMODEUS is a universal all-sky meteor simulator.
 
 Its original purpose was to determine and correct observation bias introduced by imperfections
 of all-sky camera systems and to use the corrected data to estimate the total meteoroid flux.
+Later versions also support evaluation of variable meteoroid properties.
 
 # Installation
 ASMODEUS requires GNU/Linux operating system and a Python interpreter `>3.7`.
@@ -26,7 +27,7 @@ timestamp and configuration options used to generate the population.
 Once atmospheric entry of each meteoroid is simulated, you need to compute the geometry and luminosity
 data for ground-based observers. This is done by
 
-    > ./asmodeus-observer.py <dataset> <observers-config-file>
+    > ./asmodeus-observe.py <dataset> <observers-config-file>
     
 using the same `<dataset>` as before. Sightings are stored in `datasets/<dataset>/sightings`
 along with the used configuration parameters.
@@ -34,11 +35,11 @@ along with the used configuration parameters.
 ## Analyses
 For basic analysis of a dataset use
 
-    > ./asmodeus-histogram.py <dataset> <analysis-config-file>
+    > ./asmodeus-histogram.py <dataset> <analysis-config-file> [--b bias-config-file]
     
 to plot histograms of selected pre-defined properties, or
 
-    > ./asmodeus-scatter.py <dataset> <analysis-config-file>
+    > ./asmodeus-scatter.py <dataset> <analysis-config-file> [--b bias-config-file]
 
 to plot 2D scatter plots for tuples of properties. You may define properties to be displayed on
 the `x` axis, `y` axis, colour and dot size.
@@ -49,7 +50,7 @@ the sensitivity of cameras to magnitude, altitude or angular speed of meteors.
 ## Plotting a sky map
 Asmodeus includes a simple visualisation tool that plots the meteors as they would be observed in the sky.
 
-    > ./asmodeus-sky.py <dataset> <sky-config-file>
+    > ./asmodeus-sky.py <dataset> <sky-config-file> [--b bias-config-file]
 
 If the observations were calculated with `streaks` option on, the sky map will contain entire meteors,
 otherwise only the brightest frame of each meteor is shown. The sky maps are saved to
