@@ -41,11 +41,7 @@ class Dataframe():
         return dataframe
 
     def expand(self):
-        self.data['appMag'] = self.data.appMag.astype(float)
         self.data['mjd'] = Time(self.data.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
-        self.data['logMass'] = np.log10(self.data.mass.to_numpy(dtype = 'float'))
-        self.data['logMassInitial'] = np.log10(self.data.massInitial.to_numpy(dtype = 'float'))
-        self.data['logDensity'] = np.log10(self.data.density.to_numpy(dtype = 'float'))
 
     def save(self):
         filename = self.dataset.path('sightings', self.observer.id, 'sky.tsv')
@@ -148,6 +144,7 @@ class Dataframe():
                 self.visible[scatter.x.id],
                 self.visible[scatter.y.id],
                 c           = self.visible[scatter.colour.id],
+                #s           = 30000 / np.log10(self.visible.massInitial)**4,
                 s           = 3 * np.exp(-self.visible.appMag / 3) * (1 + self.visible.isAbsBrightest * 5),
                 cmap        = scatter.get('cmap', 'viridis_r'),
                 alpha       = 1,

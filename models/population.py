@@ -11,10 +11,11 @@ log = logging.getLogger('root')
 
 
 class Population():
-    def __init__(self, parameters):
+    def __init__(self, parameters, streaks = True):
         log.debug(f"Initializing the population")
         self.generator = Generator.fromConfig(parameters)
         self.parameters = parameters
+        self.streaks = streaks
 
         try:
             log.info("Configuring meteoroid property distributions")
@@ -58,12 +59,12 @@ class Population():
 
     def simulate(self, fps, spf, *, processes = 1, period = 1):
         log.info(f"Simulating atmospheric entry: using {c.num(processes)} processes at {c.num(fps)} frames per second, "
-                 f"with {c.num(spf)} steps per frame")
+                 f"""with {c.num(spf)} steps per frame, saving as {c.over(f"{'streaks' if self.streaks else 'points'}")}""")
         self.meteors = parallel(
             simulate,
             self.meteors,
             initializer     = initSimulate,
-            initargs        = (fps, spf),
+            initargs        = (fps, spf, self.streaks),
             processes       = min(self.count, processes),
             period          = period,
             action          = "Simulating meteors",
@@ -85,6 +86,7 @@ class Population():
         yaml.dump({
             'timestamp':        datetime.datetime.now().isoformat(),
             'generator':        self.generator.asDict(),
+            'streaks':          self.streaks,
         }, open(dataset.path('meteors.yaml'), 'w'), default_flow_style = False)
 
 
@@ -104,12 +106,16 @@ def save(meteor):
     return meteor.save(dataset.path('meteors'))
 
 
-def initSimulate(_queue, _fps, _spf):
-    global queue, fps, spf
-    queue, fps, spf = _queue, _fps, _spf
+def initSimulate(_queue, _fps, _spf, _streaks):
+    global queue, fps, spf, streaks
+    queue, fps, spf, streaks = _queue, _fps, _spf, _streaks
 
 
 def simulate(meteor):
     meteor.flyRK4(fps, spf)
     queue.put(1)
+
+    if not streaks:
+        meteor.reduceToPoint()
+
     return meteor

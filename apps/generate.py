@@ -20,20 +20,26 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
     def createArgparser(self):
         super().createArgparser()
         self.argparser.add_argument('-c', '--count', type = int, help = "override the total number of meteoroids to generate (only with random generator)")
+        self.argparser.add_argument('-s', '--streaks', action = 'store_true', help = "Save observations as streaks (all frames will be recorded)")
 
     def overrideConfig(self):
         super().overrideConfig()
 
-        self.config.parameters.generator.count = 1
+        self.config.generator.parameters.count = 1
         if self.args.count:
             self.overrideWarning('count', self.config.generator.parameters.count, self.args.count)
             self.config.generator.parameters.count = self.args.count
+
+        self.config.streaks = False
+        if self.args.streaks:
+            self.overrideWarning('streaks', self.config.streaks, self.args.streaks)
+            self.config.streaks = True
 
     def prepareDataset(self):
         self.dataset.resetMeteors()
 
     def configure(self):
-        self.population = Population(self.config.generator)
+        self.population = Population(self.config.generator, streaks = self.config.streaks)
 
     def runSpecific(self):
         self.population.generate()

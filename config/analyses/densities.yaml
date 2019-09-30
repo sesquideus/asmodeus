@@ -91,14 +91,15 @@ quantities:                 &quantities
 #            xaxis:              time
 
 scatters:
-    -   {x:            *mjd, y:      *elevation, colour: *mjd, cmap: twilight_shifted}
-    -   {x:            *mjd, y:     *entryAngle, colour: *mjd, cmap: twilight_shifted}
-    -   {x:            *mjd, y:         *absMag, colour: *mjd, cmap: twilight_shifted}
-    -   {x:         *absMag, y:      *elevation, colour: *mjd, cmap: twilight_shifted}
-    -   {x:     *entryAngle, y:      *elevation, colour: *mjd, cmap: twilight_shifted}
-    -   {x:           *time, y:        *logMass, colour: *mjd, cmap: twilight_shifted}
-    -   {x:           *time, y:      *elevation, colour: *mjd, cmap: twilight_shifted}
-    -   {x:           *time, y:         *absMag, colour: *mjd, cmap: twilight_shifted}
-    -   {x:          *speed, y:           *time, colour: *mjd, cmap: twilight_shifted}
-    -   {x:     *logDensity, y:      *elevation, colour: *mjd, cmap: twilight_shifted}
-    -   {x:     *entryAngle, y:      *elevation, colour: *mjd, cmap: twilight_shifted}
+    -   {x:             *time, y:     *elevation, colour: *density, cmap: viridis}
+    -   {x:             *time, y:          *mass, colour: *density, cmap: viridis}
+    -   {x:             *time, y:       *logMass, colour: *density, cmap: viridis}
+    -   {x:             *time, y:        *absMag, colour: *density, cmap: viridis}
+    -   {x:             *time, y:    *entryAngle, colour: *density, cmap: viridis}
+    -   {x:             *time, y:         *speed, colour: *density, cmap: viridis}
+    -   {x:   *logMassInitial, y:         *speed, colour: *density, cmap: viridis}
+    -   {x:           *absMag, y:     *elevation, colour: *density, cmap: viridis}
+    -   {x:       *entryAngle, y:     *elevation, colour: *density, cmap: viridis}
+    -   {x:       *logDensity, y:     *elevation, colour: *density, cmap: viridis}
+    -   {x:          *logMass, y:        *absMag, colour: *density, cmap: viridis}
+    -   {x:   *logMassInitial, y:        *absMag, colour: *density, cmap: viridis}

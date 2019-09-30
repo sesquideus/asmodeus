@@ -12,14 +12,14 @@ generator:
         position:
             latitude:           89
             longitude:          90
-            elevation:          300000
+            elevation:          400000
         velocity:
             ra:                 0
-            dec:                45
+            dec:                90
             speed:
                 min:            50000
                 max:            500000
-                count:          19
+                count:          20
                 spacing:        log
         time:                   2016-06-21T00:00:00
 

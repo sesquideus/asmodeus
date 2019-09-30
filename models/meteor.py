@@ -191,8 +191,8 @@ class Meteor:
                 log.debug("Burnt to death")
                 break
 
-            # If the particle flew above 300 km, it will likely leave Earth altogether
-            if self.position.elevation() > 300000:
+            # If the particle flew above 400 km, it will likely leave Earth altogether
+            if self.position.elevation() > 400000:
                 log.debug("Flew away")
                 break
 
@@ -207,6 +207,17 @@ class Meteor:
                 break
 
         log.debug(f"Meteor generated ({len(self.frames)} frames)")
+
+    def reduceToPoint(self):
+        maxLight = np.inf
+        brightest = None
+
+        for frame in self.frames:
+            if frame.absoluteMagnitude < maxLight:
+                maxLight = frame.absoluteMagnitude
+                brightest = frame
+
+        self.frames = [frame]
 
     def simulate(self):
         self.flyRK4()

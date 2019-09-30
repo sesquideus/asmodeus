@@ -12,15 +12,15 @@ generator:
         position:
             latitude:           49
             longitude:          20
-            elevation:          130000
+            elevation:          150000
         velocity:
             ra:                 43
             dec:                56
             speed:              59000
         time:                   
             min:                2016-08-11T00:00:00
-            max:                2016-08-11T23:30:00
-            count:              48
+            max:                2016-08-11T23:00:00
+            count:              24
 
 integrator:                                             
     name:                       'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.

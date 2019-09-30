@@ -5,27 +5,29 @@ generator:
             dragCoefficient:    0.5
             shapeFactor:        1.21
         material:
-            density:
-                min:            300
-                max:            10000
-                count:          50
-                spacing:        log
-            heatTransfer:       0.5
+            density:            600
+            heatTransfer:       1.0
             ablationHeat:       6000000
-        mass:                   0.001
+        mass:                   
+            min:                1.0e-12
+            max:                1.0e-6
+            count:              30
+            spacing:            log
         position:
             latitude:           90
-            longitude:          0
-            elevation:          150000
+            longitude:          90
+            elevation:          400000
         velocity:
             ra:                 0
             dec:                90
-            speed:              40000
-        time:                   2016-08-12T00:00:00
+            speed:
+                min:            70000
+                max:            500000
+                count:          31
+                spacing:        log
+        time:                   2016-06-21T00:00:00
 
 integrator:                                             
     name:                       'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
     fps:                        1000                        # Frames per second
     spf:                        1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time
-
-
