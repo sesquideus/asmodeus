@@ -1,0 +1,117 @@
+quantities:                 &quantities
+    ablationHeat:           &ablationHeat
+        id:                 ablationHeat
+        bin:                1
+        unit:               'J/kg'
+        name:               'heat of ablation'
+        scale:              log
+    altitude:               &altitude
+        id:                 altitude
+        bin:                1
+        unit:               '°'
+        name:               'altitude'
+    azimuth:                &azimuth
+        id:                 azimuth
+        bin:                5
+        name:               'azimuth'
+        unit:               '°'
+    appMag:                 &appMag
+        id:                 appMag
+        bin:                0.25
+        name:               'apparent magnitude'
+    absMag:                 &absMag
+        id:                 absMag
+        bin:                0.25
+        name:               'absolute magnitude'
+    angSpeed:               &angSpeed
+        id:                 angSpeed
+        bin:                1
+        name:               'angular speed'
+        unit:               '°/s'
+    logMassInitial:         &logMassInitial
+        id:                 massInitial
+        bin:                0.1
+        name:               'log initial mass'
+        unit:               'kg'
+        scale:              log
+    mass:                   &mass
+        id:                 mass
+        bin:                0.1
+        min:                0
+        max:                0.0011
+        name:               'mass'
+        unit:               'kg'
+    logMass:                &logMass
+        id:                 mass
+        bin:                0.1
+        name:               'mass'
+        unit:               'kg'
+        scale:              log
+    mjd:                    &mjd
+        id:                 mjd
+        bin:                0.0069444444
+        name:               'MJD'
+        unit:               'd'
+    elevation:              &elevation
+        id:                 elevation
+        bin:                1000
+        name:               'elevation'
+        unit:               'm'
+    entryAngle:             &entryAngle
+        id:                 entryAngle
+        bin:                2
+        name:               'entry angle'
+        unit:               '°'
+    time:                   &time
+        id:                 time
+        bin:                0.1
+        name:               'flight time'
+        unit:               's'
+    speed:                  &speed
+        id:                 speed
+        bin:                1000
+        name:               'speed'
+        unit:               'm/s'
+    density:                &density
+        id:                 density
+        bin:                500
+        name:               'density'
+        unit:               'kg/m³'
+    logDensity:             &logDensity
+        id:                 density
+        bin:                0.1
+        name:               'density'
+        unit:               'kg/m³'
+        scale:              'log'
+    massFraction:           &mf
+        id:                 massFraction
+        name:               'mass fraction'
+    fpkg:                   &fpkg
+        id:                 fpkg
+        name:               'flux per mass'
+        scale:              log
+        unit:               'W/kg'
+    fpkgi:                  &fpkgi
+        id:                 fpkgi
+        name:               'flux per initial mass'
+        unit:               'W/kg'
+#        timestamp:
+#            min:                2016-08-11T19:00:00
+#            max:                2016-08-12T02:00:00
+#            bin:                600
+#            name:               'time'
+#            xaxis:              time
+
+scatters:
+    -   {x:             *time, y:        *absMag, colour: *ablationHeat, cmap: inferno}
+    -   {x:             *time, y:         *speed, colour: *ablationHeat, cmap: inferno}
+    -   {x:   *logMassInitial, y:         *speed, colour: *ablationHeat, cmap: inferno}
+    -   {x:           *absMag, y:     *elevation, colour: *ablationHeat, cmap: inferno}
+    -   {x:          *logMass, y:        *absMag, colour: *ablationHeat, cmap: inferno}
+    -   {x:   *logMassInitial, y:        *absMag, colour: *ablationHeat, cmap: inferno}
+    -   {x:   *logMassInitial, y:            *mf, colour: *ablationHeat, cmap: inferno}
+    -   {x:             *time, y:          *fpkg, colour: *ablationHeat, cmap: inferno}
+    -   {x:             *time, y:         *fpkgi, colour: *ablationHeat, cmap: inferno}
+    -   {x:               *mf, y:          *fpkg, colour: *ablationHeat, cmap: inferno}
+    -   {x:               *mf, y:         *fpkgi, colour: *ablationHeat, cmap: inferno}
+    -   {x:     *ablationHeat, y:     *elevation, colour: *ablationHeat, cmap: inferno}

@@ -14,7 +14,7 @@ def loadYAML(fileObject):
     except yaml.composer.ComposerError as e:
         log.error(f"YAML composer error {e}")
         raise exceptions.ConfigurationError(e) from e
-    except yaml.composer.ScannerError as e:
+    except yaml.scanner.ScannerError as e:
         log.error(f"YAML scanner error {e}")
         raise exceptions.ConfigurationError(e) from e
 

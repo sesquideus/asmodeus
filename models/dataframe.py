@@ -42,10 +42,13 @@ class Dataframe():
 
     def expand(self):
         self.data['mjd'] = Time(self.data.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
+        self.data['massFraction'] = self.data.mass / self.data.massInitial
+        self.data['fpkgi'] = self.data.lumPower / self.data.massInitial
+        self.data['fpkg'] = self.data.lumPower / self.data.mass
 
     def save(self):
         filename = self.dataset.path('sightings', self.observer.id, 'sky.tsv')
-        log.info(f"Saving a TSV file for observer {c.name(self.observer.id)} {c.path(filename)}")
+        log.info(f"Saving a TSV file for observer {c.name(self.observer.name)} {c.path(filename)}")
         self.data.to_csv(filename, sep = '\t', float_format = '%6g')
 
     def applyBias(self, biasFunction):
@@ -145,7 +148,7 @@ class Dataframe():
                 self.visible[scatter.y.id],
                 c           = self.visible[scatter.colour.id],
                 #s           = 30000 / np.log10(self.visible.massInitial)**4,
-                s           = 3 * np.exp(-self.visible.appMag / 3) * (1 + self.visible.isAbsBrightest * 5),
+                s           = 0.5 * np.exp(-self.visible.absMag / 10) * (1 + self.visible.isAbsBrightest * 8),
                 cmap        = scatter.get('cmap', 'viridis_r'),
                 alpha       = 1,
                 linewidths  = 0,
@@ -196,6 +199,7 @@ class Dataframe():
     def emptyFigure(self):
         pyplot.rcParams['font.family'] = "Minion Pro"
         pyplot.rcParams['mathtext.fontset'] = "dejavuserif"
+        pyplot.rcParams["axes.formatter.useoffset"] = False
         figure, axes = pyplot.subplots()
         figure.tight_layout(rect = (0.07, 0.05, 1, 0.97))
         figure.set_size_inches(8, 5)

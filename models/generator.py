@@ -42,6 +42,7 @@ class GeneratorGrid(Generator):
             return pandas.date_range(min, max, count).to_pydatetime()
         else:
             return space(min, max, count, dtype = float)
+
     def getSpace(self, definition):
         try:
             if isinstance(definition, dotmap.DotMap):

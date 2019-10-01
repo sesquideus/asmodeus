@@ -143,9 +143,9 @@ class Vector3D:
     def strGeodetic(self):
         return "{lat:9.6f}° {ns}, {lon:9.6f}° {ew}, {ele:6.0f} m".format(
             lat     = self.latitude(),
-            ns      = 'N' if self.latitude() > 0 else 'S',
+            ns      = 'N' if self.latitude() >= 0 else 'S',
             lon     = self.longitude(),
-            ew      = 'E' if self.longitude() > 0 else 'W',
+            ew      = 'E' if self.longitude() >= 0 else 'W',
             ele     = self.elevation(),
         )
 

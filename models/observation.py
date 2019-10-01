@@ -24,7 +24,7 @@ class Observation():
             f"""meteors saved as {c.over(f"{'streaks' if self.config.streaks else 'points'}")}"""
         )
 
-        meteorFiles = self.dataset.list('meteors')
+        meteorFiles = sorted(self.dataset.list('meteors'))
         self.count = 0
 
         argList = [(

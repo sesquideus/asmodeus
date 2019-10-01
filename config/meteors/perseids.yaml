@@ -49,5 +49,5 @@ generator:
 
 integrator:                                             
     name:                           'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
-    fps:                            200                         # Frames per second
+    fps:                            20                          # Frames per second
     spf:                            1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time

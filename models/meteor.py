@@ -103,7 +103,7 @@ class Meteor:
         newState = State(
             state.position + diff.drdt * dt * node,
             state.velocity + diff.dvdt * dt * node,
-            max(state.mass + diff.dmdt * dt * node, 1e-9)
+            max(state.mass + diff.dmdt * dt * node, 1e-12)
         )
         airRho = atmosphere.airDensity(newState.position.norm() - constants.earthRadius)
         speed = newState.velocity.norm()

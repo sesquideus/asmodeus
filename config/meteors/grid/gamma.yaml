@@ -2,25 +2,25 @@ generator:
     method:                     grid
     parameters:
         shape:
-            dragCoefficient:    0.5
+            dragCoefficient:    0.6
             shapeFactor:        1.21
         material:
             density:            625
-            heatTransfer:       0.5
-            ablationHeat:       6000000
-        mass:
-            min:                0.000001
-            max:                1
-            count:              31
-            spacing:            log
+            heatTransfer:       1.0
+            ablationHeat:
+                min:            1000
+                max:            20000000
+                count:          40
+                spacing:        log
+        mass:                   0.001
         position:
-            latitude:           90
+            latitude:           45
             longitude:          0
-            elevation:          130000
+            elevation:          150000
         velocity:
             ra:                 0
-            dec:                45
-            speed:              40000
+            dec:                90
+            speed:              59000
         time:                   2016-08-12T00:00:00
 
 integrator:                                             
