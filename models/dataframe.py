@@ -129,10 +129,7 @@ class Dataframe():
             log.debug(f"y axis: {scatter.y}")
             log.debug(f"colour: {scatter.colour}")
 
-            namex = f"{'log' if xscale == 'log' else ''}{scatter.x.id}"
-            namey = f"{'log' if yscale == 'log' else ''}{scatter.y.id}"
-            namec = f"{'log' if cscale == 'log' else ''}{scatter.colour.id}"
-            filename = f"{namex}-{namey}-{namec}.png"
+            filename = f"{scatter.x.id}-{scatter.y.id}-{scatter.colour.id}.png"
 
             log.info(f"Creating a scatter plot for {c.param(scatter.x.id):>24} × {c.param(scatter.y.id):>24} (colour {c.param(scatter.colour.id):>24}), saving as {c.path(filename)}")
 

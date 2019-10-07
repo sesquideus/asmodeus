@@ -11,7 +11,7 @@ generator:
         mass:
             min:                0.000000001
             max:                1000
-            count:              51
+            count:              61
             spacing:            log
         position:
             latitude:           45
@@ -21,10 +21,9 @@ generator:
             ra:                 0
             dec:                90
             speed:              59000
-        time:                   2016-08-12T00:00:00
+        time:                   2019-03-20T21:58:00
 
 integrator:                                             
     name:                       'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
     fps:                        1000                        # Frames per second
     spf:                        1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time
-
