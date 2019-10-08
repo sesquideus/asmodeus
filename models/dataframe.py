@@ -116,12 +116,10 @@ class Dataframe():
             except KeyError:
                 pass
 
-            cscale = 'linear'
             norm = None
             try:
                 if scatter.colour.scale == 'log':
                     norm = colors.LogNorm(vmin = self.visible[scatter.colour.id].min(), vmax = self.visible[scatter.colour.id].max())
-                    cscale = 'log'
             except KeyError:
                 norm = None
             

@@ -115,3 +115,4 @@ scatters:
     -   {x:             *time, y:         *fpkgi, colour: *logMassInitial, cmap: viridis}
     -   {x:               *mf, y:          *fpkg, colour: *logMassInitial, cmap: viridis}
     -   {x:               *mf, y:         *fpkgi, colour: *logMassInitial, cmap: viridis}
+    -   {x:               *mf, y:     *elevation, colour: *logMassInitial, cmap: viridis}
