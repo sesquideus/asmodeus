@@ -6,7 +6,7 @@ generator:
             shapeFactor:        1.21
         material:
             density:            625
-            heatTransfer:       0.5
+            heatTransfer:       1
             ablationHeat:       6000000
         mass:                   0.001
         position:

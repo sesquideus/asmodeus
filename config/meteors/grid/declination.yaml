@@ -21,7 +21,7 @@ generator:
                 count:          30
                 spacing:        log
             speed:              59000
-        time:                   2016-06-21T00:00:00
+        time:                   2019-03-21T21:58:00
 
 integrator:                                             
     name:                       'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.

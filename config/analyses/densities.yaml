@@ -83,6 +83,18 @@ quantities:                 &quantities
         name:               'density'
         unit:               'kg/m³'
         scale:              'log'
+    massFraction:           &mf
+        id:                 massFraction
+        name:               'mass fraction'
+    fpkg:                   &fpkg
+        id:                 fpkg
+        name:               'flux per mass'
+        scale:              log
+        unit:               'W/kg'
+    fpkgi:                  &fpkgi
+        id:                 fpkgi
+        name:               'flux per initial mass'
+        unit:               'W/kg'
 #        timestamp:
 #            min:                2016-08-11T19:00:00
 #            max:                2016-08-12T02:00:00
@@ -91,15 +103,16 @@ quantities:                 &quantities
 #            xaxis:              time
 
 scatters:
-    -   {x:             *time, y:     *elevation, colour: *density, cmap: viridis}
-    -   {x:             *time, y:          *mass, colour: *density, cmap: viridis}
-    -   {x:             *time, y:       *logMass, colour: *density, cmap: viridis}
-    -   {x:             *time, y:        *absMag, colour: *density, cmap: viridis}
-    -   {x:             *time, y:    *entryAngle, colour: *density, cmap: viridis}
-    -   {x:             *time, y:         *speed, colour: *density, cmap: viridis}
-    -   {x:   *logMassInitial, y:         *speed, colour: *density, cmap: viridis}
-    -   {x:           *absMag, y:     *elevation, colour: *density, cmap: viridis}
-    -   {x:       *entryAngle, y:     *elevation, colour: *density, cmap: viridis}
-    -   {x:       *logDensity, y:     *elevation, colour: *density, cmap: viridis}
-    -   {x:          *logMass, y:        *absMag, colour: *density, cmap: viridis}
-    -   {x:   *logMassInitial, y:        *absMag, colour: *density, cmap: viridis}
+    -   {x:             *time, y:          *mass, colour: *logDensity, cmap: plasma}
+    -   {x:             *time, y:       *logMass, colour: *logDensity, cmap: plasma}
+    -   {x:             *time, y:        *absMag, colour: *logDensity, cmap: plasma}
+    -   {x:             *time, y:         *speed, colour: *logDensity, cmap: plasma}
+    -   {x:           *absMag, y:     *elevation, colour: *logDensity, cmap: plasma}
+    -   {x:       *logDensity, y:     *elevation, colour: *logDensity, cmap: plasma}
+    -   {x:          *logMass, y:        *absMag, colour: *logDensity, cmap: plasma}
+    -   {x:             *time, y:          *fpkg, colour: *logDensity, cmap: plasma}
+    -   {x:             *time, y:         *fpkgi, colour: *logDensity, cmap: plasma}
+    -   {x:               *mf, y:          *fpkg, colour: *logDensity, cmap: plasma}
+    -   {x:               *mf, y:         *fpkgi, colour: *logDensity, cmap: plasma}
+    -   {x:               *mf, y:     *elevation, colour: *logDensity, cmap: plasma}
+    -   {x:               *mf, y:        *absMag, colour: *logDensity, cmap: plasma}

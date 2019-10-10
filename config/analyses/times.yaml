@@ -91,15 +91,13 @@ quantities:                 &quantities
 #            xaxis:              time
 
 scatters:
-    -   {x:             *time, y:     *elevation, colour: *speed, cmap: viridis}
-    -   {x:             *time, y:          *mass, colour: *speed, cmap: viridis}
-    -   {x:             *time, y:       *logMass, colour: *speed, cmap: viridis}
-    -   {x:             *time, y:        *absMag, colour: *speed, cmap: viridis}
-    -   {x:             *time, y:    *entryAngle, colour: *speed, cmap: viridis}
-    -   {x:             *time, y:         *speed, colour: *speed, cmap: viridis}
-    -   {x:   *logMassInitial, y:         *speed, colour: *speed, cmap: viridis}
-    -   {x:           *absMag, y:     *elevation, colour: *speed, cmap: viridis}
-    -   {x:       *entryAngle, y:     *elevation, colour: *speed, cmap: viridis}
-    -   {x:       *logDensity, y:     *elevation, colour: *speed, cmap: viridis}
-    -   {x:          *logMass, y:        *absMag, colour: *speed, cmap: viridis}
-    -   {x:   *logMassInitial, y:        *absMag, colour: *speed, cmap: viridis}
+    -   {x:             *time, y:     *elevation, colour: *mjd, cmap: twilight_shifted}
+    -   {x:             *time, y:          *mass, colour: *mjd, cmap: twilight_shifted}
+    -   {x:             *time, y:       *logMass, colour: *mjd, cmap: twilight_shifted}
+    -   {x:             *time, y:        *absMag, colour: *mjd, cmap: twilight_shifted}
+    -   {x:             *time, y:    *entryAngle, colour: *mjd, cmap: twilight_shifted}
+    -   {x:             *time, y:         *speed, colour: *mjd, cmap: twilight_shifted}
+    -   {x:           *absMag, y:     *elevation, colour: *mjd, cmap: twilight_shifted}
+    -   {x:       *entryAngle, y:     *elevation, colour: *mjd, cmap: twilight_shifted}
+    -   {x:       *logDensity, y:     *elevation, colour: *mjd, cmap: twilight_shifted}
+    -   {x:          *logMass, y:        *absMag, colour: *mjd, cmap: twilight_shifted}

@@ -82,24 +82,14 @@ class Meteor:
         return pickle.load(io.FileIO(filename, 'rb'))
 
     def __str__(self):
-        return "<Meteor {id} at {position}, velocity {velocity} | " \
-            "{density:4.0f} kg/m³, Q {ablationHeat:8.0f} J/kg, G {dragCoefficient:5.3f}, " \
-            "m {mass:8.6e} kg, r {radius:10.3f} mm, {frames} frames>".format(
-                id              = self.id,
-                position        = self.position,
-                velocity        = self.velocity,
-                mass            = self.mass,
-                radius          = self.radius * 1000,
-                density         = self.density,
-                ablationHeat    = self.ablationHeat,
-                dragCoefficient = self.dragCoefficient,
-                frames          = len(self.frames),
-            )
+        return f"<Meteor {self.id} at {self.position}, velocity {self.velocity} | " \
+            f"{self.density:4.0f} kg/m³, Q {self.ablationHeat:8.0f} J/kg, G {self.dragCoefficient:5.3f}, " \
+            f"m {self.mass:8.6e} kg, r {self.radius * 1000:10.3f} mm, {len(self.frames)} frames>"
 
     def save(self, filename):
         pickle.dump(self, io.FileIO(os.path.join(filename, f"{self.id}x{datetime.datetime.now().strftime('%H%M%S%f')}.pickle"), 'wb'))
 
-    def evaluate(self, state, diff, dt, node):
+    def evaluateRK4(self, state, diff, dt, node):
         newState = State(
             state.position + diff.drdt * dt * node,
             state.velocity + diff.dvdt * dt * node,
@@ -140,10 +130,10 @@ class Meteor:
             # else:
             state = State(self.position, self.velocity, self.mass)
             d0 = Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0)
-            d1 = self.evaluate(state, d0, dt,   0)
-            d2 = self.evaluate(state, d1, dt, 0.5)
-            d3 = self.evaluate(state, d2, dt, 0.5)
-            d4 = self.evaluate(state, d3, dt,   1)
+            d1 = self.evaluateRK4(state, d0, dt,   0)
+            d2 = self.evaluateRK4(state, d1, dt, 0.5)
+            d3 = self.evaluateRK4(state, d2, dt, 0.5)
+            d4 = self.evaluateRK4(state, d3, dt,   1)
 
             drdt = (d1.drdt + 2 * d2.drdt + 2 * d3.drdt + d4.drdt) / 6.0
             dvdt = (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt) / 6.0
@@ -198,7 +188,7 @@ class Meteor:
 
             # If the velocity is very low, it is a meteorite
             if self.velocity.norm() < 6500:
-                log.debug("Survived with final mass {:12.6f} kg".format(self.mass))
+                log.debug(f"Survived with final mass {self.mass:12.6f} kg")
                 break
 
             # If the elevation is below zero, we have an impact

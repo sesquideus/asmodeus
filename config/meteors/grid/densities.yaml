@@ -6,26 +6,24 @@ generator:
             shapeFactor:        1.21
         material:
             density:
-                min:            300
-                max:            10000
-                count:          50
+                min:            1
+                max:            100000
+                count:          51
                 spacing:        log
-            heatTransfer:       0.5
+            heatTransfer:       1
             ablationHeat:       6000000
         mass:                   0.001
         position:
-            latitude:           90
+            latitude:           45
             longitude:          0
             elevation:          150000
         velocity:
             ra:                 0
             dec:                90
-            speed:              40000
-        time:                   2016-08-12T00:00:00
+            speed:              59000
+        time:                   2019-03-21T21:58:00
 
 integrator:                                             
     name:                       'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
-    fps:                        1000                        # Frames per second
+    fps:                        5000                        # Frames per second
     spf:                        1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time
-
-
