@@ -19,7 +19,7 @@ class Observation():
 
     def observe(self, *, processes = 1, period = 1):
         log.info(
-            f"Calculating {c.num(self.population.count)} observations "
+            f"Calculating {c.num(self.population.count)} observations for observer {c.name(self.observer.name)} "
             f"using {c.num(processes)} processes, "
             f"""meteors saved as {c.over(f"{'streaks' if self.config.streaks else 'points'}")}"""
         )

@@ -11,4 +11,4 @@ class AsmodeusSky(asmodeus.AsmodeusAnalyze):
 
     def runSpecific(self):
         super().runSpecific()
-        self.campaign.makeSkyPlots()
+        self.campaign.makeSkyPlots(dark = False)

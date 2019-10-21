@@ -102,6 +102,6 @@ class Campaign():
         for dataframe in self.dataframes:
             dataframe.makeScatters(self.analyses.scatters)
 
-    def makeSkyPlots(self):
+    def makeSkyPlots(self, *, dark = True):
         for dataframe in self.dataframes:
-            dataframe.makeSkyPlot()
+            dataframe.makeSkyPlot(dark = dark)

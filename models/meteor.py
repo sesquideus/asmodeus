@@ -31,23 +31,6 @@ class Diff:
         self.dmdt = dmdt
 
 
-@numba.njit
-def rungekutta(state, diff, dt, dragCoefficient, shapeFactor, density, heatTransfer, ablationHeat):
-    new = state + diff * dt
-    new[6] = max(new[6], 1e-9)
-
-    # print(state)
-    # print(diff, dt)
-    # print(new)
-    airRho = atmosphere.airDensity(np.linalg.norm(state[0:3]) - 6371000)
-    speed = np.linalg.norm(state[3:6])
-    drag = -(dragCoefficient * shapeFactor * airRho * speed / (state[6]**(1 / 3) * density**(2 / 3)))
-    ablation = -(heatTransfer * shapeFactor * airRho * speed**3 * (state[6] / density)**(2 / 3) / (2 * ablationHeat))
-
-    x = np.array([new[3], new[4], new[5], drag * new[3], drag * new[4], drag * new[5], ablation])
-    return x
-
-
 class Meteor:
     def __init__(self, *, mass, density, position, velocity, timestamp, dragCoefficient, **kwargs):
         self.mass               = mass
@@ -110,24 +93,6 @@ class Meteor:
         frame = 0
 
         while True:
-            # if False:
-            #    x, y, z = self.position.x, self.position.y, self.position.z
-            #    vx, vy, vz = self.velocity.x, self.velocity.y, self.velocity.z
-            #    m = self.mass
-            #    state = np.array([x, y, z, vx, vy, vz, m])
-
-            #  x = lambda d, dt: rungekutta(state, d, dt, self.dragCoefficient, self.shapeFactor, self.density, self.heatTransfer, self.ablationHeat)
-            #    d0 = np.array([0, 0, 0, 0, 0, 0, 0])
-            #    d1 = x(d0, 0.0)
-            #    d2 = x(d1, dt/2)
-            #    d3 = x(d2, dt/2)
-            #    d4 = x(d3, dt)
-            #
-            #    ns = (d1 + 2 * d2 + 2 * d3 + d4) / 6.0
-            #    drdt = coord.Vector3D(*ns[0:3])
-            #    dvdt = coord.Vector3D(*ns[3:6])
-            #    dmdt = ns[6]
-            # else:
             state = State(self.position, self.velocity, self.mass)
             d0 = Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0)
             d1 = self.evaluateRK4(state, d0, dt,   0)

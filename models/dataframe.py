@@ -162,16 +162,25 @@ class Dataframe():
         except KeyError as e:
             log.error(f"Invalid scatter configuration parameter {c.param(e)}")
 
-    def makeSkyPlot(self):
+    def makeSkyPlot(self, *, dark = True):
         log.info(f"Creating {c.name('sky plot')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
+
+        if dark:
+            background = 'black'
+            lineColour = 'white'
+        else:
+            background = 'white'
+            lineColour = 'grey'
+
+
         self.dataset.create('analyses', 'skyplots', self.observer.id, exist_ok = True)
 
         path = self.dataset.path('analyses', 'skyplots', self.observer.id, 'sky.png')
 
-        azimuths    = np.radians(self.visible.azimuth)
+        azimuths    = np.radians(90 + self.visible.azimuth)
         altitudes   = 90 - self.visible.altitude
-        colours     = -self.visible.appMag
-        sizes       = 8 * np.exp(-self.visible.appMag / 2)
+        colours     = self.visible.angSpeed
+        sizes       = 18 * np.exp(-self.visible.appMag / 2)
 
         figure, axes = pyplot.subplots(subplot_kw = {'projection': 'polar'})
 
@@ -179,15 +188,16 @@ class Dataframe():
         figure.set_size_inches(8, 8)
 
         axes.xaxis.set_ticks(np.linspace(0, 2 * np.pi, 25))
+        axes.xaxis.set_ticklabels([])
         axes.yaxis.set_ticklabels([])
         axes.yaxis.set_ticks(np.linspace(0, 90, 7))
-        axes.set_ylim(0, 90.5)
-        axes.set_facecolor('black')
-        axes.grid(linewidth = 0.2, color = 'white')
+        axes.set_ylim(0, 90)
+        axes.set_facecolor(background)
+        axes.grid(linewidth = 0.2, color = lineColour)
 
-        axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'plasma', alpha = 1, linewidths = 0)
+        axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'Purples', alpha = 1, linewidths = 0)
 
-        figure.savefig(path, facecolor = 'black', dpi = 300)
+        figure.savefig(path, facecolor = background, dpi = 300)
 
 
 

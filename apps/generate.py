@@ -25,7 +25,6 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
     def overrideConfig(self):
         super().overrideConfig()
 
-        self.config.generator.parameters.count = 1
         if self.args.count:
             self.overrideWarning('count', self.config.generator.parameters.count, self.args.count)
             self.config.generator.parameters.count = self.args.count
