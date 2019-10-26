@@ -65,5 +65,5 @@ The program outputs the optimal values of parameters. Currently this is not impl
 but older versions supported this in a limited way.
 
 # Thanks
-I would like to thank Juraj Tóth as the advisor of my master thesis, which required this program to be written,
-and to Peter Vereš, who suggested using a simulation as a means of de-biasing the observational data.
+I would like to thank Juraj Tóth as the advisor of my master thesis, which was the primary reason for this software to be written at all 
+and to Peter Vereš, who suggested using a numerical simulation.
