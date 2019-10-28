@@ -42,9 +42,9 @@ class Dataframe():
 
     def expand(self):
         self.data['mjd'] = Time(self.data.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
-        self.data['massFraction'] = self.data.mass / self.data.massInitial
-        self.data['fpkgi'] = self.data.lumPower / self.data.massInitial
-        self.data['fpkg'] = self.data.lumPower / self.data.mass
+        #self.data['massFraction'] = self.data.mass / self.data.massInitial
+        #self.data['fpkgi'] = self.data.lumPower / self.data.massInitial
+        #self.data['fpkg'] = self.data.lumPower / self.data.mass
 
     def save(self):
         filename = self.dataset.path('sightings', self.observer.id, 'sky.tsv')
@@ -53,12 +53,12 @@ class Dataframe():
 
     def applyBias(self, biasFunction):
         log.info(f"Applying bias DPFs on dataframe for observer {c.name(self.observer.name)}")
-        self.data.visible = self.data.apply(biasFunction, axis = 1)
-        self.visible = self.data[self.data.visible]
+        self.data['visible'] = self.data.apply(biasFunction, axis = 1)
+        self.visible = self.data[(self.data.visible) & (self.data.altitude > self.observer.horizon)]
         log.info(f"Bias applied, {c.num(len(self.visible.index))}/{c.num(len(self.data.index))} sightings marked as detected")
 
     def skipBias(self):
-        self.visible = self.data
+        self.visible = self.data[self.data.altitude > self.observer.horizon]
 
     def makeScatters(self, settings):
         log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
@@ -156,7 +156,6 @@ class Dataframe():
             except:
                 cb.set_label(scatter.colour.name)
 
-
             figure.savefig(self.dataset.path('analyses', 'scatters', self.observer.id, filename), dpi = 300)
             pyplot.close(figure)
         except KeyError as e:
@@ -184,7 +183,7 @@ class Dataframe():
 
         figure, axes = pyplot.subplots(subplot_kw = {'projection': 'polar'})
 
-        figure.tight_layout(rect = (0, 0, 1, 1))
+        figure.tight_layout(rect = (-0.08, -0.08, 1.08, 1.08))
         figure.set_size_inches(8, 8)
 
         axes.xaxis.set_ticks(np.linspace(0, 2 * np.pi, 25))
@@ -195,7 +194,7 @@ class Dataframe():
         axes.set_facecolor(background)
         axes.grid(linewidth = 0.2, color = lineColour)
 
-        axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'Purples', alpha = 1, linewidths = 0)
+        axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'viridis', alpha = 1, linewidths = 0)
 
         figure.savefig(path, facecolor = background, dpi = 300)
 
