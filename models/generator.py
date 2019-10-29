@@ -18,7 +18,7 @@ log = logging.getLogger('root')
 
 class Generator():
     @classmethod
-    def fromConfig(cls, config):
+    def from_config(cls, config):
         config._dynamic = False
         return {
             'grid':     GeneratorGrid,
@@ -32,7 +32,7 @@ class GeneratorGrid(Generator):
     def __init__(self, parameters):
         self.parameters = parameters
 
-    def getSpaceRange(self, *, min, max, count, spacing = 'linear', time = False):
+    def get_space_range(self, *, min, max, count, spacing = 'linear', time = False):
         space = {
             'linear':   np.linspace,
             'log':      np.geomspace,
@@ -43,10 +43,10 @@ class GeneratorGrid(Generator):
         else:
             return space(min, max, count, dtype = float)
 
-    def getSpace(self, definition):
+    def get_space(self, definition):
         try:
             if isinstance(definition, dotmap.DotMap):
-                return self.getSpaceRange(**definition.toDict())
+                return self.get_space_range(**definition.toDict())
             elif isinstance(definition, numbers.Number) or isinstance(definition, datetime.datetime):
                 return [definition]
             else:
@@ -56,41 +56,41 @@ class GeneratorGrid(Generator):
 
     def generate(self):
         self.meteors = []
-        space = utilities.dictProduct(
-            mass                = self.getSpace(self.parameters.mass),
+        space = utilities.dict_product(
+            mass                = self.get_space(self.parameters.mass),
 
-            density             = self.getSpace(self.parameters.material.density),
-            heatTransfer        = self.getSpace(self.parameters.material.heatTransfer),
-            ablationHeat        = self.getSpace(self.parameters.material.ablationHeat),
+            density             = self.get_space(self.parameters.material.density),
+            heatTransfer        = self.get_space(self.parameters.material.heat_transfer),
+            ablationHeat        = self.get_space(self.parameters.material.ablation_heat),
 
-            dragCoefficient     = self.getSpace(self.parameters.shape.dragCoefficient),
-            shapeFactor         = self.getSpace(self.parameters.shape.shapeFactor),
+            drag_coefficient    = self.get_space(self.parameters.shape.drag_coefficient),
+            shape_factor        = self.get_space(self.parameters.shape.shape_factor),
 
-            latitude            = self.getSpace(self.parameters.position.latitude),
-            longitude           = self.getSpace(self.parameters.position.longitude),
-            elevation           = self.getSpace(self.parameters.position.elevation),
+            latitude            = self.get_space(self.parameters.position.latitude),
+            longitude           = self.get_space(self.parameters.position.longitude),
+            elevation           = self.get_space(self.parameters.position.elevation),
 
-            ra                  = self.getSpace(self.parameters.velocity.ra),
-            dec                 = self.getSpace(self.parameters.velocity.dec),
-            speed               = self.getSpace(self.parameters.velocity.speed),
+            ra                  = self.get_space(self.parameters.velocity.ra),
+            dec                 = self.get_space(self.parameters.velocity.dec),
+            speed               = self.get_space(self.parameters.velocity.speed),
 
-            time                = self.getSpace(self.parameters.time),
+            time                = self.get_Space(self.parameters.time),
         )
 
         for raw in space:
-            velocityEquatorial  = VelocityDistribution.shower(ra = raw['ra'], dec = raw['dec'], speed = raw['speed'])()
-            velocity            = coord.Vector3D.fromNumpyVector(
-                                    (coord.rotMatrixZ(coord.earthRotationAngle(raw['time'])) @ velocityEquatorial.toNumpyVector())
+            velocity_equatorial = VelocityDistribution.shower(ra = raw['ra'], dec = raw['dec'], speed = raw['speed'])()
+            velocity            = coord.Vector3D.from_numpy_vector(
+                                    (coord.rot_matrix_z(coord.earth_rotation_angle(raw['time'])) @ velocity_equatorial.to_numpy_vector())
                                 )
 
             self.meteors.append(Meteor(
                 mass            = raw['mass'],
                 density         = raw['density'],
                 timestamp       = raw['time'],
-                position        = coord.Vector3D.fromGeodetic(raw['latitude'], raw['longitude'], raw['elevation']),
-                dragCoefficient = raw['dragCoefficient'],
+                position        = coord.Vector3D.from_geodetic(raw['latitude'], raw['longitude'], raw['elevation']),
+                dragCoefficient = raw['drag_coefficient'],
                 velocity        = velocity,
-                ablationHeat    = raw['ablationHeat'],
+                ablationHeat    = raw['ablation_heat'],
             ))
 
         self.count = len(self.meteors)
@@ -113,37 +113,37 @@ class GeneratorRandom(Generator):
     def __init__(self, parameters):
         self.parameters = parameters
 
-        self.massDistribution               = MassDistribution.fromConfig(self.parameters.mass).logInfo()
-        self.positionDistribution           = PositionDistribution.fromConfig(self.parameters.position).logInfo()
-        self.velocityDistribution           = VelocityDistribution.fromConfig(self.parameters.velocity).logInfo()
-        self.densityDistribution            = DensityDistribution.fromConfig(self.parameters.material.density).logInfo()
-        self.temporalDistribution           = TimeDistribution.fromConfig(self.parameters.time).logInfo()
-        self.dragCoefficientDistribution    = DragCoefficientDistribution.fromConfig(self.parameters.shape.dragCoefficient).logInfo()
+        self.mass_distribution              = MassDistribution.from_config(self.parameters.mass).log_info()
+        self.position_distribution          = PositionDistribution.from_config(self.parameters.position).log_info()
+        self.velocity_distribution          = VelocityDistribution.from_config(self.parameters.velocity).log_info()
+        self.density_distribution           = DensityDistribution.from_config(self.parameters.material.density).log_info()
+        self.temporal_distribution          = TimeDistribution.from_config(self.parameters.time).log_info()
+        self.drag_coefficient_distribution  = DragCoefficientDistribution.from_config(self.parameters.shape.drag_coefficient).log_info()
 
-    def generateOne(self):
-        mass                = self.massDistribution.sample()
-        density             = self.densityDistribution.sample()
-        timestamp           = self.temporalDistribution.sample()
-        position            = self.positionDistribution.sample()
-        dragCoefficient     = self.dragCoefficientDistribution.sample()
-        velocityEquatorial  = self.velocityDistribution.sample()
+    def generate_one(self):
+        mass                    = self.mass_distribution.sample()
+        density                 = self.density_distribution.sample()
+        timestamp               = self.temporal_distribution.sample()
+        position                = self.position_distribution.sample()
+        drag_coefficient        = self.drag_coefficient_distribution.sample()
+        velocity_equatorial     = self.velocity_distribution.sample()
 
-        velocityECEF        = coord.Vector3D.fromNumpyVector(
-                                (coord.rotMatrixZ(coord.earthRotationAngle(timestamp)) @ velocityEquatorial.toNumpyVector())
-                            )
-        entryAngleSin       = -position * velocityECEF / (position.norm() * velocityECEF.norm())
+        velocity_ECEF           = coord.Vector3D.from_numpy_vector(
+                                    (coord.rot_matrix_z(coord.earth_rotation_angle(timestamp)) @ velocity_equatorial.to_numpy_vector())
+                                )
+        entry_angle_sin         = -position * velocity_ECEF / (position.norm() * velocity_ECEF.norm())
 
         self.iterations += 1
-        if entryAngleSin > random.random():
+        if entry_angle_sin > random.random():
             self.meteors.append(Meteor(
-                mass            = mass,
-                density         = density,
-                timestamp       = timestamp,
-                velocity        = velocityECEF,
-                position        = position,
-                ablationHeat    = self.parameters.material.ablationHeat,
-                heatTransfer    = self.parameters.material.heatTransfer,
-                dragCoefficient = dragCoefficient,
+                mass                = mass,
+                density             = density,
+                timestamp           = timestamp,
+                velocity            = velocity_ECEF,
+                position            = position,
+                ablation_heat       = self.parameters.material.ablation_heat,
+                heat_transfer       = self.parameters.material.heat_transfer,
+                drag_coefficient    = drag_coefficient,
             ))
             self.count += 1
 
@@ -154,7 +154,7 @@ class GeneratorRandom(Generator):
         self.meteors = []
 
         while (self.count < self.parameters.count):
-            self.generateOne()
+            self.generate_one()
 
         log.info("Needed {iterations} candidate{s}, effective area {area}".format(
             iterations      = c.num(self.iterations),
@@ -164,21 +164,21 @@ class GeneratorRandom(Generator):
 
         return self.meteors
 
-    def asDict(self):
+    def as_dict(self):
         return {
-            'method':           self.method,
-            'count':            self.count,
-            'iterations':       self.iterations,
-            'parameters':       {
-                'mass':             self.massDistribution.asDict(),
-                'time':             self.temporalDistribution.asDict(),
-                'position':         self.positionDistribution.asDict(),
-                'velocity':         self.velocityDistribution.asDict(),
-                'material':         {
-                    'density':          self.densityDistribution.asDict(),
+            'method': self.method,
+            'count': self.count,
+            'iterations': self.iterations,
+            'parameters': {
+                'mass': self.mass_distribution.as_dict(),
+                'time': self.temporal_distribution.as_dict(),
+                'position': self.position_distribution.as_dict(),
+                'velocity': self.velocity_distribution.as_dict(),
+                'material': {
+                    'density': self.density_distribution.as_dict(),
                 },
-                'shape':        {
-                    'dragCoefficient':  self.dragCoefficientDistribution.asDict(),
+                'shape': {
+                    'drag_coefficient': self.drag_coefficient_distribution.as_dict(),
                 },
             },
         }

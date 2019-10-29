@@ -35,7 +35,7 @@ class Observation():
         self.sightings = parallel(
             observe,
             argList,
-            initializer = initObserve,
+            initializer = init_observe,
             initargs    = (self.observer, self.config.streaks),
             processes   = processes,
             action      = "Observing meteors",
@@ -45,81 +45,53 @@ class Observation():
 
     def save(self):
         directory = self.dataset.create('sightings', self.observer.id)
-        self.asDataframe().save()
+        self.as_dataframe().save()
         # log.debug(f"""Saving the observed population as {c.over(f"{'streaks' if self.config.streaks else 'points'}")} to {c.path(self.dataset.name)}""")
 
         # for sighting in self.sightings:
         # sighting.save(directory, streak = self.config.streaks)
 
-    def asDataframe(self):
-        return Dataframe.fromObservation(self)
+    def as_dataframe(self):
+        return Dataframe.from_observation(self)
 
-    def saveMetadata(self, directory):
+    def save_metadata(self, directory):
         pass
 
-    def asDict(self):
+    def as_dict(self):
         return {
             'observer':     self.observer.id,
         }
 
     """
-    def makeKDEs(self):
+    def make_KDEs(self):
         log.info(f"Creating KDEs for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', 'kdes', self.id, exist_ok = True)
 
         for stat, params in self.settings.kdes.quantities.items():
-            self.makeKDE(stat, **params)
+            self.make_KDE(stat, **params)
 
-    def computeKDE(self, stat):
+    def compute_KDE(self, stat):
         return scipy.stats.gaussian_kde(self.visible[stat])
 
-    def renderKDE(self, stat, *, min, max, bin, **kwargs):
+    def render_KDE(self, stat, *, min, max, bin, **kwargs):
         log.info(f"Creating a KDE for {c.param(stat)}")
         points = 20 * (max - min) // bin
         space = np.linspace(min, max, points)
-        pdf = self.computeKDE(stat).evaluate(space)
+        pdf = self.compute_KDE(stat).evaluate(space)
 
-        figure, axes = self.emptyFigure()
+        figure, axes = self.empty_figure()
         axes.fill_between(space, 0, pdf, alpha = 0.5)
         figure.savefig(self.dataset.path('analyses', 'kdes', self.id, f"{stat}.png"))
         pyplot.close(figure)
 
-    def plotSky(self):
-        path = self.dataset.path('plots', self.id, 'sky.png')
-        log.info(f"Plotting sky for observer {c.name(self.id)} ({c.path(path)})")
-        self.dataset.create('plots', self.id)
-
-        azimuths    = np.radians(self.visible.azimuth)
-        altitudes   = 90 - self.visible.altitude
-        colours     = -self.visible.appMag
-        sizes       = 8 * np.exp(-self.visible.appMag / 2)
-
-        figure, axes = pyplot.subplots(subplot_kw = {'projection': 'polar'})
-
-        figure.tight_layout(rect = (0, 0, 1, 1))
-        figure.set_size_inches(8, 8)
-        figure.set_dpi(300)
-        figure.set_facecolor('black')
-
-        axes.xaxis.set_ticks(np.linspace(0, 2 * np.pi, 25))
-        axes.yaxis.set_ticklabels([])
-        axes.yaxis.set_ticks(np.linspace(0, 90, 7))
-        axes.set_ylim(0, 90.5)
-        axes.set_facecolor('black')
-        axes.grid(linewidth = 0.2, color = 'white')
-
-        axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'hot', alpha = 1, linewidths = 0)
-
-        figure.savefig(path, facecolor = 'black')
-
-    def makeHistograms(self):
+    def make_histograms(self):
         log.info(f"Creating histograms for observer {c.name(self.id)}, {c.num(len(self.visible.index))} sightings to process")
         self.dataset.create('analyses', 'histograms', self.id, exist_ok = True)
 
         for stat, params in self.settings.histograms.quantities.items():
-            self.makeHistogram(stat, params)
+            self.make_histogram(stat, params)
 
-    def makeHistogram(self, stat, params):
+    def make_histogram(self, stat, params):
         log.info(f"Creating a histogram for {c.param(stat)}")
         hist, edges = self.computeHistogram(stat, params)
 
@@ -148,7 +120,7 @@ class Observation():
     """
 
 
-def initObserve(_queue, _observer, _streaks):
+def init_observe(_queue, _observer, _streaks):
     global queue, observer, streaks
     queue, observer, streaks = _queue, _observer, _streaks
 
@@ -161,6 +133,6 @@ def observe(args):
     sighting = Sighting(observer, meteor)
 
     if not streaks:
-        sighting.reduceToPoint()
+        sighting.reduce_to_point()
 
     return sighting

@@ -21,7 +21,7 @@ class PositionDistribution(base.Distribution):
 
     @classmethod
     def constant(cls, *, latitude: float, longitude: float, elevation: float) -> (lambda: coord.Vector3D):
-        return lambda: coord.Vector3D.fromGeodetic(latitude, longitude, elevation)
+        return lambda: coord.Vector3D.from_geodetic(latitude, longitude, elevation)
 
     @classmethod
     def pillow(cls, *, south: float, north: float, west: float, east: float, bottom: float, top: float) -> (lambda: coord.Vector3D):
@@ -31,11 +31,11 @@ class PositionDistribution(base.Distribution):
             latitude = math.degrees(math.asin(random.uniform(southSin, northSin)))
             longitude = random.uniform(west, east)
             elevation = random.uniform(bottom, top)
-            return coord.Vector3D.fromGeodetic(latitude, longitude, elevation)
+            return coord.Vector3D.from_geodetic(latitude, longitude, elevation)
         return fun
 
     @classmethod
     def circle(cls, *, latitude: float, longitude: float, radius: float, elevation: float) -> (lambda: coord.Vector3D):
         def fun():
-            return coord.Vector3D.fromGeodetic(0, 0, 0)  # Put real computation here
+            return coord.Vector3D.from_geodetic(0, 0, 0)  # Put real computation here
         return fun

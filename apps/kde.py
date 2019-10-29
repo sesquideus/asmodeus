@@ -6,9 +6,9 @@ log = logger.setupLog('root')
 class AsmodeusKDE(asmodeus.AsmodeusAnalyze):
     name = 'kde'
 
-    def prepareDataset(self):
-        super().prepareDataset()
-        self.protectOverwrite('analyses', 'kde')
+    def prepare_dataset(self):
+        super().prepare_dataset()
+        self.protect_overwrite('analyses', 'kde')
 
-    def runAnalysis(self, observer):
-        observer.makeKDEs()
+    def run_analysis(self, observer):
+        observer.make_KDEs()

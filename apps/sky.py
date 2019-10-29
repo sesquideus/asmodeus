@@ -6,9 +6,9 @@ log = logger.setupLog('root')
 class AsmodeusSky(asmodeus.AsmodeusAnalyze):
     name = 'sky'
 
-    def prepareDataset(self):
-        self.dataset.resetSkyPlots()
+    def prepare_dataset(self):
+        self.dataset.reset_sky_plots()
 
-    def runSpecific(self):
-        super().runSpecific()
-        self.campaign.makeSkyPlots(dark = False)
+    def run_specific(self):
+        super().run_specific()
+        self.campaign.make_sky_plots(dark=False)

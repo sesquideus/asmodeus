@@ -14,80 +14,80 @@ class SightingFrame():
         self.observer           = observer
         self.frame              = copy.copy(frame)
 
-        self.altAz              = observer.altAz(frame.position)
-        self.relativePosition   = self.frame.position - self.observer.position
+        self.alt_az             = observer.alt_az(frame.position)
+        self.relative_position  = self.frame.position - self.observer.position
 
-        dot                     = self.relativePosition * self.frame.velocity
-        projection              = dot / (self.relativePosition.norm() ** 2) * self.relativePosition
+        dot                     = self.relative_position * self.frame.velocity
+        projection              = dot / (self.relative_position.norm() ** 2) * self.relative_position
         rejection               = self.frame.velocity - projection
-        self.angularSpeed       = math.degrees(rejection.norm() / self.relativePosition.norm())
+        self.angular_speed      = math.degrees(rejection.norm() / self.relative_position.norm())
 
-        airMass                 = atmosphere.airMass(self.altAz.latitude(), self.observer.position.elevation())
-        attenuatedPower         = atmosphere.attenuate(self.frame.luminousPower, airMass)
-        self.fluxDensity        = radiometry.fluxDensity(attenuatedPower, self.altAz.norm())
+        air_mass                = atmosphere.air_mass(self.alt_az.latitude(), self.observer.position.elevation())
+        attenuated_power        = atmosphere.attenuate(self.frame.luminous_power, air_mass)
+        self.flux_density       = radiometry.flux_density(attenuated_power, self.alt_az.norm())
 
-        self.apparentMagnitude  = radiometry.apparentMagnitude(self.fluxDensity)
-        self.absoluteMagnitude  = self.frame.absoluteMagnitude
+        self.apparent_magnitude = radiometry.apparent_magnitude(self.flux_density)
+        self.absolute_magnitude = self.frame.absolute_magnitude
 
-        self.isBrightest        = 0
-        self.isAbsBrightest     = 0
+        self.is_brightest       = 0
+        self.is_abs_brightest   = 0
 
     def __str__(self):
         return "{timestamp} | {truePos}, \
-            {trueSpeed:7.0f} m/s | {altaz}, \
-            {angSpeed:6.3f}°/s | {mass:6.4e} kg, \
-            {fluxDensity:8.3e} W/m2, {magnitude:6.2f} m".format(
+            {true_speed:7.0f} m/s | {alt_az}, \
+            {angular_speed:6.3f}°/s | {mass:6.4e} kg, \
+            {flux_density:8.3e} W/m2, {magnitude:6.2f} m".format(
             timestamp           = self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S:%f"),
             mass                = self.frame.mass,
-            angSpeed            = self.angularSpeed,
-            fluxDensity         = self.fluxDensity,
-            magnitude           = self.apparentMagnitude,
-            altaz               = self.altAz.strSpherical(),
-            truePos             = self.frame.position.strGeodetic(),
-            trueSpeed           = self.frame.velocity.norm(),
+            angular_speed       = self.angular_speed,
+            flux_density        = self.flux_density,
+            magnitude           = self.apparent_magnitude,
+            alt_az              = self.alt_az.str_spherical(),
+            true_position       = self.frame.position.str_geodetic(),
+            true_speed          = self.frame.velocity.norm(),
         )
 
-    def asDict(self):
+    def as_dict(self):
         return {
             'timestamp'         : self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f"),
             'altitude'          : self.altAz.latitude(),
             'azimuth'           : self.altAz.longitude(),
             'distance'          : self.altAz.norm(),
             'elevation'         : self.frame.position.elevation(),
-            'entryAngle'        : self.frame.entryAngle,
+            'entryAngle'        : self.frame.entry_angle,
             'speed'             : self.frame.speed,
-            'angularSpeed'      : self.angularSpeed,
+            'angular_speed'     : self.angular_speed,
             'mass'              : self.frame.mass,
-            'luminousPower'     : self.frame.luminousPower,
-            'fluxDensity'       : self.fluxDensity,
-            'apparentMagnitude' : self.apparentMagnitude,
-            'absoluteMagnitude' : self.absoluteMagnitude,
+            'luminous_power'    : self.frame.luminous_power,
+            'flux_density'      : self.flux_density,
+            'apparent_magnitude': self.apparent_magnitude,
+            'absolute_magnitude': self.absolute_magnitude,
         }
 
-    def asDotMap(self):
-        return dotmap.DotMap(self.asDict())
+    def as_dotmap(self):
+        return dotmap.DotMap(self.as_dict())
 
-    def asTuple(self):
+    def as_tuple(self):
         return (
             self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f"),
             self.frame.time,
-            self.altAz.latitude(),
-            self.altAz.longitude(),
-            self.altAz.norm(),
+            self.alt_az.latitude(),
+            self.alt_az.longitude(),
+            self.alt_az.norm(),
             self.frame.position.elevation(),
-            self.frame.entryAngle,
+            self.frame.entry_angle,
             self.frame.speed,
-            self.angularSpeed,
-            self.frame.massInitial,
+            self.angular_speed,
+            self.frame.mass_initial,
             self.frame.mass,
             self.frame.density,
-            self.frame.ablationHeat,
-            self.frame.luminousPower,
-            self.fluxDensity,
-            self.apparentMagnitude,
-            self.absoluteMagnitude,
-            self.isBrightest,
-            self.isAbsBrightest,
+            self.frame.ablation_heat,
+            self.frame.luminous_power,
+            self.flux_density,
+            self.apparent_magnitude,
+            self.absolute_magnitude,
+            self.is_brightest,
+            self.is_abs_brightest,
         )
 
     def save(self):

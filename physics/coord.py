@@ -2,6 +2,7 @@ import math, numbers
 import numpy as np
 
 from astropy.time import Time
+from physics import constants
 
 
 class Vector3D:
@@ -102,10 +103,10 @@ class Vector3D:
         return math.degrees(math.atan2(self.y, self.x)) % 360
 
     def elevation(self):
-        return self.norm() - 6371000
+        return self.norm() - constants.EARTH_RADIUS
 
     @classmethod
-    def fromSpherical(cls, lat, lon, r = 1):
+    def from_spherical(cls, lat, lon, r = 1):
         return Vector3D(
             r * math.cos(math.radians(lat)) * math.cos(math.radians(lon)),
             r * math.cos(math.radians(lat)) * math.sin(math.radians(lon)),
@@ -113,34 +114,34 @@ class Vector3D:
         )
 
     @classmethod
-    def fromGeodetic(cls, lat, lon, alt = 0):
-        return Vector3D.fromSpherical(lat, lon, alt + 6371000)
+    def from_geodetic(cls, lat, lon, alt = 0):
+        return Vector3D.from_spherical(lat, lon, alt + constants.EARTH_RADIUS)
 
     @classmethod
-    def fromNumpyVector(cls, npv):
+    def from_numpy_vector(cls, npv):
         return Vector3D(npv[0, 0], npv[1, 0], npv[2, 0])
 
-    def toNumpyVector(self):
+    def to_numpy_vector(self):
         return np.array([[self.x], [self.y], [self.z]])
 
     def __str__(self):
-        return self.strCartesian()
+        return self.str_cartesian()
 
-    def strCartesian(self):
+    def str_cartesian(self):
         return "({:7.0f}, {:7.0f}, {:7.0f})".format(
             self.x,
             self.y,
             self.z,
         )
 
-    def strSpherical(self):
+    def str_spherical(self):
         return "{:5.2f}° {:6.2f}° {:7.0f} m".format(
             self.latitude(),
             self.longitude(),
             self.norm(),
         )
 
-    def strGeodetic(self):
+    def str_geodetic(self):
         return "{lat:9.6f}° {ns}, {lon:9.6f}° {ew}, {ele:6.0f} m".format(
             lat     = self.latitude(),
             ns      = 'N' if self.latitude() >= 0 else 'S',
@@ -149,27 +150,27 @@ class Vector3D:
             ele     = self.elevation(),
         )
 
-def cosSin(angle):
+def cos_sin(angle):
     return np.cos(np.radians(angle)), np.sin(np.radians(angle))
    
-def rotMatrixX(angle):
-    c, s = cosSin(angle)
+def rot_matrix_x(angle):
+    c, s = cos_sin(angle)
     return np.ndarray((3, 3), dtype = float, buffer = np.array([
         1,  0,  0,
         0,  c, -s,
         0,  s,  c,
     ]))
 
-def rotMatrixY(angle):
-    c, s = cosSin(angle)
+def rot_matrix_y(angle):
+    c, s = cos_sin(angle)
     return np.ndarray((3, 3), dtype = float, buffer = np.array([
         c,  0, -s,
         0,  1,  0,
         s,  0,  c,
     ]))
 
-def rotMatrixZ(angle):
-    c, s = cosSin(angle)
+def rot_matrix_z(angle):
+    c, s = cos_sin(angle)
     return np.ndarray((3, 3), dtype = float, buffer = np.array([
         c, -s,  0,
         s,  c,  0,
@@ -177,21 +178,21 @@ def rotMatrixZ(angle):
     ]))
 
 
-def fastSun(time):
+def fast_sun(time):
     obliquity           = 0.40908772
     mjd                 = Time(time).jd - 2451545.0
-    meanLongitude       = math.radians((280.459 + 0.98564736 * mjd) % 360.0)
-    meanAnomaly         = math.radians((357.529 + 0.98560028 * mjd) % 360.0)
+    mean_longitude      = math.radians((280.459 + 0.98564736 * mjd) % 360.0)
+    mean_anomaly        = math.radians((357.529 + 0.98560028 * mjd) % 360.0)
 
-    eclipticLongitude   = meanLongitude + 0.0334230551756 * math.sin(meanAnomaly) + 3.490658503988e-4 * math.sin(2 * meanAnomaly)
+    ecliptic_longitude  = mean_longitude + 0.0334230551756 * math.sin(mean_anomaly) + 3.490658503988e-4 * math.sin(2 * mean_anomaly)
 
-    rightAscension      = (math.degrees(math.atan2(math.cos(obliquity()) * math.sin(eclipticLongitude), math.cos(eclipticLongitude)))) % 360
-    declination         = math.degrees(math.asin(math.sin(obliquity()) * math.sin(eclipticLongitude)))
-    distance            = (1.00014 - 0.01671 * math.cos(meanAnomaly) - 0.00014 * math.cos(2 * meanAnomaly)) * 149597870700
+    ra                  = (math.degrees(math.atan2(math.cos(obliquity()) * math.sin(ecliptic_longitude), math.cos(ecliptic_longitude)))) % 360
+    dec                 = math.degrees(math.asin(math.sin(obliquity()) * math.sin(ecliptic_longitude)))
+    distance            = (1.00014 - 0.01671 * math.cos(mean_anomaly) - 0.00014 * math.cos(2 * mean_anomaly)) * 149597870700
 
-    return Vector3D.fromSpherical(declination, rightAscension, distance)
+    return Vector3D.from_spherical(dec, ra, distance)
 
 
-def earthRotationAngle(time):
+def earth_rotation_angle(time):
     mjd = Time(time).jd - 2451545.0
     return -360 * ((0.779057273264 + 1.00273781191135448 * mjd) % 1)

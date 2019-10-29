@@ -15,41 +15,41 @@ log = logging.getLogger('root')
 class AsmodeusAnalyze(Asmodeus):
     name = 'analyze'
 
-    def createArgparser(self):
-        super().createArgparser()
-        self.argparser.add_argument('-b', '--bias', type = argparse.FileType('r'), help = "bias configuration file")
+    def create_argparser(self):
+        super().create_argparser()
+        self.argparser.add_argument('-b', '--bias', type=argparse.FileType('r'), help="bias configuration file")
 
-    def loadConfig(self):
-        super().loadConfig()
+    def load_config(self):
+        super().load_config()
         if self.args.bias:
-            self.bias = configuration.loadYAML(self.args.bias)
-            configuration.makeStatic(self.bias)
+            self.bias = configuration.load_YAML(self.args.bias)
+            configuration.make_static(self.bias)
 
-    def overrideConfig(self):
-        super().overrideConfig()
+    def override_config(self):
+        super().override_config()
 
     def configure(self):
-        self.campaign = Campaign.load(self.dataset, analyses = self.config)
+        self.campaign = Campaign.load(self.dataset, analyses=self.config)
 
         if self.args.bias:
             try:
                 log.info("Setting bias function discriminators")
                 discriminators = {
-                    'appMag':       MagnitudeDiscriminator.fromConfig(self.bias.magnitude),
-                    'altitude':     AltitudeDiscriminator.fromConfig(self.bias.altitude),
-                    'angSpeed':     AngularSpeedDiscriminator.fromConfig(self.bias.angularSpeed),
+                    'appMag':       MagnitudeDiscriminator.from_config(self.bias.magnitude),
+                    'altitude':     AltitudeDiscriminator.from_config(self.bias.altitude),
+                    'angSpeed':     AngularSpeedDiscriminator.from_config(self.bias.angular_speed),
                 }
 
                 log.info(f"Loaded {c.num(len(discriminators))} discriminators:")
                 for discriminator in discriminators.values():
-                    discriminator.logInfo()
+                    discriminator.log_info()
 
-                self.campaign.setDiscriminators(discriminators)
+                self.campaign.set_discriminators(discriminators)
                 
             except AttributeError as e:
                 raise exceptions.ConfigurationError(e) from e
         else:
             log.debug("No bias file set")
 
-    def runSpecific(self):
-        self.campaign.filterVisible(self.args.bias is not None)
+    def run_specific(self):
+        self.campaign.filter_visible(self.args.bias is not None)

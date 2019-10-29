@@ -4,25 +4,25 @@ import numba
 
 from physics import constants
 
-def airMassKastenYoung(altitude, observerElevation = 0):
+def air_mass_Kasten_Young(altitude, observer_elevation = 0):
     if altitude >= 0:
-        return (airDensity(observerElevation) / airDensity(0)) / (math.sin(math.radians(altitude)) + 0.50572 * ((altitude + 6.07995) ** (-1.6364)))
+        return (air_density(observer_elevation) / air_density(0)) / (math.sin(math.radians(altitude)) + 0.50572 * ((altitude + 6.07995) ** (-1.6364)))
     else:
-        return 1e9
+        return np.inf
 
-def airMassPickering2002(altitude, observerElevation = 0):
+def air_mass_pickering_2002(altitude, observer_elevation = 0):
     if altitude >= 0:
-        return (airDensity(observerElevation) / airDensity(0)) / (math.sin(math.radians(altitude + (244 / (165 + 47 * altitude**1.1)))))
+        return (air_density(observer_elevation) / air_density(0)) / (math.sin(math.radians(altitude + (244 / (165 + 47 * altitude**1.1)))))
     else:
-        return 1e9
+        return np.inf
 
-airMass = airMassKastenYoung
+air_mass = air_mass_Kasten_Young
 
-def attenuate(flux, airMass):
-    return flux * math.exp(constants.attenuationOneAirMass * airMass)
+def attenuate(flux, air_mass):
+    return flux * math.exp(constants.ATTENUATION_ONE_AIR_MASS * air_mass)
 
 #@numba.njit
-def airDensityLogMSIS(altitude):
+def air_density_MSIS(altitude):
     if altitude >= 500000:
         return 0
 
@@ -1035,4 +1035,4 @@ def airDensityLogMSIS(altitude):
 
     return math.exp(logs[i] + (logs[i+1] - logs[i]) * f) * 1000
 
-airDensity = airDensityLogMSIS
+air_density = air_density_MSIS

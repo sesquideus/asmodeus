@@ -30,11 +30,11 @@ class Dataframe():
         return dataframe
 
     @classmethod
-    def fromObservation(cls, observation):
+    def from_observation(cls, observation):
         log.info(f"Creating a dataframe from observation (observer {c.name(observation.observer.name)})")
         dataframe = Dataframe(observation.dataset, observation.observer)
         dataframe.data = pandas.DataFrame.from_records(
-            [frame.asTuple() for sighting in observation.sightings for frame in sighting.frames],
+            [frame.as_tuple() for sighting in observation.sightings for frame in sighting.frames],
             columns     = Sighting.columns,
         )
         log.info(f"Dataframe created with {c.num(len(dataframe.data.index))} rows")
@@ -42,32 +42,32 @@ class Dataframe():
 
     def expand(self):
         self.data['mjd'] = Time(self.data.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
-        #self.data['massFraction'] = self.data.mass / self.data.massInitial
-        #self.data['fpkgi'] = self.data.lumPower / self.data.massInitial
-        #self.data['fpkg'] = self.data.lumPower / self.data.mass
+        #self.data['mass_fraction'] = self.data.mass / self.data.mass_initial
+        #self.data['fpkgi'] = self.data.luminous_power / self.data.mass_initial
+        #self.data['fpkg'] = self.data.luminous_power / self.data.mass
 
     def save(self):
         filename = self.dataset.path('sightings', self.observer.id, 'sky.tsv')
         log.info(f"Saving a TSV file for observer {c.name(self.observer.name)} {c.path(filename)}")
         self.data.to_csv(filename, sep = '\t', float_format = '%6g')
 
-    def applyBias(self, biasFunction):
+    def apply_bias(self, bias_function):
         log.info(f"Applying bias DPFs on dataframe for observer {c.name(self.observer.name)}")
-        self.data['visible'] = self.data.apply(biasFunction, axis = 1)
+        self.data['visible'] = self.data.apply(bias_function, axis = 1)
         self.visible = self.data[(self.data.visible) & (self.data.altitude > self.observer.horizon)]
         log.info(f"Bias applied, {c.num(len(self.visible.index))}/{c.num(len(self.data.index))} sightings marked as detected")
 
-    def skipBias(self):
+    def skip_bias(self):
         self.visible = self.data[self.data.altitude > self.observer.horizon]
 
-    def makeScatters(self, settings):
+    def make_scatters(self, settings):
         log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
         self.dataset.create('analyses', 'scatters', self.observer.id, exist_ok = True)
     
         for scatter in settings:
-            self.crossScatter(scatter)
+            self.cross_scatter(scatter)
 
-    def crossScatter(self, scatter):
+    def cross_scatter(self, scatter):
         """
             Render a cross-scatter plot of four variables using a scatter dotmap
             scatter: dotmap in shape
@@ -78,7 +78,7 @@ class Dataframe():
         """
 
         try:
-            figure, axes = self.emptyFigure()
+            figure, axes = self.empty_figure()
 
             axes.tick_params(axis = 'both', which = 'major', labelsize = 12)
             
@@ -142,8 +142,8 @@ class Dataframe():
                 self.visible[scatter.x.id],
                 self.visible[scatter.y.id],
                 c           = self.visible[scatter.colour.id],
-                #s           = 30000 / np.log10(self.visible.massInitial)**4,
-                s           = 0.5 * np.exp(-self.visible.absMag / 10) * (1 + self.visible.isAbsBrightest * 8),
+                #s           = 30000 / np.log10(self.visible.mass_initial)**4,
+                s           = 0.5 * np.exp(-self.visible.abs_mag / 10) * (1 + self.visible.is_abs_brightest * 8),
                 cmap        = scatter.get('cmap', 'viridis_r'),
                 alpha       = 1,
                 linewidths  = 0,
@@ -161,15 +161,15 @@ class Dataframe():
         except KeyError as e:
             log.error(f"Invalid scatter configuration parameter {c.param(e)}")
 
-    def makeSkyPlot(self, *, dark = True):
+    def make_sky_plot(self, *, dark = True):
         log.info(f"Creating {c.name('sky plot')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
 
         if dark:
             background = 'black'
-            lineColour = 'white'
+            line_colour = 'white'
         else:
             background = 'white'
-            lineColour = 'grey'
+            line_colour = 'grey'
 
 
         self.dataset.create('analyses', 'skyplots', self.observer.id, exist_ok = True)
@@ -178,8 +178,8 @@ class Dataframe():
 
         azimuths    = np.radians(90 + self.visible.azimuth)
         altitudes   = 90 - self.visible.altitude
-        colours     = self.visible.angSpeed
-        sizes       = 18 * np.exp(-self.visible.appMag / 2)
+        colours     = self.visible.angular_speed
+        sizes       = 18 * np.exp(-self.visible.apparent_magnitude / 2)
 
         figure, axes = pyplot.subplots(subplot_kw = {'projection': 'polar'})
 
@@ -192,7 +192,7 @@ class Dataframe():
         axes.yaxis.set_ticks(np.linspace(0, 90, 7))
         axes.set_ylim(0, 90)
         axes.set_facecolor(background)
-        axes.grid(linewidth = 0.2, color = lineColour)
+        axes.grid(linewidth = 0.2, color = line_colour)
 
         axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'viridis', alpha = 1, linewidths = 0)
 
@@ -200,7 +200,7 @@ class Dataframe():
 
 
 
-    def emptyFigure(self):
+    def empty_figure(self):
         pyplot.rcParams['font.family'] = "Minion Pro"
         pyplot.rcParams['mathtext.fontset'] = "dejavuserif"
         pyplot.rcParams["axes.formatter.useoffset"] = False

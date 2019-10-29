@@ -21,7 +21,7 @@ class Campaign():
 
         self.dataset = dataset
         self.config = config
-        self.loadObservers(config.observers)
+        self.load_observers(config.observers)
         log.debug(f"Campaign initialized")
 
     @classmethod
@@ -30,10 +30,10 @@ class Campaign():
         filename = dataset.path('campaign.yaml')
 
         try:
-            config = configuration.loadYAML(open(filename, 'r'))
+            config = configuration.load_YAML(open(filename, 'r'))
             campaign = Campaign(dataset, config)
             campaign.analyses = analyses
-            campaign.loadDataframes()
+            campaign.load_dataframes()
             return campaign
         except FileNotFoundError as e:
             log.critical(f"Could not load campaign metadata for dataset {c.name(dataset.name)} (file {c.path(filename)} is missing)")
@@ -42,7 +42,7 @@ class Campaign():
             log.critical(f"Could not parse campaign metadata file for dataset {c.name(dataset.name)} (file {c.path(filename)} is not valid YAML)")
             raise exceptions.PrerequisiteError from e
 
-    def loadObservers(self, parameters):
+    def load_observers(self, parameters):
         log.debug("Loading observers")
         self.observers = [Observer(oid, obs) for oid, obs in parameters.items()]
 
@@ -54,10 +54,10 @@ class Campaign():
         for o in self.observers:
             log.info(f"    {o}")
 
-    def loadPopulation(self, *, processes = 1, period = 1):
+    def load_population(self, *, processes=1, period=1):
         self.population = Population.load(self.dataset, processes = processes, period = period)
 
-    def loadDataframes(self):
+    def load_dataframes(self):
         self.dataframes = [Dataframe.load(self.dataset, observer) for observer in self.observers]        
 
         for dataframe in self.dataframes:
@@ -68,40 +68,40 @@ class Campaign():
         self.observations = [Observation(self.dataset, observer, self.population, self.config) for observer in self.observers]
 
         for observation in self.observations:
-            observation.observe(processes = processes, period = period)
+            observation.observe(processes=processes, period=period)
 
     def save(self):
         for observation in self.observations:
             observation.save()
 
-        self.saveMetadata()
+        self.save_metadata()
 
-    def saveMetadata(self):
+    def save_metadata(self):
         yaml.dump({
             'count':            self.population.count,
             'timestamp':        datetime.datetime.now().isoformat(),
-            'observers':        {observer.id: observer.asDict() for observer in self.observers},
-            'observations':     {observation.observer.id: observation.asDict() for observation in self.observations},
+            'observers':        {observer.id: observer.as_dict() for observer in self.observers},
+            'observations':     {observation.observer.id: observation.as_dict() for observation in self.observations},
         }, open(self.dataset.path('campaign.yaml'), 'w'), default_flow_style = False)
 
-    def setDiscriminators(self, discriminators):
+    def set_discriminators(self, discriminators):
         self.discriminators = discriminators
-        self.biasFunction = lambda row: all([disc.compute(row[prop]) for prop, disc in self.discriminators.items()])
+        self.bias_function = lambda row: all([disc.compute(row[prop]) for prop, disc in self.discriminators.items()])
 
-    def filterVisible(self, bias = True):
+    def filter_visible(self, bias = True):
         if bias:
             log.warning(f"Applying bias effects")            
             for dataframe in self.dataframes:
-                dataframe.applyBias(self.biasFunction)
+                dataframe.apply_bias(self.bias_function)
         else:
             log.warning(f"No bias effects active, all meteors will be visible")
             for dataframe in self.dataframes:
-                dataframe.skipBias()
+                dataframe.skip_bias()
 
-    def makeScatters(self):
+    def make_scatters(self):
         for dataframe in self.dataframes:
-            dataframe.makeScatters(self.analyses.scatters)
+            dataframe.make_scatters(self.analyses.scatters)
 
-    def makeSkyPlots(self, *, dark = True):
+    def make_sky_plots(self, *, dark = True):
         for dataframe in self.dataframes:
-            dataframe.makeSkyPlot(dark = dark)
+            dataframe.make_sky_plot(dark = dark)

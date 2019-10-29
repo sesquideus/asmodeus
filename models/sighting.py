@@ -17,19 +17,19 @@ class Sighting():
         'azimuth',
         'distance',
         'elevation',
-        'entryAngle',
+        'entry_angle',
         'speed',
-        'angSpeed',
+        'angular_speed',
         'massInitial',
         'mass',
         'density',
-        'ablationHeat',
-        'lumPower',
+        'ablation_heat',
+        'luminous_power',
         'fluxDensity',
-        'appMag',
-        'absMag',
-        'isBrightest',
-        'isAbsBrightest',
+        'apparent_magnitude',
+        'absolute_magnitude',
+        'is_brightest',
+        'is_abs_brightest',
     ]
 
     def __init__(self, observer, meteor):
@@ -39,50 +39,50 @@ class Sighting():
         self.timestamp              = self.meteor.timestamp
         self.id                     = "{}{}".format(self.observer.id, self.timestamp)
 
-        self.frames                 = [SightingFrame(self.observer, meteorFrame) for meteorFrame in self.meteor.frames]
+        self.frames                 = [SightingFrame(self.observer, frame) for frame in self.meteor.frames]
 
         self.first                  = self.frames[0]
         self.last                   = self.frames[-1]
         self.brightest              = None
-        self.absBrightest           = None
+        self.abs_brightest          = None
 
         for frame in self.frames:
-            if self.brightest is None or self.brightest.apparentMagnitude > frame.apparentMagnitude:
+            if self.brightest is None or self.brightest.apparent_magnitude > frame.apparent_magnitude:
                 self.brightest = frame
 
-            if self.absBrightest is None or self.absBrightest.absoluteMagnitude > frame.absoluteMagnitude:
-                self.absBrightest = frame
+            if self.abs_brightest is None or self.abs_brightest.absolute_magnitude > frame.absolute_magnitude:
+                self.abs_brightest = frame
 
-        self.brightest.isBrightest = 1
-        self.absBrightest.isAbsBrightest = 1
+        self.brightest.is_brightest = 1
+        self.abs_brightest.is_abs_brightest = 1
 
-        self.massInitial            = self.first.frame.mass
-        self.velocityInfinity       = self.first.frame.velocity
+        self.mass_initial           = self.first.frame.mass
+        self.velocity_initial       = self.first.frame.velocity
 
     @staticmethod
     def load(filename):
         return pickle.load(io.FileIO(filename, 'rb'))
 
-    def asDict(self):
+    def as_dict(self):
         return {
             'id':               self.id,
             'timestamp':        self.brightest.frame.timestamp,
             'simulationTime':   (self.last.frame.timestamp - self.first.frame.timestamp).total_seconds(),
         }
 
-    def reduceToPoint(self):
-        singleFrame = copy.copy(self.absBrightest)
+    def reduce_to_point(self):
+        single_frame = copy.copy(self.abs_brightest)
 
-        self.frames     = [singleFrame]
-        self.first      = singleFrame
-        self.last       = singleFrame
-        self.brightest  = singleFrame
+        self.frames     = [single_frame]
+        self.first      = single_frame
+        self.last       = single_frame
+        self.brightest  = single_frame
 
     def save(self, directory):
         pickle.dump(self, io.FileIO(os.path.join(directory, f"{self.id}.pickle"), 'wb'))
 
-    def applyBias(self, *discriminators):
-        self.sighted = self.applyBias(*discriminators)
+    def apply_bias(self, *discriminators):
+        self.sighted = self.apply_bias(*discriminators)
         return self.sighted
 
     def __str__(self):

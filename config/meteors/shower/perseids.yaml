@@ -4,19 +4,19 @@ generator:
         count:                      10000
 
         shape:
-            dragCoefficient:        
+            drag_coefficient:        
                 distribution:       constant
                 parameters:
                     value:          0.6                         # 0.6 for a spherical body
-            shapeFactor:            1.21                        # 1.21 for a spherical body
+            shape_factor:           1.21                        # 1.21 for a spherical body
 
         material:
             density:                
                 distribution:       'constant'
                 parameters:
                     value:          625 
-            heatTransfer:           1.0                         # Heat transfer coefficient, default 0.5
-            ablationHeat:           6000000                     # Specific enthalpy of vaporization, in J/kg
+            heat_transfer:          1.0                         # Heat transfer coefficient, default 0.5
+            ablation_heat:          6000000                     # Specific enthalpy of vaporization, in J/kg
 
         mass:
             distribution:           'pareto'                    # Particle mass distribution. Possible values 'pareto', 'exponential' or a number

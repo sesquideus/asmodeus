@@ -16,7 +16,7 @@ class DataManager():
         self.root = os.path.realpath(os.path.join(root, name))
         self.overwrite = overwrite
 
-    def createRoot(self):
+    def create_root(self):
         os.makedirs(self.root)
         
     def path(self, *path):
@@ -47,15 +47,15 @@ class DataManager():
         self.remove(*path)
         self.create(*path)
 
-    def protectedReset(self, *path):
+    def protected_reset(self, *path):
         if self.overwrite or not self.exists(*path):
             self.reset(*path)
         else:
             raise exceptions.OverwriteError(f"Refusing to overwrite {c.path(self.path(*path))}")
 
-    def resetMeteors(self):
-        self.protectedReset()
-        self.protectedReset('meteors')
+    def reset_meteors(self):
+        self.protected_reset()
+        self.protected_reset('meteors')
         self.remove('meteors.yaml')
         
         self.remove('sightings')
@@ -63,25 +63,25 @@ class DataManager():
 
         self.remove('analyses')
 
-    def validateSightings(self):
+    def validate_sightings(self):
         """ We will validate the sightings directory here """
         if not os.path.isdir(self.path('sightings')) or not self.exists('sightings.yaml'):
             raise exceptions.PrerequisiteError(f"Sighting files are corrupt in dataset {c.name(self.name)}")
 
         return True
 
-    def resetSightings(self):
-        self.protectedReset('sightings')
+    def reset_sightings(self):
+        self.protected_reset('sightings')
         self.remove('campaign.yaml')
 
         self.remove('analyses')
 
-    def resetScatters(self):
-        self.protectedReset('analyses', 'scatters')
+    def reset_scatters(self):
+        self.protected_reset('analyses', 'scatters')
     
-    def resetSkyPlots(self):
-        self.protectedReset('analyses', 'skyplots')
+    def reset_sky_plots(self):
+        self.protected_reset('analyses', 'skyplots')
 
-    def meteorFiles(self):
+    def meteor_files(self):
         return self.list('meteors')
         

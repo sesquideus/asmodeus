@@ -1,7 +1,9 @@
-from physics import constants
 import math
 
-def excitationCoefficient(speed: float) -> float:
+from physics import constants
+
+
+def excitation_coefficient(speed: float) -> float:
     if speed < 6200:
         return 0
     elif speed < 20000:
@@ -13,19 +15,23 @@ def excitationCoefficient(speed: float) -> float:
     else:
         return 1.615 + speed * 1.3725e-5
 
-def luminousEfficiency(speed: float) -> float:
-    return 2 * 7.668e6 * excitationCoefficient(speed) / speed**2
 
-def fluxDensity(flux, distance):
+def luminous_efficiency(speed: float) -> float:
+    return 2 * 7.668e6 * excitation_coefficient(speed) / speed**2
+
+
+def flux_density(flux, distance):
     return flux / (4 * math.pi * distance**2)
 
-def absoluteMagnitude(flux: float) -> float:
+
+def absolute_magnitude(flux: float) -> float:
     if flux < 1e-30:
         return math.inf
-    return constants.absoluteMagnitudeOneWatt - 2.5 * math.log10(flux) 
+    return constants.ABSOLUTE_MAGNITUDE_ONE_WATT - 2.5 * math.log10(flux) 
 
-def apparentMagnitude(fluxDensity: float) -> float:
-    if fluxDensity < 1e-50:
+
+def apparent_magnitude(flux_density: float) -> float:
+    if flux_density < 1e-50:
         return math.inf
-    return constants.apparentMagnitudeOneWm2 - 2.5 * math.log10(fluxDensity)
+    return constants.APPARENT_MAGNITUDE_ONE_WM2 - 2.5 * math.log10(flux_density)
 

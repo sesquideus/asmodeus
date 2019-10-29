@@ -6,9 +6,9 @@ log = logger.setupLog('root')
 class AsmodeusScatter(asmodeus.AsmodeusAnalyze):
     name = 'scatter'
 
-    def prepareDataset(self):
-        self.dataset.resetScatters()
+    def prepare_dataset(self):
+        self.dataset.reset_scatters()
 
-    def runSpecific(self):
-        super().runSpecific()
-        self.campaign.makeScatters()
+    def run_specific(self):
+        super().run_specific()
+        self.campaign.make_scatters()

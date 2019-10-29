@@ -13,7 +13,7 @@ log = logging.getLogger('root')
 class Population():
     def __init__(self, parameters, streaks = True):
         log.debug(f"Initializing the population")
-        self.generator = Generator.fromConfig(parameters)
+        self.generator = Generator.from_config(parameters)
         self.parameters = parameters
         self.streaks = streaks
 
@@ -28,7 +28,7 @@ class Population():
         filename = dataset.path('meteors.yaml')
 
         try:
-            config = configuration.loadYAML(open(filename, 'r'))
+            config = configuration.load_YAML(open(filename, 'r'))
 
             population = Population(config.generator)
             population.count = config.generator.count
@@ -36,7 +36,7 @@ class Population():
             population.meteors = parallel(
                 load,
                 dataset.list('meteors'),
-                initializer     = initLoadSave,
+                initializer     = init_load_save,
                 initargs        = (dataset,),
                 processes       = processes,
                 period          = period,
@@ -57,40 +57,43 @@ class Population():
         self.count = self.generator.count
         self.iterations = self.generator.iterations
 
-    def simulate(self, fps, spf, *, processes = 1, period = 1):
+    def simulate(self, fps, spf, *, processes=1, period=1):
         log.info(f"Simulating atmospheric entry: using {c.num(processes)} processes at {c.num(fps)} frames per second, "
                  f"""with {c.num(spf)} steps per frame, saving as {c.over(f"{'streaks' if self.streaks else 'points'}")}""")
         self.meteors = parallel(
             simulate,
             self.meteors,
-            initializer     = initSimulate,
+            initializer     = init_simulate,
             initargs        = (fps, spf, self.streaks),
             processes       = min(self.count, processes),
             period          = period,
             action          = "Simulating meteors",
         )
+        self.total_frames   = sum(map(lambda x: len(x.frames), self.meteors))
+        self.total_mass     = sum(map(lambda x: x.mass_initial, self.meteors))
+
         log.info("Generated {frames} frames, total mass {mass}".format(
-            frames          = c.num(sum(map(lambda x: len(x.frames), self.meteors))),
-            mass            = c.num("{:6f} kg".format(sum(map(lambda x: x.massInitial, self.meteors)))),
+            frames          = c.num(self.total_frames),
+            mass            = c.num("{:6f} kg".format(self.total_mass)),
         ))
 
-    def save(self, dataset, *, processes = 1, period = 1):
+    def save(self, dataset, *, processes=1, period=1):
         log.info(f"Saving the population to {c.path(dataset.name)}, this might take some time...")
 
         for meteor in self.meteors:
             meteor.save(dataset.path('meteors'))
 
-        self.saveMetadata(dataset)
+        self.save_metadata(dataset)
 
-    def saveMetadata(self, dataset):
+    def save_metadata(self, dataset):
         yaml.dump({
             'timestamp':        datetime.datetime.now().isoformat(),
-            'generator':        self.generator.asDict(),
+            'generator':        self.generator.as_dict(),
             'streaks':          self.streaks,
         }, open(dataset.path('meteors.yaml'), 'w'), default_flow_style = False)
 
 
-def initLoadSave(_queue, _dataset):
+def init_load_save(_queue, _dataset):
     global queue, dataset
     queue, dataset = _queue, _dataset
 
@@ -106,16 +109,16 @@ def save(meteor):
     return meteor.save(dataset.path('meteors'))
 
 
-def initSimulate(_queue, _fps, _spf, _streaks):
+def init_simulate(_queue, _fps, _spf, _streaks):
     global queue, fps, spf, streaks
     queue, fps, spf, streaks = _queue, _fps, _spf, _streaks
 
 
 def simulate(meteor):
-    meteor.flyRK4(fps, spf)
+    meteor.fly_RK4(fps, spf)
     queue.put(1)
 
     if not streaks:
-        meteor.reduceToPoint()
+        meteor.reduce_to_point()
 
     return meteor

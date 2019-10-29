@@ -6,9 +6,9 @@ log = logger.setupLog('root')
 class AsmodeusHistogram(asmodeus.AsmodeusAnalyze):
     name = 'histogram'
 
-    def prepareDataset(self):
-        super().prepareDataset()
-        self.protectOverwrite('analyses', 'histograms')
+    def prepare_dataset(self):
+        super().prepare_dataset()
+        self.protect_overwrite('analyses', 'histograms')
 
-    def runAnalysis(self, observer):
-        observer.makeHistograms()
+    def run_analysis(self, observer):
+        observer.make_histograms()

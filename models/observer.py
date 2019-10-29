@@ -14,25 +14,25 @@ class Observer():
     def __init__(self, id, parameters):
         self.id                 = id
         self.name               = parameters.name
-        self.position           = coord.Vector3D.fromGeodetic(parameters.latitude, parameters.longitude, parameters.altitude)
+        self.position           = coord.Vector3D.from_geodetic(parameters.latitude, parameters.longitude, parameters.altitude)
         self.horizon            = parameters.horizon
 
-        self.earthToAltAzMatrix = functools.reduce(np.dot, [
+        self.rotation_matrix = functools.reduce(np.dot, [
             np.fliplr(np.eye(3)),
-            coord.rotMatrixY(-self.position.latitude()),
-            coord.rotMatrixZ(-self.position.longitude()),
+            coord.rot_matrix_y(-self.position.latitude()),
+            coord.rot_matrix_z(-self.position.longitude()),
         ])
 
-    def altAz(self, point: coord.Vector3D) -> coord.Vector3D:
+    def alt_az(self, point: coord.Vector3D) -> coord.Vector3D:
         """
             Compute AltAz coordinates of a point in ECEF frame as observed by this observer
         """
-        return coord.Vector3D.fromNumpyVector(self.earthToAltAzMatrix @ (point - self.position).toNumpyVector())
+        return coord.Vector3D.from_numpy_vector(self.rotation_matrix @ (point - self.position).to_numpy_vector())
 
     def __str__(self):
-        return f"{c.name(self.name)} ({c.name(self.id)}) at {self.position.strGeodetic()}"
+        return f"{c.name(self.name)} ({c.name(self.id)}) at {self.position.str_geodetic()}"
 
-    def asDict(self):
+    def as_dict(self):
         return {
             'name':         self.name,
             'latitude':     self.position.latitude(),
@@ -41,16 +41,16 @@ class Observer():
             'horizon':      self.horizon,
         }
 
-    def loadSightings(self):
+    def load_sightings(self):
         log.info(f"Loading sightings from {c.path(self.dataset.path('sightings'))}")
 
         dicts = {}
         for sf in sorted(os.listdir(self.dataset.path('sightings', self.id))):
             sighting = Sighting.load(self.dataset.path('sightings', self.id, sf))
-            dicts[sighting.id] = sighting.asDict()
+            dicts[sighting.id] = sighting.as_dict()
 
         log.info(f"Loaded {c.num(len(dicts))} sightings")
-        self.createDataframe()
+        self.create_dataframe()
 
     """
     def minimize(self, settings):

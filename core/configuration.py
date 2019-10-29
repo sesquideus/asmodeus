@@ -8,7 +8,7 @@ from utilities import colour as c
 log = logging.getLogger('root')
 
 
-def loadYAML(fileObject):
+def load_YAML(fileObject):
     try:
         config = yaml.safe_load(fileObject)
     except yaml.composer.ComposerError as e:
@@ -21,11 +21,11 @@ def loadYAML(fileObject):
     return dotmap.DotMap(config)
 
 
-def makeStatic(config):
+def make_static(config):
     for k in config._map:
         if isinstance(config[k], dotmap.DotMap):
-            makeStatic(config[k])
+            make_static(config[k])
         if isinstance(config[k], list):
             for item in config[k]:
-                makeStatic(item)
+                make_static(item)
         config._dynamic = False

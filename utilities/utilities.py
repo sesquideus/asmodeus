@@ -9,7 +9,7 @@ import dotmap
 from utilities import colour as c
 
 
-class readableDir(argparse.Action):
+class readable_dir(argparse.Action):
     def __call__(self, parser, namespace, values, option_string = None):
         tryDir = values
         if not os.path.isdir(tryDir):
@@ -20,7 +20,7 @@ class readableDir(argparse.Action):
             raise argparse.ArgumentTypeError("readableDir: {0} is not a readable directory".format(tryDir))
 
 
-class writeableDir(argparse.Action):
+class writeable_dir(argparse.Action):
     def __call__(self, parser, namespace, values, option_string = None):
         tryDir = values
         os.mkdir(tryDir, exist_ok = True)
@@ -33,15 +33,15 @@ class writeableDir(argparse.Action):
             raise argparse.ArgumentTypeError("writeableDir: {0} is not a writeable directory".format(tryDir))
 
 
-def formatList(items):
+def format_list(items):
     return ", ".join(["{}".format(c.param(item)) for item in items])
 
 
-def formatParameters(parameters):
+def format_parameters(parameters):
     return ", ".join(["{} = {}".format(c.param(name), value) for name, value in parameters.items()])
 
 
-def jinjaEnvironment(directory):
+def jinja_environment(directory):
     return jinja2.Environment(
         trim_blocks = True,
         autoescape = False,
@@ -50,23 +50,23 @@ def jinjaEnvironment(directory):
     )
 
 
-def renderTemplate(template, context, outputDirectory = None):
+def render_template(template, context, output_directory = None):
     print(
         jinjaEnvironment('templates').get_template(template).render(context),
-        file = sys.stdout if outputDirectory is None else open(os.path.join(outputDirectory, template), 'w')
+        file = sys.stdout if output_directory is None else open(os.path.join(output_directory, template), 'w')
     )
 
 
-def linSpace(min, max, step):
+def lin_space(min, max, step):
     return np.linspace(min, max, int(round((max - min) / step)) + 1)
 
 
-def filterVisible(sightings):
+def filter_visible(sightings):
     return list(filter(lambda s: s.sighted, sightings))
 
 
-def generateParameterSpace(**parameters):
-    spaces = itertools.product(*[[{name: value} for value in linSpace(param.min, param.max, param.step)] for name, param in parameters.items()])
+def generate_parameter_space(**parameters):
+    spaces = itertools.product(*[[{name: value} for value in lin_space(param.min, param.max, param.step)] for name, param in parameters.items()])
 
     output = []
     for space in spaces:
@@ -78,7 +78,7 @@ def generateParameterSpace(**parameters):
     return output
 
 
-def dictProduct(**kwargs):
+def dict_product(**kwargs):
     keys = kwargs.keys()
     
     for instance in itertools.product(*kwargs.values()):

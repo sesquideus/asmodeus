@@ -9,17 +9,17 @@ quantities:                 &quantities
         max:                360
         bin:                5
         name:               'azimuth'
-    appMag:                 &appMag
+    apparent_magnitude:     &apparent_magnitude
         min:                -15
         max:                10
         bin:                0.25
         name:               'apparent magnitude'
-    absMag:                 &absMag
+    absolute_magnitude:     &absolute_magnitude
         min:                -15
         max:                10
         bin:                0.25
         name:               'absolute magnitude'
-    angSpeed:               &angSpeed
+    angular_speed:          &angular_speed
         min:                0
         max:                40
         bin:                1
@@ -29,7 +29,7 @@ quantities:                 &quantities
         max:                1
         bin:                0.1
         name:               'log initial mass'
-    logMass:                &logMass
+    log_mass:                &logMass
         min:                -8
         max:                1
         bin:                0.1

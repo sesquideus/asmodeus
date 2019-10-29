@@ -15,11 +15,11 @@ class Distribution():
         try:
             self.sample = self.functions.get(name)(**kwargs)
         except TypeError:
-            self.errorUnknown(name)
+            self.error_unknown(name)
             raise exceptions.ConfigurationError()
 
     @classmethod
-    def fromConfig(cls, config):
+    def from_config(cls, config):
         try:
             return cls(config.distribution, **config.parameters.toDict())
         except KeyError:
@@ -48,23 +48,23 @@ class Distribution():
     def default(cls, **kwargs):
         raise NotImplementedError("No default distribution defined")
 
-    def logInfo(self):
+    def log_info(self):
         log.info("    {quantity} distribution is {name}{params}".format(
             quantity    = c.param(self.quantity.capitalize()),
             name        = c.name(self.name),
-            params      = "" if self.params is None else " ({})".format(u.formatParameters(self.params)),
+            params      = "" if self.params is None else " ({})".format(u.format_parameters(self.params)),
         ))
         return self
 
-    def warningDefault(self):
+    def warning_default(self):
         log.warning("No {} distribution defined, defaulting to {}".format(c.name(self.quantity), c.name(self.default)))
         return self
 
-    def errorUnknown(self, name):
+    def error_unknown(self, name):
         log.error(f'Unknown {self.quantity} distribution "{name}"')
         return self
 
-    def asDict(self):
+    def as_dict(self):
         return {
             'distribution': self.name,
             'parameters':   self.params,
