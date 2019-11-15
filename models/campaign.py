@@ -58,7 +58,7 @@ class Campaign():
         self.population = Population.load(self.dataset, processes = processes, period = period)
 
     def load_dataframes(self):
-        self.dataframes = [Dataframe.load(self.dataset, observer) for observer in self.observers]        
+        self.dataframes = [Dataframe.load(self.dataset, observer) for observer in self.observers]
 
         for dataframe in self.dataframes:
             dataframe.quantities = self.analyses.quantities
@@ -90,7 +90,7 @@ class Campaign():
 
     def filter_visible(self, bias = True):
         if bias:
-            log.warning(f"Applying bias effects")            
+            log.warning(f"Applying bias effects")
             for dataframe in self.dataframes:
                 dataframe.apply_bias(self.bias_function)
         else:

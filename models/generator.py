@@ -50,7 +50,9 @@ class GeneratorGrid(Generator):
             elif isinstance(definition, numbers.Number) or isinstance(definition, datetime.datetime):
                 return [definition]
             else:
-                raise exceptions.ConfigurationError(f"Parameter space definition must be either a number or a dictionary with min, max and count defined")
+                raise exceptions.ConfigurationError(
+                    f"Parameter space definition must be either a number or a dictionary with min, max and count defined"
+                )
         except TypeError as e:
             raise exceptions.ConfigurationError(e)
 
@@ -79,9 +81,9 @@ class GeneratorGrid(Generator):
 
         for raw in space:
             velocity_equatorial = VelocityDistribution.shower(ra = raw['ra'], dec = raw['dec'], speed = raw['speed'])()
-            velocity            = coord.Vector3D.from_numpy_vector(
-                                    (coord.rot_matrix_z(coord.earth_rotation_angle(raw['time'])) @ velocity_equatorial.to_numpy_vector())
-                                )
+            velocity = coord.Vector3D.from_numpy_vector(
+                (coord.rot_matrix_z(coord.earth_rotation_angle(raw['time'])) @ velocity_equatorial.to_numpy_vector())
+            )
 
             self.meteors.append(Meteor(
                 mass            = raw['mass'],
@@ -129,8 +131,8 @@ class GeneratorRandom(Generator):
         velocity_equatorial     = self.velocity_distribution.sample()
 
         velocity_ECEF           = coord.Vector3D.from_numpy_vector(
-                                    (coord.rot_matrix_z(coord.earth_rotation_angle(timestamp)) @ velocity_equatorial.to_numpy_vector())
-                                )
+            (coord.rot_matrix_z(coord.earth_rotation_angle(timestamp)) @ velocity_equatorial.to_numpy_vector())
+        )
         entry_angle_sin         = -position * velocity_ECEF / (position.norm() * velocity_ECEF.norm())
 
         self.iterations += 1

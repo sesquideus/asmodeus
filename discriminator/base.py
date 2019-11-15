@@ -36,7 +36,7 @@ class Discriminator():
         return rnd < prob
 
     @classmethod
-    def fromConfig(cls, config):
+    def from_config(cls, config):
         try:
             return cls(config.discriminator, **config.parameters.toDict())
         except AttributeError:
@@ -50,18 +50,18 @@ class Discriminator():
     def default(self, **kwargs):
         raise KeyError("No default discriminator defined for {}".format(self.property))
 
-    def logInfo(self):
+    def log_info(self):
         log.info("    {quantity} discriminator is {name}{params}".format(
             quantity    = c.param(self.property.capitalize()),
             name        = c.name(self.name),
-            params      = f" ({util.formatParameters(self.params)})" if self.params else "",
+            params      = f" ({util.format_parameters(self.params)})" if self.params else "",
         ))
         return self
 
-    def warningDefault(self, name):
+    def warning_default(self, name):
         log.warning(f"No {c.name(self.property)} discriminator defined, defaulting to {c.name(self.default)}")
         return self
 
-    def errorUnknown(self, name):
+    def error_unknown(self, name):
         log.error(f'Unknown {c.name(self.property)} distribution "{c.param(name)}"')
         return self

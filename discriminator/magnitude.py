@@ -18,7 +18,7 @@ class MagnitudeDiscriminator(base.Discriminator):
         super().__init__(name, **kwargs)
 
     def apply(self, sighting):
-        return self.compute(sighting.apparentMagnitude)
+        return self.compute(sighting.apparent_magnitude)
 
     @classmethod
     def step(cls, *, limit: float) -> (lambda float: float):

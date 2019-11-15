@@ -15,7 +15,10 @@ class Observer():
         self.id                 = id
         self.name               = parameters.name
         self.position           = coord.Vector3D.from_geodetic(parameters.latitude, parameters.longitude, parameters.altitude)
-        self.horizon            = parameters.horizon
+        try:
+            self.horizon        = parameters.horizon
+        except KeyError:
+            self.horizon        = 0
 
         self.rotation_matrix = functools.reduce(np.dot, [
             np.fliplr(np.eye(3)),

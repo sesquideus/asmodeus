@@ -35,9 +35,9 @@ class AsmodeusAnalyze(Asmodeus):
             try:
                 log.info("Setting bias function discriminators")
                 discriminators = {
-                    'appMag':       MagnitudeDiscriminator.from_config(self.bias.magnitude),
-                    'altitude':     AltitudeDiscriminator.from_config(self.bias.altitude),
-                    'angSpeed':     AngularSpeedDiscriminator.from_config(self.bias.angular_speed),
+                    'apparent_magnitude':   MagnitudeDiscriminator.from_config(self.bias.magnitude),
+                    'altitude':             AltitudeDiscriminator.from_config(self.bias.altitude),
+                    'angular_speed':        AngularSpeedDiscriminator.from_config(self.bias.angular_speed),
                 }
 
                 log.info(f"Loaded {c.num(len(discriminators))} discriminators:")

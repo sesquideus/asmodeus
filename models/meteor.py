@@ -4,7 +4,6 @@ import math
 import io
 import os
 import numpy as np
-import numba
 import pickle
 
 import models.frame
@@ -166,12 +165,10 @@ class Meteor:
 
     def reduce_to_point(self):
         max_light = np.inf
-        brightest = None
 
         for frame in self.frames:
             if frame.absolute_magnitude < max_light:
                 max_light = frame.absolute_magnitude
-                brightest = frame
 
         self.frames = [frame]
 

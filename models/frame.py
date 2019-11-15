@@ -1,5 +1,4 @@
 import copy
-from physics import radiometry
 
 
 class Frame:

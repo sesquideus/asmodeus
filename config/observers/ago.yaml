@@ -3,6 +3,6 @@ campaign:
         ago:
             latitude:           48.3729
             longitude:          17.2738
-            altitude:           538
-            horizon:            15
+            altitude:           531
+#            horizon:            15
             name:               'AGO'

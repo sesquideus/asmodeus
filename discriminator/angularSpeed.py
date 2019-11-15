@@ -15,8 +15,8 @@ class AngularSpeedDiscriminator(base.Discriminator):
         super().__init__(name, **kwargs)
 
     def apply(self, sighting):
-        return self.compute(sighting.angularSpeed)
+        return self.compute(sighting.angular_speed)
 
     @classmethod
     def bracket(cls, *, lower: float, upper: float) -> (lambda float: float):
-        return lambda angspeed: 1 if angSpeed >= lower and angSpeed <= upper else 0
+        return lambda ang_speed: 1 if ang_speed >= lower and ang_speed <= upper else 0
