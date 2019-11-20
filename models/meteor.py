@@ -126,7 +126,7 @@ class Meteor:
                               lumEff          = radiometry.luminous_efficiency(self.velocity.norm()),
                               ablation        = dmdt,
                               mass            = self.mass,
-                              radius          = ((3 * self.mass) / (4 * np.pi * self.density)) + (1 / 3) * 1000,
+                              radius          = ((3 * self.mass) / (4 * np.pi * self.density))**(1 / 3) * 1000,
                               lp              = self.luminous_power,
                               absmag          = self.absolute_magnitude,
                           ))
