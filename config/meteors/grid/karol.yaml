@@ -1,0 +1,25 @@
+generator:
+    method:                     grid
+    parameters:
+        shape:
+            drag_coefficient:   0.5
+            shape_factor:       1.21
+        material:
+            density:            625
+            heat_transfer:      1.0
+            ablation_heat:      6000000
+        mass:                   0.1
+        position:
+            latitude:           45
+            longitude:          0
+            elevation:          35000
+        velocity:
+            ra:                 0
+            dec:                90
+            speed:              500
+        time:                   2019-03-20T21:58:00
+
+integrator:                                             
+    name:                       'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
+    fps:                        1                           # Frames per second
+    spf:                        100                         # Steps per frame. Higher values result in more precise trajectories but increase computation time

@@ -62,8 +62,8 @@ class GeneratorGrid(Generator):
             mass                = self.get_space(self.parameters.mass),
 
             density             = self.get_space(self.parameters.material.density),
-            heatTransfer        = self.get_space(self.parameters.material.heat_transfer),
-            ablationHeat        = self.get_space(self.parameters.material.ablation_heat),
+            heat_transfer       = self.get_space(self.parameters.material.heat_transfer),
+            ablation_heat       = self.get_space(self.parameters.material.ablation_heat),
 
             drag_coefficient    = self.get_space(self.parameters.shape.drag_coefficient),
             shape_factor        = self.get_space(self.parameters.shape.shape_factor),
@@ -76,7 +76,7 @@ class GeneratorGrid(Generator):
             dec                 = self.get_space(self.parameters.velocity.dec),
             speed               = self.get_space(self.parameters.velocity.speed),
 
-            time                = self.get_Space(self.parameters.time),
+            time                = self.get_space(self.parameters.time),
         )
 
         for raw in space:
@@ -90,9 +90,9 @@ class GeneratorGrid(Generator):
                 density         = raw['density'],
                 timestamp       = raw['time'],
                 position        = coord.Vector3D.from_geodetic(raw['latitude'], raw['longitude'], raw['elevation']),
-                dragCoefficient = raw['drag_coefficient'],
+                drag_coefficient= raw['drag_coefficient'],
                 velocity        = velocity,
-                ablationHeat    = raw['ablation_heat'],
+                ablation_heat   = raw['ablation_heat'],
             ))
 
         self.count = len(self.meteors)
@@ -100,7 +100,7 @@ class GeneratorGrid(Generator):
 
         return self.meteors
 
-    def asDict(self):
+    def as_dict(self):
         return {
             'method':           self.method,
             'count':            self.count,

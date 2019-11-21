@@ -19,6 +19,7 @@ tqdm = "*"
 numba = "*"
 pandas = "*"
 pyqt5 = "*"
+ipython = "*"
 
 [requires]
 python_version = "3.7"

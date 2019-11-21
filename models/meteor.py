@@ -43,11 +43,11 @@ class Meteor:
         self.time               = 0.0
 
         self.drag_coefficient   = drag_coefficient
-        self.shape_factor       = kwargs.get('shape_factor',     1.21)
-        self.heat_transfer      = kwargs.get('heat_transfer',    0.5)
-        self.ablation_heat      = kwargs.get('ablation_heat',    8e6)
+        self.shape_factor       = kwargs.get('shape_factor', 1.21)
+        self.heat_transfer      = kwargs.get('heat_transfer', 0.5)
+        self.ablation_heat      = kwargs.get('ablation_heat', 8e6)
 
-        self.luminous_power      = 0
+        self.luminous_power     = 0
 
         self.id                 = self.timestamp.strftime("%Y%m%d-%H%M%S-%f")
         self.frames             = []
@@ -104,32 +104,31 @@ class Meteor:
             dmdt = (d1.dmdt + 2 * d2.dmdt + 2 * d3.dmdt + d4.dmdt) / 6.0
 
             speed = self.velocity.norm()
+            air_density = atmosphere.air_density(self.position.elevation())
 
             self.luminous_power = -(radiometry.luminous_efficiency(speed) * dmdt * speed**2 / 2.0)
             self.absolute_magnitude = radiometry.absolute_magnitude(self.luminous_power)
             self.entry_angle = math.degrees(math.asin(-self.position * self.velocity / (self.position.norm() * speed)))
+            self.radius = ((3 * self.mass) / (4 * np.pi * self.density))**(1 / 3)
+
+            self.reynolds_number = 2 * self.radius * self.velocity.norm() * air_density / constants.AIR_VISCOSITY
 
             if (frame % spf == 0):
                 self.frames.append(models.frame.Frame(self))
-                log.debug("{time:6.3f} s | "
-                          "{latitude:6.4f} N, {longitude:6.4f} E, {elevation:6.0f} m, {angle:6.2f}° | {density:9.3e} kg/m³ | "
-                          "{speed:7.1f} m/s, {acceleration:13.3f} m/s², τ {lumEff:6.4f} | "
-                          "{mass:6.2e} kg, {ablation:9.3e} kg/s {radius:7.3f} mm | I {lp:10.3e} W, M {absmag:6.2f}m".format(
-                              time            = self.time,
-                              latitude        = self.position.latitude(),
-                              longitude       = self.position.longitude(),
-                              elevation       = self.position.elevation(),
-                              angle           = self.entry_angle,
-                              density         = atmosphere.air_density(self.position.elevation()),
-                              speed           = self.velocity.norm(),
-                              acceleration    = dvdt.norm(),
-                              lumEff          = radiometry.luminous_efficiency(self.velocity.norm()),
-                              ablation        = dmdt,
-                              mass            = self.mass,
-                              radius          = ((3 * self.mass) / (4 * np.pi * self.density))**(1 / 3) * 1000,
-                              lp              = self.luminous_power,
-                              absmag          = self.absolute_magnitude,
-                          ))
+                log.debug(
+                    f"{self.time:6.3f} s | "
+                    f"{self.position.latitude():6.4f} N, {self.position.longitude():6.4f} E, {self.position.elevation():6.0f} m, "
+                    f"{self.entry_angle:6.2f}° | "
+                    f"{air_density:9.3e} kg/m³ | "
+                    f"{self.velocity.norm():7.1f} m/s, "
+                    f"{dvdt.norm():13.3f} m/s², "
+                    f"{radiometry.luminous_efficiency(self.velocity.norm()):6.4f} "
+                    f"{self.reynolds_number:10.3f} | "
+                    f"{self.mass:6.2e} kg, {dmdt:9.3e} kg/s, "
+                    f"{self.radius * 1000:7.3f} mm | "
+                    f"{self.luminous_power:10.3e} W, "
+                    f"{self.absolute_magnitude:6.2f}m"
+                )
 
             frame += 1
 
@@ -152,7 +151,7 @@ class Meteor:
                 break
 
             # If the velocity is very low, it is a meteorite
-            if self.velocity.norm() < 6500:
+            if self.velocity.norm() < 1:
                 log.debug(f"Survived with final mass {self.mass:12.6f} kg")
                 break
 
