@@ -7,7 +7,7 @@ EARTH_GRAVITY = 9.81
 GAMMA = 0.47
 
 def get_wind(vector):
-    return coord.Vector3D(0, 0, 0)
+    return coord.Vector3D(10, 0, 0)
 
 
 class State():

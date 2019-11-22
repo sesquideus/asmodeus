@@ -87,6 +87,10 @@ class Meteor:
             -(self.heat_transfer * self.shape_factor * air_density * speed**3 * (new_state.mass / self.density)**(2 / 3) / (2 * self.ablation_heat)),
         )
 
+    def step_euler(self, state, dt):
+        diff = self.evaluate(state, Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0), dt, 1)
+        return diff.drdt, diff.dvdt, diff.dmdt
+
     def step_RK4(self, state, dt):
         d0 = Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0)
         d1 = self.evaluate(state, d0, dt,   0)
@@ -100,9 +104,14 @@ class Meteor:
 
         return drdt, dvdt, dmdt
 
-    def fly_RK4(self, fps, spf):
+    def fly(self, fps, spf, *, method='euler'):
         dt = 1.0 / (fps * spf)
         frame = 0
+
+        integrator = {
+            'euler': self.step_euler,
+            'RK4': self.step_RK4,
+        }.get(method, self.step_euler)
 
         while True:
             drdt, dvdt, dmdt = self.step_RK4(State(self.position, self.velocity, self.mass), dt)
@@ -177,5 +186,5 @@ class Meteor:
         self.frames = [frame]
 
     def simulate(self):
-        self.fly_RK4()
+        self.fly()
         self.save()
