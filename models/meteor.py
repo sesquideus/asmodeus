@@ -71,7 +71,7 @@ class Meteor:
     def save(self, filename):
         pickle.dump(self, io.FileIO(os.path.join(filename, f"{self.id}x{datetime.datetime.now().strftime('%H%M%S%f')}.pickle"), 'wb'))
 
-    def evaluate_RK4(self, state, diff, dt, node):
+    def evaluate(self, state, diff, dt, node):
         new_state = State(
             state.position + diff.drdt * dt * node,
             state.velocity + diff.dvdt * dt * node,
@@ -87,28 +87,33 @@ class Meteor:
             -(self.heat_transfer * self.shape_factor * air_density * speed**3 * (new_state.mass / self.density)**(2 / 3) / (2 * self.ablation_heat)),
         )
 
+    def step_RK4(self, state, dt):
+        d0 = Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0)
+        d1 = self.evaluate(state, d0, dt,   0)
+        d2 = self.evaluate(state, d1, dt, 0.5)
+        d3 = self.evaluate(state, d2, dt, 0.5)
+        d4 = self.evaluate(state, d3, dt,   1)
+
+        drdt = (d1.drdt + 2 * d2.drdt + 2 * d3.drdt + d4.drdt) / 6.0
+        dvdt = (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt) / 6.0
+        dmdt = (d1.dmdt + 2 * d2.dmdt + 2 * d3.dmdt + d4.dmdt) / 6.0
+
+        return drdt, dvdt, dmdt
+
     def fly_RK4(self, fps, spf):
         dt = 1.0 / (fps * spf)
         frame = 0
 
         while True:
-            state = State(self.position, self.velocity, self.mass)
-            d0 = Diff(coord.Vector3D(0, 0, 0), coord.Vector3D(0, 0, 0), 0.0)
-            d1 = self.evaluate_RK4(state, d0, dt,   0)
-            d2 = self.evaluate_RK4(state, d1, dt, 0.5)
-            d3 = self.evaluate_RK4(state, d2, dt, 0.5)
-            d4 = self.evaluate_RK4(state, d3, dt,   1)
-
-            drdt = (d1.drdt + 2 * d2.drdt + 2 * d3.drdt + d4.drdt) / 6.0
-            dvdt = (d1.dvdt + 2 * d2.dvdt + 2 * d3.dvdt + d4.dvdt) / 6.0
-            dmdt = (d1.dmdt + 2 * d2.dmdt + 2 * d3.dmdt + d4.dmdt) / 6.0
+            drdt, dvdt, dmdt = self.step_RK4(State(self.position, self.velocity, self.mass), dt)
 
             speed = self.velocity.norm()
             air_density = atmosphere.air_density(self.position.elevation())
 
             self.luminous_power = -(radiometry.luminous_efficiency(speed) * dmdt * speed**2 / 2.0)
             self.absolute_magnitude = radiometry.absolute_magnitude(self.luminous_power)
-            self.entry_angle = math.degrees(math.asin(-self.position * self.velocity / (self.position.norm() * speed)))
+            #print(-self.position * self.velocity / (self.position.norm() * speed) - 1e-10)
+            self.entry_angle = math.degrees(math.asin(-self.position * self.velocity / (self.position.norm() * speed) - 1e-10))
             self.radius = ((3 * self.mass) / (4 * np.pi * self.density))**(1 / 3)
 
             self.reynolds_number = 2 * self.radius * self.velocity.norm() * air_density / constants.AIR_VISCOSITY

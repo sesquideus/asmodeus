@@ -72,7 +72,8 @@ class Population():
         self.total_frames   = sum(map(lambda x: len(x.frames), self.meteors))
         self.total_mass     = sum(map(lambda x: x.mass_initial, self.meteors))
 
-        log.info("Generated {frames} frames, total mass {mass}".format(
+        log.info("Generated {meteoroids} with {frames} frames, total mass {mass}".format(
+            meteoroids      = c.num(len(self.meteors)),
             frames          = c.num(self.total_frames),
             mass            = c.num("{:6f} kg".format(self.total_mass)),
         ))
