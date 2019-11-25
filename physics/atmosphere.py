@@ -4,11 +4,13 @@ import numba
 
 from physics import constants
 
+
 def air_mass_Kasten_Young(altitude, observer_elevation = 0):
     if altitude >= 0:
         return (air_density(observer_elevation) / air_density(0)) / (math.sin(math.radians(altitude)) + 0.50572 * ((altitude + 6.07995) ** (-1.6364)))
     else:
         return np.inf
+
 
 def air_mass_pickering_2002(altitude, observer_elevation = 0):
     if altitude >= 0:
@@ -18,13 +20,18 @@ def air_mass_pickering_2002(altitude, observer_elevation = 0):
 
 air_mass = air_mass_Kasten_Young
 
+
 def attenuate(flux, air_mass):
     return flux * math.exp(constants.ATTENUATION_ONE_AIR_MASS * air_mass)
+
 
 #@numba.njit
 def air_density_MSIS(altitude):
     if altitude >= 500000:
         return 0
+
+    if altitude < 0:
+        return np.inf
 
     i = int(altitude // 500)
     f = (altitude - 500 * i) / 500
@@ -1034,5 +1041,6 @@ def air_density_MSIS(altitude):
     ]
 
     return math.exp(logs[i] + (logs[i+1] - logs[i]) * f) * 1000
+
 
 air_density = air_density_MSIS
