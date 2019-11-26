@@ -7,22 +7,10 @@ from matplotlib import pyplot
 
 from physics import atmosphere, coord, constants
 
-
 def get_wind(vector):
     return coord.Vector3D(0, 0, 0)
 
-def reynolds_number(length, speed, density):
-    return length * speed * density / constants.AIR_VISCOSITY
-
-def drag_coefficient(reynolds):
-    a = reynolds / 5
-    b = reynolds / 263000
-    c = reynolds / 1000000
-
-    return 24 / reynolds \
-        + 2.6 * a / (1 + a)**1.52 \
-        + 0.411 * b**-7.94 / (1 + b**-8) \
-        + 0.25 * c / (1 + c)
+GRAVITY_VECTOR = coord.Vector3D(0, 0, -constants.EARTH_GRAVITY)
 
 
 class State():
@@ -45,23 +33,23 @@ class Meteorite():
         self.velocity = velocity
 
     def step(self, state, diff, dt, node):
-        new_state = State(
-            state.position + diff.position * dt * node,
-            state.velocity + diff.velocity * dt * node,
-        )
-        air_density = atmosphere.air_density(state.position.z)
-        speed = new_state.velocity.norm()
-        wind = get_wind(new_state.position)
-        reynolds = reynolds_number(self.radius, state.velocity.norm(), air_density / constants.AIR_VISCOSITY
-        gamma = drag_coefficient(reynolds)
+        new_position = state.position + diff.position * dt * node
+        new_velocity = state.velocity + diff.velocity * dt * node
+
+        air_density = atmosphere.air_density(new_position.z)
+        speed = new_velocity.norm()
+        wind = get_wind(new_position)
+        reynolds = atmosphere.Reynolds_number(self.radius, new_velocity.norm(), air_density / constants.AIR_VISCOSITY)
+        gamma = atmosphere.drag_coefficient_smooth_sphere(reynolds)
+
+        air_velocity = new_velocity - wind
+        air_speed_squared = air_velocity * air_velocity
+
+        force = -gamma * air_density * (self.area / self.mass) * air_speed_squared * new_velocity.unit() + GRAVITY_VECTOR
 
         return State(
-            new_state.velocity,
-            coord.Vector3D(
-                -(gamma * air_density * (self.area / self.mass) * speed * (new_state.velocity.x - wind.x)),
-                -(gamma * air_density * (self.area / self.mass) * speed * (new_state.velocity.y - wind.y)),
-                -(gamma * air_density * (self.area / self.mass) * speed * (new_state.velocity.z - wind.z)) - constants.EARTH_GRAVITY,
-            )
+            new_velocity,
+            force,
         )
 
     def next_euler(self, state, dt):
@@ -94,8 +82,8 @@ class Meteorite():
 
             air_density = atmosphere.air_density(self.position.z)
             wind = get_wind(self.position)
-            reynolds = 2 * self.radius * self.velocity.norm() * air_density / constants.AIR_VISCOSITY
-            gamma = drag_coefficient(reynolds)
+            reynolds = atmosphere.Reynolds_number(2 * self.radius, self.velocity.norm(), air_density)
+            gamma = atmosphere.drag_coefficient_smooth_sphere(reynolds)
 
             if step % spf == 0:
                 self.frames.append((
@@ -112,8 +100,7 @@ class Meteorite():
                     reynolds,
                     gamma,
                 ))
-                print(f"Time {time:8.02f} s: {self}, Re {reynolds:10.2f} \u0393 {gamma:5.3f}")
-
+                print(f"Time {time:8.02f} s: {self}, {dvel.norm():8.02f} m/s² | Re {reynolds:10.2f} \u0393 {gamma:5.3f}")
 
             self.position += dpos * dt
             self.velocity += dvel * dt
@@ -135,30 +122,33 @@ class Meteorite():
         pyplot.rcParams['font.family'] = "Minion Pro"
         pyplot.rcParams['mathtext.fontset'] = "dejavuserif"
         
-        figure, axes = pyplot.subplots()
+        figure, axes = pyplot.subplots(3, 3)
 
-        figure.tight_layout(rect = (0.05, 0.0, 1.0, 1.0))
+        figure.tight_layout(rect=(0.05, 0.0, 1.0, 1.0))
         figure.set_size_inches(9, 8)
 
-        axes.tick_params(axis='x', which='major', labelsize=16)
-        axes.tick_params(axis='y', which='major', labelsize=16)
-        axes.grid(linewidth = 0.2, color = 'black')
+        axes[0, 0].tick_params(axis='x', which='major')
+        axes[0, 0].tick_params(axis='y', which='major')
+        axes[0, 0].grid(linewidth=0.2, color='black')
 
-        axes.set_xlabel('speed', fontdict = {'fontsize': 16})
-        axes.set_ylabel('altitude', fontdict = {'fontsize': 16})
-        axes.plot(self.dataframe.x, self.dataframe.z)
+        axes[0, 0].set_xlabel('speed')
+        axes[0, 0].set_ylabel('altitude')
+#        axes.set_ylim(bottom=0)
+        axes[0, 0].plot(self.dataframe.vx, self.dataframe.z)
+        axes[0, 1].plot(self.dataframe.vy, self.dataframe.z)
+        axes[0, 2].plot(self.dataframe.vz, self.dataframe.z)
         pyplot.show()
 
     def __str__(self):
-        return f"{self.position.x:9.3f} {self.position.y:9.3f} {self.position.z:9.3f} | {self.velocity.x:12.3f} {self.velocity.y:12.3f} {self.velocity.z:12.3f}"
+        return f"{self.position.x:12.3f} {self.position.y:12.3f} {self.position.z:12.3f} | {self.velocity.x:12.3f} {self.velocity.y:12.3f} {self.velocity.z:12.3f} ({self.velocity.norm():12.3f} m/s)"
 
 
 def main():
-    meteorite = Meteorite(1, 0.1, 1.21,
-        coord.Vector3D(0, 0, 106000),
-        coord.Vector3D(500, 0, -1000),
+    meteorite = Meteorite(0.2286, 0.0253, np.pi / 4,
+        coord.Vector3D(0, 0, 18000),
+        coord.Vector3D(1100, 0, -2200 * np.cos(np.radians(30))),
     )
-    meteorite.fly(fps=10, spf=10, integrator='rk4')
+    meteorite.fly(fps=1, spf=10, integrator='rk4')
     meteorite.to_dataframe()
     meteorite.plot()
 

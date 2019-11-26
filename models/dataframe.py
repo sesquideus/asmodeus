@@ -58,7 +58,7 @@ class Dataframe():
         log.info(f"Bias applied, {c.num(len(self.visible.index))}/{c.num(len(self.data.index))} sightings marked as detected")
 
     def skip_bias(self):
-        self.visible = self.data[self.data.altitude > self.observer.horizon]
+        self.visible = self.data#[self.data.altitude > self.observer.horizon]
 
     def make_scatters(self, settings):
         log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")

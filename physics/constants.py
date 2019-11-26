@@ -1,3 +1,5 @@
+from . import coord
+
 EARTH_RADIUS                = 6371000
 EARTH_MASS                  = 5.9722e24
 GRAVITATIONAL_CONSTANT      = 6.674333e-11

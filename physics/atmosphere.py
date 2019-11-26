@@ -1,8 +1,24 @@
 import sys
 import math
 import numba
+import numpy as np
 
 from physics import constants
+
+
+def drag_coefficient_smooth_sphere(reynolds):
+    a  = reynolds / 5
+    b = reynolds / 263000
+    c = reynolds / 1000000
+
+    return 24 / reynolds \
+        + 2.6 * a / (1 + a)**1.52 \
+        + 0.411 * b**-7.94 / (1 + b**-8) \
+        + 0.25 * c / (1 + c)
+
+
+def Reynolds_number(length, speed, density):
+    return length * speed * density / constants.AIR_VISCOSITY
 
 
 def air_mass_Kasten_Young(altitude, observer_elevation = 0):
@@ -31,7 +47,7 @@ def air_density_MSIS(altitude):
         return 0
 
     if altitude < 0:
-        return np.inf
+        return 1
 
     i = int(altitude // 500)
     f = (altitude - 500 * i) / 500

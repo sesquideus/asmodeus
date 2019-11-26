@@ -82,7 +82,7 @@ class GeneratorGrid(Generator):
         for raw in space:
             velocity_equatorial = VelocityDistribution.shower(ra = raw['ra'], dec = raw['dec'], speed = raw['speed'])()
             velocity = coord.Vector3D.from_numpy_vector(
-                (coord.rot_matrix_z(coord.earth_rotation_angle(raw['time'])) @ velocity_equatorial.to_numpy_vector())
+                (coord.rot_matrix_z(coord.earth_rotation_angle(raw['time'])) @ velocity_equatorial.as_numpy_vector())
             )
 
             self.meteors.append(Meteor(

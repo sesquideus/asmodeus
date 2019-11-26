@@ -77,7 +77,7 @@ class Meteor:
             state.velocity + diff.dvdt * dt * node,
             max(state.mass + diff.dmdt * dt * node, 1e-12)
         )
-        air_density = atmosphere.air_density(new_state.position.norm() - constants.EARTH_RADIUS)
+        air_density = atmosphere.air_density(new_state.position.elevation())
         speed = new_state.velocity.norm()
 
         return Diff(
@@ -114,7 +114,7 @@ class Meteor:
         }.get(method, self.step_euler)
 
         while True:
-            drdt, dvdt, dmdt = self.step_RK4(State(self.position, self.velocity, self.mass), dt)
+            drdt, dvdt, dmdt = integrator(State(self.position, self.velocity, self.mass), dt)
 
             speed = self.velocity.norm()
             air_density = atmosphere.air_density(self.position.elevation())
@@ -129,7 +129,7 @@ class Meteor:
 
             if (frame % spf == 0):
                 self.frames.append(models.frame.Frame(self))
-                log.debug(
+                print(
                     f"{self.time:6.3f} s | "
                     f"{self.position.latitude():6.4f} N, {self.position.longitude():6.4f} E, {self.position.elevation():6.0f} m, "
                     f"{self.entry_angle:6.2f}° | "

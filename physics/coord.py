@@ -1,8 +1,12 @@
-import math, numbers
+import math
+import numbers
+import functools
 import numpy as np
 
 from astropy.time import Time
 from physics import constants
+
+#EARTH_ROTATION_VECTOR       = Vector3D(0, 0, 7.292115855e-5)
 
 
 class Vector3D:
@@ -61,11 +65,11 @@ class Vector3D:
                 self.z * other,
             )
         else:
-            raise TypeError("Vector3D: cannot __mul__ {}".format(type(other)))
+            raise TypeError("Vector3D: cannot __mul__ with {}".format(type(other)))
 
     def __imul__(self, other):
         if not isinstance(other, numbers.Number):
-            raise TypeError("Vector3D: cannot __imul__ {}".format(type(other)))
+            raise TypeError("Vector3D: cannot __imul__ with {}".format(type(other)))
         self.x *= other
         self.y *= other
         self.z *= other
@@ -74,7 +78,7 @@ class Vector3D:
     __rmul__ = __mul__
 
     def __matmul__(self, other):
-        return self.toNumpyVector() @ other
+        return self.to_numpy_vector() @ other
 
     def __neg__(self):
         return Vector3D(
@@ -105,6 +109,23 @@ class Vector3D:
     def elevation(self):
         return self.norm() - constants.EARTH_RADIUS
 
+    def unit(self):
+        return self / self.norm()
+
+    def rotation_matrix(self):
+        return functools.reduce(np.dot, [
+            np.fliplr(np.eye(3)),
+            rot_matrix_y(-self.latitude()),
+            rot_matrix_z(-self.longitude()),
+        ])
+
+    def derotation_matrix(self):
+        return functools.reduce(np.dot, [
+            rot_matrix_z(self.longitude()),
+            rot_matrix_y(self.latitude()),
+            np.fliplr(np.eye(3)),
+        ])
+
     @classmethod
     def from_spherical(cls, lat, lon, r = 1):
         return Vector3D(
@@ -114,32 +135,28 @@ class Vector3D:
         )
 
     @classmethod
+    def from_local(cls, position, local):
+        return Vector3D.from_numpy_array(position.rotation_matrix() @ local.as_numpy_vector())
+
+    @classmethod
     def from_geodetic(cls, lat, lon, alt = 0):
-        return Vector3D.from_spherical(lat, lon, alt + constants.EARTH_RADIUS)
+        return __class__.from_spherical(lat, lon, alt + constants.EARTH_RADIUS)
 
     @classmethod
     def from_numpy_vector(cls, npv):
-        return Vector3D(npv[0, 0], npv[1, 0], npv[2, 0])
+        return Vector3D(*npv)
 
-    def to_numpy_vector(self):
-        return np.array([[self.x], [self.y], [self.z]])
+    def as_numpy_vector(self):
+        return np.array([self.x, self.y, self.z])
 
     def __str__(self):
         return self.str_cartesian()
 
     def str_cartesian(self):
-        return "({:7.0f}, {:7.0f}, {:7.0f})".format(
-            self.x,
-            self.y,
-            self.z,
-        )
+        return f"({self.x:7.0f}, {self.y:7.0f}, {self.z:7.0f})"
 
     def str_spherical(self):
-        return "{:5.2f}° {:6.2f}° {:7.0f} m".format(
-            self.latitude(),
-            self.longitude(),
-            self.norm(),
-        )
+        return f"{self.latitude():5.2f}° {self.longitude():6.2f}° {self.norm():7.0f} m"
 
     def str_geodetic(self):
         return "{lat:9.6f}° {ns}, {lon:9.6f}° {ew}, {ele:6.0f} m".format(
@@ -150,9 +167,51 @@ class Vector3D:
             ele     = self.elevation(),
         )
 
+class Local(Vector3D):
+    pass
+
+class EarthLocation(Vector3D):
+    @classmethod
+    def from_spherical(cls, lat, lon, r = 1):
+        return EarthLocation(
+            r * math.cos(math.radians(lat)) * math.cos(math.radians(lon)),
+            r * math.cos(math.radians(lat)) * math.sin(math.radians(lon)),
+            r * math.sin(math.radians(lat))
+        )
+
+    @classmethod
+    def from_geodetic(cls, lat, lon, alt = 0):
+        return EarthLocation.from_spherical(lat, lon, alt + constants.EARTH_RADIUS)
+
+    @classmethod
+    def from_pure(cls, pure):
+        return __class__(pure.x, pure.y, pure.z)
+
+    def as_pure(self):
+        return Vector3D(self.x, self.y, self.z)
+
+    def __add__(self, other):
+        if isinstance(other, EarthLocation):
+            raise TypeError("Cannot add two EarthLocations")
+        elif not isinstance(other, Vector3D):
+            raise TypeError(f"EarthLocation: Cannot __add__ {type(other)}")
+        else:
+            return __class__.from_pure(self.as_pure() + other)
+
+    def __str__(self):
+        return "{lat:9.6f}° {ns}, {lon:9.6f}° {ew}, {ele:6.0f} m".format(
+            lat     = self.latitude(),
+            ns      = 'N' if self.latitude() >= 0 else 'S',
+            lon     = self.longitude(),
+            ew      = 'E' if self.longitude() >= 0 else 'W',
+            ele     = self.elevation(),
+        )
+
+
 def cos_sin(angle):
     return np.cos(np.radians(angle)), np.sin(np.radians(angle))
    
+
 def rot_matrix_x(angle):
     c, s = cos_sin(angle)
     return np.ndarray((3, 3), dtype = float, buffer = np.array([
@@ -161,6 +220,7 @@ def rot_matrix_x(angle):
         0,  s,  c,
     ]))
 
+
 def rot_matrix_y(angle):
     c, s = cos_sin(angle)
     return np.ndarray((3, 3), dtype = float, buffer = np.array([
@@ -168,6 +228,7 @@ def rot_matrix_y(angle):
         0,  1,  0,
         s,  0,  c,
     ]))
+
 
 def rot_matrix_z(angle):
     c, s = cos_sin(angle)

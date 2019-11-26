@@ -10,8 +10,8 @@ generator:
             ablation_heat:      6000000
         mass:                   0.1
         position:
-            latitude:           45
-            longitude:          0
+            latitude:           48
+            longitude:          17
             elevation:          35000
         velocity:
             ra:                 0

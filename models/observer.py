@@ -1,5 +1,4 @@
 import logging
-import functools
 import os
 import numpy as np
 
@@ -20,17 +19,13 @@ class Observer():
         except KeyError:
             self.horizon        = 0
 
-        self.rotation_matrix = functools.reduce(np.dot, [
-            np.fliplr(np.eye(3)),
-            coord.rot_matrix_y(-self.position.latitude()),
-            coord.rot_matrix_z(-self.position.longitude()),
-        ])
+        self.rotation_matrix = self.position.rotation_matrix()
 
     def alt_az(self, point: coord.Vector3D) -> coord.Vector3D:
         """
             Compute AltAz coordinates of a point in ECEF frame as observed by this observer
         """
-        return coord.Vector3D.from_numpy_vector(self.rotation_matrix @ (point - self.position).to_numpy_vector())
+        return coord.Vector3D.from_numpy_vector(self.rotation_matrix @ (point - self.position).as_numpy_vector())
 
     def __str__(self):
         return f"{c.name(self.name)} ({c.name(self.id)}) at {self.position.str_geodetic()}"
@@ -54,6 +49,7 @@ class Observer():
 
         log.info(f"Loaded {c.num(len(dicts))} sightings")
         self.create_dataframe()
+
 
     """
     def minimize(self, settings):
