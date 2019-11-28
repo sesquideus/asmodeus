@@ -183,30 +183,31 @@ class Vector3D:
     def __str__(self):
         return self.str_cartesian()
 
-    def str_cartesian(self):
-        return f"({self.x:f}, {self.y:f}, {self.z:f})"
+    def str_cartesian(self, fmt='.6f'):
+        return f"({self.x:{fmt}}, {self.y:{fmt}}, {self.z:{fmt}})"
 
     def str_spherical(self):
         return f"{self.latitude():5.2f}° {self.longitude():6.2f}° {self.norm():7.0f} m"
 
-    def str_geodetic(self):
-        lat = self.latitude()
-        lon = self.longitude() % 360
-        return "{lat:9.6f}° {ns}, {lon:9.6f}° {ew}, {ele:6.0f} m".format(
-            lat     = lat,
-            ns      = 'N' if self.latitude() >= 0 else 'S',
-            lon     = lon if lon <= 180 else 360 - lon,
-            ew      = 'E' if lon <= 180 else 'W',
-            ele     = self.elevation(),
-        )
+    def str_geodetic(self, fmta='8.6f', fmtd='6.0f'):
+        lat = (self.latitude() + 90) % 180 - 90
+        lon = (self.longitude() + 180) % 360 - 180
+        ns = 'N' if self.latitude() >= 0 else 'S'
+        ew = 'E' if lon <= 180 else 'W'
+        return f"{self.latitude():{fmta}}° {ns}, {lon:{fmta}}° {ew}, {self.elevation():{fmtd}} m"
 
-    def __format__(self, formatstr):
-        if formatstr == 'c':
-            return self.str_cartesian()
-        elif formatstr == 's':
-            return self.str_spherical()
-        else:
+    def __format__(self, formatstr=''):
+        if formatstr == '':
             return self.__str__()
+
+        inner, system = formatstr[:-1].split(','), formatstr[-1:]
+#        print(inner, system)
+        if system == 'c':
+            return self.str_cartesian(fmt=inner[0])
+        elif system == 's':
+            return self.str_spherical(fmt=inner[0])
+        elif system == 'g':
+            return self.str_geodetic(fmta=inner[0], fmtd=inner[1])
 
 class Local(Vector3D):
     pass

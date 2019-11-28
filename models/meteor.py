@@ -81,7 +81,7 @@ class Meteor:
         air_density = atmosphere.air_density(new_state.position.elevation())
         speed = new_state.velocity.norm()
         reynolds = atmosphere.Reynolds_number(self.radius, new_state.velocity.norm(), air_density / constants.AIR_VISCOSITY)
-        gamma = atmosphere.drag_coefficient_smooth_sphere(reynolds)
+        gamma = 0.47#atmosphere.drag_coefficient_smooth_sphere(reynolds)
  
         drag_vector = -(gamma * self.shape_factor * air_density * speed / (new_state.mass**(1 / 3) * self.density**(2 / 3))) * new_state.velocity
         gravity_vector = -constants.GRAVITATIONAL_CONSTANT * constants.EARTH_MASS / new_state.position.norm()**3 * new_state.position
@@ -172,10 +172,12 @@ class Meteor:
         log.debug(f"Meteor generated ({len(self.frames)} frames)")
 
     def print_info(self):
+        print(f"{self.position:8.6f,6.0fg}")
+        return
         print(
             f"{self.time:8.3f} s | "
             f"{self.position.str_geodetic()} | "
-            f"{self.local_vector:s} | "
+            f"{self.local_vector:6.3f,6.3fg} | "
             f"\u03c1 {self.air_density:9.3e} kg/m³ | "
             f"{self.acceleration:13.3f} m/s², "
             #f"{radiometry.luminous_efficiency(self.velocity.norm()):6.4f} "
