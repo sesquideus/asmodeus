@@ -17,7 +17,10 @@ def excitation_coefficient(speed: float) -> float:
 
 
 def luminous_efficiency(speed: float) -> float:
-    return 2 * 7.668e6 * excitation_coefficient(speed) / speed**2
+    if speed > 1000:
+        return 2 * 7.668e6 * excitation_coefficient(speed) / speed**2
+    else:
+        return 0
 
 
 def flux_density(flux, distance):

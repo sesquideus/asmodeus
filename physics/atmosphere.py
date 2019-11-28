@@ -7,6 +7,8 @@ from physics import constants
 
 
 def drag_coefficient_smooth_sphere(reynolds):
+    if reynolds == 0:
+        return 0
     a  = reynolds / 5
     b = reynolds / 263000
     c = reynolds / 1000000

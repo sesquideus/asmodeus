@@ -131,7 +131,7 @@ class GeneratorRandom(Generator):
         velocity_equatorial     = self.velocity_distribution.sample()
 
         velocity_ECEF           = coord.Vector3D.from_numpy_vector(
-            (coord.rot_matrix_z(coord.earth_rotation_angle(timestamp)) @ velocity_equatorial.to_numpy_vector())
+            (coord.rot_matrix_z(coord.earth_rotation_angle(timestamp)) @ velocity_equatorial.as_numpy_vector())
         )
         entry_angle_sin         = -position * velocity_ECEF / (position.norm() * velocity_ECEF.norm())
 

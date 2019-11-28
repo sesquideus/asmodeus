@@ -11,6 +11,7 @@ import models.frame
 from physics import atmosphere, coord, radiometry, constants
 
 log = logging.getLogger('root')
+EARTH_ROTATION = coord.Vector3D(0, 0, constants.EARTH_ANGULAR_SPEED)
 
 
 class State:
@@ -79,12 +80,18 @@ class Meteor:
         )
         air_density = atmosphere.air_density(new_state.position.elevation())
         speed = new_state.velocity.norm()
+        reynolds = atmosphere.Reynolds_number(self.radius, new_state.velocity.norm(), air_density / constants.AIR_VISCOSITY)
+        gamma = atmosphere.drag_coefficient_smooth_sphere(reynolds)
+ 
+        drag_vector = -(gamma * self.shape_factor * air_density * speed / (new_state.mass**(1 / 3) * self.density**(2 / 3))) * new_state.velocity
+        gravity_vector = -constants.GRAVITATIONAL_CONSTANT * constants.EARTH_MASS / new_state.position.norm()**3 * new_state.position
+        coriolis_vector = -2 * EARTH_ROTATION ^ new_state.velocity
+        huygens_vector = -EARTH_ROTATION ^ (EARTH_ROTATION ^ new_state.position)
 
         return Diff(
             new_state.velocity,
-            -(self.drag_coefficient * self.shape_factor * air_density * speed / (new_state.mass**(1 / 3) * self.density**(2 / 3))) * new_state.velocity
-            - constants.GRAVITATIONAL_CONSTANT * constants.EARTH_MASS / new_state.position.norm()**3 * new_state.position,
-            -(self.heat_transfer * self.shape_factor * air_density * speed**3 * (new_state.mass / self.density)**(2 / 3) / (2 * self.ablation_heat)),
+            drag_vector + gravity_vector + coriolis_vector + huygens_vector,
+            0#-(self.heat_transfer * self.shape_factor * air_density * speed**3 * (new_state.mass / self.density)**(2 / 3) / (2 * self.ablation_heat)),
         )
 
     def step_euler(self, state, dt):
@@ -117,32 +124,20 @@ class Meteor:
             drdt, dvdt, dmdt = integrator(State(self.position, self.velocity, self.mass), dt)
 
             speed = self.velocity.norm()
-            air_density = atmosphere.air_density(self.position.elevation())
-
+            self.air_density = atmosphere.air_density(self.position.elevation())
             self.luminous_power = -(radiometry.luminous_efficiency(speed) * dmdt * speed**2 / 2.0)
             self.absolute_magnitude = radiometry.absolute_magnitude(self.luminous_power)
-            #print(-self.position * self.velocity / (self.position.norm() * speed) - 1e-10)
-            self.entry_angle = math.degrees(math.asin(-self.position * self.velocity / (self.position.norm() * speed) - 1e-10))
+            self.local_vector = self.position.to_local(self.velocity)
             self.radius = ((3 * self.mass) / (4 * np.pi * self.density))**(1 / 3)
 
-            self.reynolds_number = 2 * self.radius * self.velocity.norm() * air_density / constants.AIR_VISCOSITY
+            self.reynolds_number = 2 * self.radius * self.velocity.norm() * self.air_density / constants.AIR_VISCOSITY
+            self.gamma = atmosphere.drag_coefficient_smooth_sphere(self.reynolds_number)
+            self.acceleration = dvdt.norm()
+            self.mass_change = dmdt
 
             if (frame % spf == 0):
                 self.frames.append(models.frame.Frame(self))
-                print(
-                    f"{self.time:6.3f} s | "
-                    f"{self.position.latitude():6.4f} N, {self.position.longitude():6.4f} E, {self.position.elevation():6.0f} m, "
-                    f"{self.entry_angle:6.2f}° | "
-                    f"{air_density:9.3e} kg/m³ | "
-                    f"{self.velocity.norm():7.1f} m/s, "
-                    f"{dvdt.norm():13.3f} m/s², "
-                    f"{radiometry.luminous_efficiency(self.velocity.norm()):6.4f} "
-                    f"{self.reynolds_number:10.3f} | "
-                    f"{self.mass:6.2e} kg, {dmdt:9.3e} kg/s, "
-                    f"{self.radius * 1000:7.3f} mm | "
-                    f"{self.luminous_power:10.3e} W, "
-                    f"{self.absolute_magnitude:6.2f}m"
-                )
+                self.print_info()
 
             frame += 1
 
@@ -155,19 +150,19 @@ class Meteor:
             self.time += dt
 
             # If all mass has been ablated away, the particle is pronounced dead
-            if self.mass < 0:
+            if self.mass < 1e-10:
                 log.debug("Burnt to death")
                 break
 
             # If the particle flew above 400 km, it will likely leave Earth altogether
-            if self.position.elevation() > 400000:
-                log.debug("Flew away")
-                break
+            #if self.position.elevation() > 400000:
+            #    log.debug("Flew away")
+            #    break
 
             # If the velocity is very low, it is a meteorite
-            if self.velocity.norm() < 1:
-                log.debug(f"Survived with final mass {self.mass:12.6f} kg")
-                break
+            #if self.velocity.norm() < 1:
+            #    log.debug(f"Survived with final mass {self.mass:12.6f} kg")
+            #    break
 
             # If the elevation is below zero, we have an impact
             if self.position.elevation() < 0:
@@ -175,6 +170,23 @@ class Meteor:
                 break
 
         log.debug(f"Meteor generated ({len(self.frames)} frames)")
+
+    def print_info(self):
+        print(
+            f"{self.time:8.3f} s | "
+            f"{self.position.str_geodetic()} | "
+            f"{self.local_vector:s} | "
+            f"\u03c1 {self.air_density:9.3e} kg/m³ | "
+            f"{self.acceleration:13.3f} m/s², "
+            #f"{radiometry.luminous_efficiency(self.velocity.norm()):6.4f} "
+            f"{self.reynolds_number:8.0f} | "
+            f"\u0393 {self.gamma:6.3f} | "
+            #f"{self.mass_initial:6.2e} kg, {self.mass:6.2e} kg, {self.mass_change:9.3e} kg/s, "
+            #f"{self.radius * 1000:7.3f} mm | "
+            #f"{self.luminous_power:10.3e} W, "
+            #f"{self.absolute_magnitude:6.2f}m"
+        )
+
 
     def reduce_to_point(self):
         max_light = np.inf

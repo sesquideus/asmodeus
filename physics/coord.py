@@ -20,7 +20,7 @@ class Vector3D:
 
     def __add__(self, other):
         if not isinstance(other, Vector3D):
-            raise TypeError("Vector3D: cannot __add__ {}".format(type(other)))
+            raise TypeError(f"Vector3D: cannot __add__ {type(other)}")
         return Vector3D(
             self.x + other.x,
             self.y + other.y,
@@ -32,7 +32,7 @@ class Vector3D:
 
     def __iadd__(self, other):
         if not isinstance(other, Vector3D):
-            raise TypeError("Vector3D: cannot __iadd__ {}".format(type(other)))
+            raise TypeError(f"Vector3D: cannot __iadd__ {type(other)}")
         self.x += other.x
         self.y += other.y
         self.z += other.z
@@ -40,7 +40,7 @@ class Vector3D:
 
     def __sub__(self, other):
         if not isinstance(other, Vector3D):
-            raise TypeError("Vector3D: cannot __sub__ {}".format(type(other)))
+            raise TypeError(f"Vector3D: cannot __sub__ {type(other)}")
         return Vector3D(
             self.x - other.x,
             self.y - other.y,
@@ -49,7 +49,7 @@ class Vector3D:
     
     def __isub__(self, other):
         if not isinstance(other, Vector3D):
-            raise TypeError("Vector3D: cannot __isub__ {}".format(type(other)))
+            raise TypeError(f"Vector3D: cannot __isub__ {type(other)}")
         self.x -= other.x
         self.y -= other.y
         self.z -= other.z
@@ -65,11 +65,11 @@ class Vector3D:
                 self.z * other,
             )
         else:
-            raise TypeError("Vector3D: cannot __mul__ with {}".format(type(other)))
+            raise TypeError(f"Vector3D: cannot __mul__ with {type(other)}")
 
     def __imul__(self, other):
         if not isinstance(other, numbers.Number):
-            raise TypeError("Vector3D: cannot __imul__ with {}".format(type(other)))
+            raise TypeError(f"Vector3D: cannot __imul__ with {type(other)}")
         self.x *= other
         self.y *= other
         self.z *= other
@@ -78,7 +78,12 @@ class Vector3D:
     __rmul__ = __mul__
 
     def __matmul__(self, other):
-        return self.to_numpy_vector() @ other
+        if isinstance(other, Vector3D):
+            return self.as_numpy_vector() @ other.as_numpy_vector()
+        return self.as_numpy_vector() @ other
+
+    def __rmatmul__(self, other):
+        return other @ self.as_numpy_vector()
 
     def __neg__(self):
         return Vector3D(
@@ -89,13 +94,20 @@ class Vector3D:
 
     def __truediv__(self, other):
         if not isinstance(other, numbers.Number):
-            raise TypeError("Vector3D: Cannot __truediv__ with {}".format(type(other)))
+            raise TypeError(f"Vector3D: Cannot __truediv__ with {type(other)}")
 
         return Vector3D(
             self.x / other,
             self.y / other,
             self.z / other,
         )
+
+    def __xor__(self, other):
+        """Computes 3D cross product of two Vector3D"""
+        if isinstance(other, Vector3D):
+            return __class__.from_numpy_vector(np.cross(self.as_numpy_vector(), other.as_numpy_vector()))
+        else:
+            raise TypeError(f"Vector3D: Cannot __xor__ (cross-product) with {type(other)}")
 
     def norm(self):
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
@@ -112,14 +124,16 @@ class Vector3D:
     def unit(self):
         return self / self.norm()
 
-    def rotation_matrix(self):
+    def derotation_matrix(self):
+        """Get an inverse transformation matrix (this location to ECEF)"""
         return functools.reduce(np.dot, [
             np.fliplr(np.eye(3)),
             rot_matrix_y(-self.latitude()),
             rot_matrix_z(-self.longitude()),
         ])
 
-    def derotation_matrix(self):
+    def rotation_matrix(self):
+        """Get a rotation matrix (ECEF to this location)"""
         return functools.reduce(np.dot, [
             rot_matrix_z(self.longitude()),
             rot_matrix_y(self.latitude()),
@@ -128,6 +142,11 @@ class Vector3D:
 
     @classmethod
     def from_spherical(cls, lat, lon, r = 1):
+        """Create a new Vector3D from spherical coordinates
+            lat:        latitude in degrees, north positive
+            lon:        longitude in degrees, east positive
+            r:          distance from the centre
+        """
         return Vector3D(
             r * math.cos(math.radians(lat)) * math.cos(math.radians(lon)),
             r * math.cos(math.radians(lat)) * math.sin(math.radians(lon)),
@@ -135,12 +154,24 @@ class Vector3D:
         )
 
     @classmethod
-    def from_local(cls, position, local):
-        return Vector3D.from_numpy_array(position.rotation_matrix() @ local.as_numpy_vector())
-
-    @classmethod
     def from_geodetic(cls, lat, lon, alt = 0):
+        """Create a new Vector3D from geodetic coordinates
+            lat:        latitude in degrees, north positive
+            lon:        longitude in degrees, east positive
+            r:          distance from the surface, up positive
+        """
         return __class__.from_spherical(lat, lon, alt + constants.EARTH_RADIUS)
+
+    def from_local(self: 'Vector3D', local: 'Vector3D') -> 'Vector3D':
+        """Transform vector `local` as perceived at `position` from alt-az to ECEF frame
+            alt-az (where x -> north, y -> east, z -> up) to
+            ECEF (where x -> (0° N, 0° E), y -> (0° N, 90° E), z -> (90° N, 0° E))
+        """
+        return Vector3D.from_numpy_vector(self.rotation_matrix() @ local.as_numpy_vector())
+
+    def to_local(self, ecef):
+        """Transform vector `ecef` to local observer coordinate system"""
+        return Vector3D.from_numpy_vector(self.derotation_matrix() @ ecef.as_numpy_vector())
 
     @classmethod
     def from_numpy_vector(cls, npv):
@@ -153,19 +184,29 @@ class Vector3D:
         return self.str_cartesian()
 
     def str_cartesian(self):
-        return f"({self.x:7.0f}, {self.y:7.0f}, {self.z:7.0f})"
+        return f"({self.x:f}, {self.y:f}, {self.z:f})"
 
     def str_spherical(self):
         return f"{self.latitude():5.2f}° {self.longitude():6.2f}° {self.norm():7.0f} m"
 
     def str_geodetic(self):
+        lat = self.latitude()
+        lon = self.longitude() % 360
         return "{lat:9.6f}° {ns}, {lon:9.6f}° {ew}, {ele:6.0f} m".format(
-            lat     = self.latitude(),
+            lat     = lat,
             ns      = 'N' if self.latitude() >= 0 else 'S',
-            lon     = self.longitude(),
-            ew      = 'E' if self.longitude() >= 0 else 'W',
+            lon     = lon if lon <= 180 else 360 - lon,
+            ew      = 'E' if lon <= 180 else 'W',
             ele     = self.elevation(),
         )
+
+    def __format__(self, formatstr):
+        if formatstr == 'c':
+            return self.str_cartesian()
+        elif formatstr == 's':
+            return self.str_spherical()
+        else:
+            return self.__str__()
 
 class Local(Vector3D):
     pass
