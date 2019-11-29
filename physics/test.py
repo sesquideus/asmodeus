@@ -139,6 +139,29 @@ class CaseVector3D(unittest.TestCase):
         self.assertAlmostEqual(summed.z, 0, delta=1e-10)
          
 
+class CaseVector3DFormatting(unittest.TestCase):
+    def setUp(self):
+        self.vector = coord.Vector3D.from_geodetic(0, 0, 1)
+
+    def test_default(self):
+        self.assertEqual(
+            f"{self.vector}",
+            "(6371001, 0, 0)"
+        )
+
+    def test_cartesian_default(self):
+        self.assertEqual(
+            f"{self.vector:c}",
+            "(6371001.0, 0.0, 0.0)"
+        )
+
+    def test_cartesian_digits(self):
+        self.assertEqual(
+            f"{self.vector:c12.6f}",
+            "(6371001.000000,     0.000000,     0.000000)"
+        )
+            
+
 class CaseEarthLocation(unittest.TestCase):
     def setUp(self):
         self.el = coord.EarthLocation.from_geodetic(48.313525, 17.315423, 531)
