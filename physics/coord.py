@@ -6,8 +6,6 @@ import numpy as np
 from astropy.time import Time
 from physics import constants
 
-#EARTH_ROTATION_VECTOR       = Vector3D(0, 0, 7.292115855e-5)
-
 
 class Vector3D:
     def __init__(self, x, y, z):
@@ -141,26 +139,30 @@ class Vector3D:
         ])
 
     @classmethod
-    def from_spherical(cls, lat, lon, r = 1):
+    def from_spherical(cls, lat, lon, r=1):
         """Create a new Vector3D from spherical coordinates
             lat:        latitude in degrees, north positive
             lon:        longitude in degrees, east positive
             r:          distance from the centre
         """
-        return Vector3D(
+        return cls(
             r * math.cos(math.radians(lat)) * math.cos(math.radians(lon)),
             r * math.cos(math.radians(lat)) * math.sin(math.radians(lon)),
             r * math.sin(math.radians(lat))
         )
 
     @classmethod
-    def from_geodetic(cls, lat, lon, alt = 0):
+    def from_geodetic(cls, lat, lon, alt=0):
         """Create a new Vector3D from geodetic coordinates
             lat:        latitude in degrees, north positive
             lon:        longitude in degrees, east positive
             r:          distance from the surface, up positive
         """
-        return __class__.from_spherical(lat, lon, alt + constants.EARTH_RADIUS)
+        return cls.from_spherical(lat, lon, alt + constants.EARTH_RADIUS)
+
+    @classmethod
+    def from_WGS84(cls, lat, lon, alt=0):
+        pass
 
     def from_local(self: 'Vector3D', local: 'Vector3D') -> 'Vector3D':
         """Transform vector `local` as perceived at `position` from alt-az to ECEF frame
@@ -186,28 +188,37 @@ class Vector3D:
     def str_cartesian(self, fmt='.0f'):
         return f"({self.x:{fmt}}, {self.y:{fmt}}, {self.z:{fmt}})"
 
-    def str_spherical(self, fmta='9.6f', fmtd='6.0f'):
-        return f"{self.latitude():{fmta}}° {self.longitude():{fmta}}° {self.norm():{fmtd}} m"
+    def str_spherical(self, fmta='.6f', fmtd='.6f'):
+        print(fmta, fmtd)
+        return f"{self.latitude():{fmta}}° {self.longitude():{fmta}}° {self.norm():{fmtd}}"
 
-    def str_geodetic(self, fmta='9.6f', fmtd='6.0f'):
+    def str_geodetic(self, fmta='.6f', fmtd='.6f'):
+        print(fmta, fmtd)
         lat = (self.latitude() + 90) % 180 - 90
         lon = (self.longitude() + 180) % 360 - 180
         ns = 'N' if self.latitude() >= 0 else 'S'
         ew = 'E' if lon <= 180 else 'W'
-        return f"{self.latitude():{fmta}}° {ns}, {lon:{fmta}}° {ew}, {self.elevation():{fmtd}} m"
+        return f"{self.latitude():{fmta}}° {ns} {lon:{fmta}}° {ew} {self.elevation():{fmtd}}"
 
     def __format__(self, formatstr=''):
         if formatstr == '':
             return self.__str__()
 
-        system, inner = formatstr[:1], formatstr[1:].split(',')
-        print(inner, system)
+        if len(formatstr) == 1:
+            system, inner = formatstr[0], []
+        else:
+            system, inner = formatstr[:1], formatstr[1:].split(',')
+
         if system == 'c':
             return self.str_cartesian(*inner)
         elif system == 's':
-            return self.str_spherical(fmt=inner[0])
+            if len(inner) == 1:
+                inner = inner * 2
+            return self.str_spherical(*inner)
         elif system == 'g':
-            return self.str_geodetic(fmta=inner[0], fmtd=inner[1])
+            if len(inner) == 1:
+                inner = inner * 2
+            return self.str_geodetic(*inner)
 
 class Local(Vector3D):
     pass

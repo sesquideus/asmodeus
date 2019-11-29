@@ -1,6 +1,6 @@
 from . import coord
 
-EARTH_RADIUS                = 6371000
+EARTH_RADIUS                = 6371000.0
 EARTH_MASS                  = 5.9722e24
 EARTH_GRAVITY               = 9.81
 EARTH_ANGULAR_SPEED         = 7.2921159e-5

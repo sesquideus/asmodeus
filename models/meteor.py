@@ -172,7 +172,7 @@ class Meteor:
         log.debug(f"Meteor generated ({len(self.frames)} frames)")
 
     def print_info(self):
-        print(f"{self.position:8.6f,6.0fg}")
+        print(f"{self.position:g8.6f,6.0f}")
         return
         print(
             f"{self.time:8.3f} s | "

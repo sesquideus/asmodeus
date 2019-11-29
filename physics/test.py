@@ -141,26 +141,62 @@ class CaseVector3D(unittest.TestCase):
 
 class CaseVector3DFormatting(unittest.TestCase):
     def setUp(self):
-        self.vector = coord.Vector3D.from_geodetic(0, 0, 1)
+        self.vector = coord.Vector3D.from_geodetic(0, 0, 0)
 
     def test_default(self):
         self.assertEqual(
             f"{self.vector}",
-            "(6371001, 0, 0)"
+            "(6371000, 0, 0)"
         )
 
     def test_cartesian_default(self):
         self.assertEqual(
             f"{self.vector:c}",
-            "(6371001.0, 0.0, 0.0)"
+            "(6371000, 0, 0)"
         )
 
     def test_cartesian_digits(self):
         self.assertEqual(
             f"{self.vector:c12.6f}",
-            "(6371001.000000,     0.000000,     0.000000)"
+            "(6371000.000000,     0.000000,     0.000000)"
+        )
+
+    def test_spherical_default(self):
+        self.assertEqual(
+            f"{self.vector:s}",
+            "0.000000° 0.000000° 6371000.000000"
         )
             
+    def test_spherical_digits(self):
+        self.assertEqual(
+            f"{self.vector:sf}",
+            "0.000000° 0.000000° 6371000.000000"
+        )
+            
+    def test_spherical_digits2(self):
+        self.assertEqual(
+            f"{self.vector:s.3f}",
+            "0.000° 0.000° 6371000.000"
+        )
+
+    def test_spherical_digits3(self):
+        self.assertEqual(
+            f"{self.vector:s.3f,12.3f}",
+            "0.000° 0.000°  6371000.000"
+        )
+    
+    def test_spherical_sci(self):
+        self.assertEqual(
+            f"{self.vector:s10.6f,10.3e}",
+            "  0.000000°   0.000000°  6.371e+06"
+        )
+
+    def test_geodetic_default(self):
+        self.assertEqual(
+            f"{self.vector:g}",
+            "0.000000° N 0.000000° E 0.000000"
+        )
+
 
 class CaseEarthLocation(unittest.TestCase):
     def setUp(self):
