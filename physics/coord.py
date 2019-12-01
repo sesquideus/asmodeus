@@ -6,6 +6,22 @@ import numpy as np
 from astropy.time import Time
 from physics import constants
 
+from ctypes import CDLL, c_double, Structure
+
+
+class VectorC(Structure):
+    _fields_ = [
+        ('x', c_double),
+        ('y', c_double),
+        ('z', c_double),
+    ]
+
+wgs84 = CDLL('physics/wgs84.so')
+wgs84.wgs84_to_ecef.restype = VectorC
+wgs84.wgs84_to_ecef.argtypes = [c_double, c_double, c_double]
+wgs84.ecef_to_wgs84.restype = VectorC
+wgs84.ecef_to_wgs84.argtypes = [c_double, c_double, c_double]
+
 
 class Vector3D:
     def __init__(self, x, y, z):
@@ -138,6 +154,15 @@ class Vector3D:
             np.fliplr(np.eye(3)),
         ])
 
+    def derotation_matrix_WGS84(self):
+        """Get a derotation matrix (ECEF to this location) in WGS84"""
+        lat, lon, alt = self.to_WGS84()
+        return functools.reduce(np.dot, [
+            np.fliplr(np.eye(3)),
+            rot_matrix_z(-lat),
+            rot_matrix_t(-lon),
+        ])
+
     @classmethod
     def from_spherical(cls, lat, lon, r=1):
         """Create a new Vector3D from spherical coordinates
@@ -151,6 +176,9 @@ class Vector3D:
             r * math.sin(math.radians(lat))
         )
 
+    def to_spherical(self):
+        return self.latitude(), self.longitude(), self.norm()
+
     @classmethod
     def from_geodetic(cls, lat, lon, alt=0):
         """Create a new Vector3D from geodetic coordinates
@@ -160,45 +188,66 @@ class Vector3D:
         """
         return cls.from_spherical(lat, lon, alt + constants.EARTH_RADIUS)
 
+    def to_geodetic(self):
+        return self.latitude(), self.longitude(), self.elevation()
+
     @classmethod
     def from_WGS84(cls, lat, lon, alt=0):
-        pass
+        result = wgs84.wgs84_to_ecef(math.radians(lat), math.radians(lon), alt)
+        return cls(result.x, result.y, result.z)
 
-    def from_local(self: 'Vector3D', local: 'Vector3D') -> 'Vector3D':
-        """Transform vector `local` as perceived at `position` from alt-az to ECEF frame
+    def to_WGS84(self):
+        result = wgs84.ecef_to_wgs84(self.x, self.y, self.z)
+        return result.x, result.y, result.z
+
+    def altaz_to_xyz(self, local: 'Vector3D') -> 'Vector3D':
+        """Transform vector `local` as perceived at `position` from alt-az to ECEF frame:
             alt-az (where x -> north, y -> east, z -> up) to
             ECEF (where x -> (0° N, 0° E), y -> (0° N, 90° E), z -> (90° N, 0° E))
         """
         return Vector3D.from_numpy_vector(self.rotation_matrix() @ local.as_numpy_vector())
 
-    def to_local(self, ecef):
-        """Transform vector `ecef` to local observer coordinate system"""
+    def xyz_to_altaz(self, ecef: 'Vector3D') -> 'Vector3D':
+        """Transform vector `ecef` to local observer's alt-az coordinate system"""
         return Vector3D.from_numpy_vector(self.derotation_matrix() @ ecef.as_numpy_vector())
+
+    def altaz_at(self, location: 'Vector3D') -> 'Vector3D':
+        return Vector3D.from_numpy_vector(location.rotation_matrix() @ self.as_numpy_vector())
+
+    def xyz_at(self, location: 'Vector3D') -> 'Vector3D':
+        return Vector3D.from_numpy_vector(location.derotation_matrix() @ self.as_numpy_vector())
 
     @classmethod
     def from_numpy_vector(cls, npv):
         return Vector3D(*npv)
 
     def as_numpy_vector(self):
-        return np.array([self.x, self.y, self.z])
+        return np.array([self.x, self.y, self.z], dtype=float)
 
     def __str__(self):
-        return self.str_cartesian()
+        return self.str_cartesian(fmt='.6f')
 
     def str_cartesian(self, fmt='.0f'):
         return f"({self.x:{fmt}}, {self.y:{fmt}}, {self.z:{fmt}})"
 
     def str_spherical(self, fmta='.6f', fmtd='.6f'):
-        print(fmta, fmtd)
         return f"{self.latitude():{fmta}}° {self.longitude():{fmta}}° {self.norm():{fmtd}}"
 
     def str_geodetic(self, fmta='.6f', fmtd='.6f'):
-        print(fmta, fmtd)
+        latitude, longitude, altitude = self.to_geodetic()
         lat = (self.latitude() + 90) % 180 - 90
         lon = (self.longitude() + 180) % 360 - 180
-        ns = 'N' if self.latitude() >= 0 else 'S'
+        ns = 'N' if lat >= 0 else 'S'
         ew = 'E' if lon <= 180 else 'W'
-        return f"{self.latitude():{fmta}}° {ns} {lon:{fmta}}° {ew} {self.elevation():{fmtd}}"
+        return f"{lat:{fmta}}° {ns} {lon:{fmta}}° {ew} {self.elevation():{fmtd}}"
+
+    def str_WGS84(self, fmta='.6f', fmtd='.6f'):
+        latitude, longitude, altitude = self.to_WGS84()
+        lat = (latitude + 90) % 180 - 90
+        lon = (longitude + 180) % 360 - 180
+        ns = 'N' if lat >= 0 else 'S'
+        ew = 'E' if lon <= 180 else 'W'
+        return f"{lat:{fmta}}° {ns} {lon:{fmta}}° {ew} {altitude:{fmtd}}"
 
     def __format__(self, formatstr=''):
         if formatstr == '':
@@ -208,17 +257,19 @@ class Vector3D:
             system, inner = formatstr[0], []
         else:
             system, inner = formatstr[:1], formatstr[1:].split(',')
+            if len(inner) == 1 and not system == 'c':
+                inner *= 2
 
         if system == 'c':
             return self.str_cartesian(*inner)
         elif system == 's':
-            if len(inner) == 1:
-                inner = inner * 2
             return self.str_spherical(*inner)
         elif system == 'g':
-            if len(inner) == 1:
-                inner = inner * 2
             return self.str_geodetic(*inner)
+        elif system == 'w':
+            return self.str_WGS84(*inner)
+        else:
+            raise ValueError(f"Unknown formatting string {formatstr}")
 
 class Local(Vector3D):
     pass
