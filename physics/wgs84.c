@@ -89,7 +89,7 @@ WGS84 ecef_to_wgs84(double x, double y, double z) {
     double v;
     double w;
     // Intermediate variables
-    double r_squared; // w^2
+    double w_squared; // w^2
     double mpn; // m+n
     double g;
     double tt; // t^2
@@ -101,8 +101,8 @@ WGS84 ecef_to_wgs84(double x, double y, double z) {
     double da;
     double t4, t5, t6, t7;
     WGS84 geo;
-    r_squared = x * x + y * y;
-    m = r_squared * WGS84_INVAA;
+    w_squared = x * x + y * y;
+    m = w_squared * WGS84_INVAA;
     n = z * z * WGS84_P1MEEDAA;
     mpn = m + n;
     p = inv6 * (mpn - WGS84_EEEE);
@@ -138,7 +138,7 @@ WGS84 ecef_to_wgs84(double x, double y, double z) {
     // compute latitude (range -PI/2..PI/2)
     u = t + WGS84_EED2;
     v = t - WGS84_EED2;
-    w = sqrt(r_squared);
+    w = sqrt(w_squared);
     zu = z * u;
     wv = w * v;
     // compute altitude
@@ -146,7 +146,6 @@ WGS84 ecef_to_wgs84(double x, double y, double z) {
     dw = w - wv * invuv;
     dz = z - zu * WGS84_P1MEE * invuv;
     da = sqrt(dw * dw + dz * dz);
-    // compute longitude (range -PI..PI)
     geo.lon = degrees(atan2(y, x));
     geo.lat = degrees(atan2(zu, wv));
     geo.alt = (u < 1) ? -da : da;
