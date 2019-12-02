@@ -32,7 +32,7 @@ class Diff:
 
 
 class Meteor:
-    def __init__(self, *, mass, density, position, velocity, timestamp, drag_coefficient, **kwargs):
+    def __init__(self, *, mass, density, position, velocity, timestamp, **kwargs):
         self.mass               = mass
         self.density            = density
         self.radius             = (3 * self.mass / (self.density * math.pi * 4))**(1 / 3)
@@ -43,7 +43,6 @@ class Meteor:
         self.timestamp          = timestamp
         self.time               = 0.0
 
-        self.drag_coefficient   = drag_coefficient
         self.shape_factor       = kwargs.get('shape_factor', 1.21)
         self.heat_transfer      = kwargs.get('heat_transfer', 0.5)
         self.ablation_heat      = kwargs.get('ablation_heat', 8e6)
@@ -66,7 +65,7 @@ class Meteor:
 
     def __str__(self):
         return f"<Meteor {self.id} at {self.position}, velocity {self.velocity} | " \
-            f"{self.density:4.0f} kg/m³, Q {self.ablation_heat:8.0f} J/kg, G {self.drag_coefficient:5.3f}, " \
+            f"{self.density:4.0f} kg/m³, Q {self.ablation_heat:8.0f} J/kg, " \
             f"m {self.mass:8.6e} kg, r {self.radius * 1000:10.3f} mm, {len(self.frames)} frames>"
 
     def save(self, filename):
@@ -78,10 +77,11 @@ class Meteor:
             state.velocity + diff.dvdt * dt * node,
             max(state.mass + diff.dmdt * dt * node, 1e-12)
         )
-        air_density = atmosphere.air_density(new_state.position.elevation())
+        coordinates = new_state.position.to_WGS84()
+        air_density = atmosphere.air_density(coordinates.alt)
         speed = new_state.velocity.norm()
         reynolds = atmosphere.Reynolds_number(self.radius, new_state.velocity.norm(), air_density / constants.AIR_VISCOSITY)
-        gamma = 0.47#atmosphere.drag_coefficient_smooth_sphere(reynolds)
+        gamma = atmosphere.drag_coefficient_smooth_sphere(reynolds)
  
         drag_vector = -(gamma * self.shape_factor * air_density * speed / (new_state.mass**(1 / 3) * self.density**(2 / 3))) * new_state.velocity
         gravity_vector = -constants.GRAVITATIONAL_CONSTANT * constants.EARTH_MASS / new_state.position.norm()**3 * new_state.position
@@ -111,7 +111,7 @@ class Meteor:
 
         return drdt, dvdt, dmdt
 
-    def fly(self, fps, spf, *, method='euler'):
+    def fly(self, fps, spf, *, method='euler', wgs84=True):
         dt = 1.0 / (fps * spf)
         frame = 0
 
@@ -122,12 +122,13 @@ class Meteor:
 
         while True:
             drdt, dvdt, dmdt = integrator(State(self.position, self.velocity, self.mass), dt)
+            coordinates = self.position.to_WGS84() if wgs84 else self.position.to_spherical()
 
             speed = self.velocity.norm()
-            self.air_density = atmosphere.air_density(self.position.elevation())
+            self.air_density = atmosphere.air_density(coordinates.alt)
             self.luminous_power = -(radiometry.luminous_efficiency(speed) * dmdt * speed**2 / 2.0)
             self.absolute_magnitude = radiometry.absolute_magnitude(self.luminous_power)
-            self.local_vector = self.position.to_local(self.velocity)
+            self.velocity_altaz = self.velocity.dxdydz_to_altaz_at(self.position)
             self.radius = ((3 * self.mass) / (4 * np.pi * self.density))**(1 / 3)
 
             self.reynolds_number = 2 * self.radius * self.velocity.norm() * self.air_density / constants.AIR_VISCOSITY
@@ -160,31 +161,31 @@ class Meteor:
             #    break
 
             # If the velocity is very low, it is a meteorite
-            #if self.velocity.norm() < 1:
-            #    log.debug(f"Survived with final mass {self.mass:12.6f} kg")
-            #    break
+            if self.velocity.norm() < 1:
+                log.debug(f"Survived with final mass {self.mass:12.6f} kg")
+                break
 
             # If the elevation is below zero, we have an impact
-            if self.position.elevation() < 0:
+            if coordinates.alt < 0:
                 log.debug("IMPACT")
                 break
 
         log.debug(f"Meteor generated ({len(self.frames)} frames)")
 
     def print_info(self):
-        print(f"{self.position:g8.6f,6.0f}")
-        return
+        #print(f"{self.position:g8.6f,6.0f}")
+        #return
         print(
             f"{self.time:8.3f} s | "
-            f"{self.position.str_geodetic()} | "
-            f"{self.local_vector:6.3f,6.3fg} | "
+            f"{self.position:w10.6f,10.3f} | "
+            f"{self.velocity_altaz:s10.6f,8.3f} m/s | "
             f"\u03c1 {self.air_density:9.3e} kg/m³ | "
             f"{self.acceleration:13.3f} m/s², "
             #f"{radiometry.luminous_efficiency(self.velocity.norm()):6.4f} "
             f"{self.reynolds_number:8.0f} | "
             f"\u0393 {self.gamma:6.3f} | "
             #f"{self.mass_initial:6.2e} kg, {self.mass:6.2e} kg, {self.mass_change:9.3e} kg/s, "
-            #f"{self.radius * 1000:7.3f} mm | "
+            f"{self.radius * 1000:7.3f} mm | "
             #f"{self.luminous_power:10.3e} W, "
             #f"{self.absolute_magnitude:6.2f}m"
         )

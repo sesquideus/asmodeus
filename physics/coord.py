@@ -4,23 +4,23 @@ import functools
 import numpy as np
 
 from astropy.time import Time
-from physics import constants
+from physics import constants, wgs84
 
 from ctypes import CDLL, c_double, Structure
 
 
-class VectorC(Structure):
-    _fields_ = [
-        ('x', c_double),
-        ('y', c_double),
-        ('z', c_double),
-    ]
-
-wgs84 = CDLL('physics/wgs84.so')
-wgs84.wgs84_to_ecef.restype = VectorC
-wgs84.wgs84_to_ecef.argtypes = [c_double, c_double, c_double]
-wgs84.ecef_to_wgs84.restype = VectorC
-wgs84.ecef_to_wgs84.argtypes = [c_double, c_double, c_double]
+#class VectorC(Structure):
+#    _fields_ = [
+#        ('x', c_double),
+#        ('y', c_double),
+#        ('z', c_double),
+#    ]
+#
+#wgs84 = CDLL('physics/wgs84.o')
+#wgs84.wgs84_to_ecef.restype = VectorC
+#wgs84.wgs84_to_ecef.argtypes = [c_double, c_double, c_double]
+#wgs84.ecef_to_wgs84.restype = VectorC
+#wgs84.ecef_to_wgs84.argtypes = [c_double, c_double, c_double]
 
 
 class Vector3D:
@@ -126,41 +126,25 @@ class Vector3D:
     def norm(self):
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
-    def latitude(self):
-        return math.degrees(math.asin(self.z / self.norm()))
-
-    def longitude(self):
-        return math.degrees(math.atan2(self.y, self.x)) % 360
-
-    def elevation(self):
-        return self.norm() - constants.EARTH_RADIUS
-
     def unit(self):
         return self / self.norm()
 
-    def derotation_matrix(self):
+    def rotation_matrix(self, *, wgs84=False):
+        """Get a transformation matrix (ECEF to this location)"""
+        coordinates = self.to_WGS84() if wgs84 else self.to_spherical()
+        return functools.reduce(np.dot, [
+            rot_matrix_z(coordinates.lon),
+            rot_matrix_y(coordinates.lat),
+            np.fliplr(np.eye(3)),
+        ])
+    
+    def derotation_matrix(self, *, wgs84=False):
         """Get an inverse transformation matrix (this location to ECEF)"""
+        coordinates = self.to_WGS84() if wgs84 else self.to_spherical()
         return functools.reduce(np.dot, [
             np.fliplr(np.eye(3)),
-            rot_matrix_y(-self.latitude()),
-            rot_matrix_z(-self.longitude()),
-        ])
-
-    def rotation_matrix(self):
-        """Get a rotation matrix (ECEF to this location)"""
-        return functools.reduce(np.dot, [
-            rot_matrix_z(self.longitude()),
-            rot_matrix_y(self.latitude()),
-            np.fliplr(np.eye(3)),
-        ])
-
-    def derotation_matrix_WGS84(self):
-        """Get a derotation matrix (ECEF to this location) in WGS84"""
-        lat, lon, alt = self.to_WGS84()
-        return functools.reduce(np.dot, [
-            np.fliplr(np.eye(3)),
-            rot_matrix_z(-lat),
-            rot_matrix_t(-lon),
+            rot_matrix_y(-coordinates.lat),
+            rot_matrix_z(-coordinates.lon),
         ])
 
     @classmethod
@@ -177,7 +161,7 @@ class Vector3D:
         )
 
     def to_spherical(self):
-        return self.latitude(), self.longitude(), self.norm()
+        return wgs84.ecef_to_spherical(self.x, self.y, self.z)
 
     @classmethod
     def from_geodetic(cls, lat, lon, alt=0):
@@ -189,7 +173,7 @@ class Vector3D:
         return cls.from_spherical(lat, lon, alt + constants.EARTH_RADIUS)
 
     def to_geodetic(self):
-        return self.latitude(), self.longitude(), self.elevation()
+        return wgs84.ecef_to_geodetic(self.x, self.y, self.z)
 
     @classmethod
     def from_WGS84(cls, lat, lon, alt=0):
@@ -197,24 +181,23 @@ class Vector3D:
         return cls(result.x, result.y, result.z)
 
     def to_WGS84(self):
-        result = wgs84.ecef_to_wgs84(self.x, self.y, self.z)
-        return result.x, result.y, result.z
+        return wgs84.ecef_to_wgs84(self.x, self.y, self.z)
 
-    def altaz_to_xyz(self, local: 'Vector3D') -> 'Vector3D':
+    def altaz_to_dxdydz(self, local: 'Vector3D') -> 'Vector3D':
         """Transform vector `local` as perceived at `position` from alt-az to ECEF frame:
             alt-az (where x -> north, y -> east, z -> up) to
             ECEF (where x -> (0° N, 0° E), y -> (0° N, 90° E), z -> (90° N, 0° E))
         """
         return Vector3D.from_numpy_vector(self.rotation_matrix() @ local.as_numpy_vector())
 
-    def xyz_to_altaz(self, ecef: 'Vector3D') -> 'Vector3D':
+    def dxdydz_to_altaz(self, ecef: 'Vector3D') -> 'Vector3D':
         """Transform vector `ecef` to local observer's alt-az coordinate system"""
         return Vector3D.from_numpy_vector(self.derotation_matrix() @ ecef.as_numpy_vector())
 
-    def altaz_at(self, location: 'Vector3D') -> 'Vector3D':
+    def altaz_to_dxdydz_at(self, location: 'Vector3D') -> 'Vector3D':
         return Vector3D.from_numpy_vector(location.rotation_matrix() @ self.as_numpy_vector())
-
-    def xyz_at(self, location: 'Vector3D') -> 'Vector3D':
+    
+    def dxdydz_to_altaz_at(self, location: 'Vector3D') -> 'Vector3D':
         return Vector3D.from_numpy_vector(location.derotation_matrix() @ self.as_numpy_vector())
 
     @classmethod
@@ -230,24 +213,23 @@ class Vector3D:
     def str_cartesian(self, fmt='.0f'):
         return f"({self.x:{fmt}}, {self.y:{fmt}}, {self.z:{fmt}})"
 
+    def _str_format_aad(self, func, fmta='.6f', fmtd='.6f'):
+        coordinates = func()
+        lat = (coordinates.lat + 90) % 180 - 90
+        lon = (coordinates.lon + 180) % 360 - 180
+        ns = 'N' if lat >= 0 else 'S'
+        ew = 'E' if lon <= 180 else 'W'
+        return f"{lat:{fmta}}° {ns} {lon:{fmta}}° {ew} {coordinates.alt:{fmtd}}"
+
     def str_spherical(self, fmta='.6f', fmtd='.6f'):
-        return f"{self.latitude():{fmta}}° {self.longitude():{fmta}}° {self.norm():{fmtd}}"
+        coordinates = self.to_spherical()
+        return f"{coordinates.lat:{fmta}}° {coordinates.lon:{fmta}}° {coordinates.alt:{fmtd}}"
 
     def str_geodetic(self, fmta='.6f', fmtd='.6f'):
-        latitude, longitude, altitude = self.to_geodetic()
-        lat = (self.latitude() + 90) % 180 - 90
-        lon = (self.longitude() + 180) % 360 - 180
-        ns = 'N' if lat >= 0 else 'S'
-        ew = 'E' if lon <= 180 else 'W'
-        return f"{lat:{fmta}}° {ns} {lon:{fmta}}° {ew} {self.elevation():{fmtd}}"
+        return self._str_format_aad(self.to_geodetic, fmta, fmtd)
 
     def str_WGS84(self, fmta='.6f', fmtd='.6f'):
-        latitude, longitude, altitude = self.to_WGS84()
-        lat = (latitude + 90) % 180 - 90
-        lon = (longitude + 180) % 360 - 180
-        ns = 'N' if lat >= 0 else 'S'
-        ew = 'E' if lon <= 180 else 'W'
-        return f"{lat:{fmta}}° {ns} {lon:{fmta}}° {ew} {altitude:{fmtd}}"
+        return self._str_format_aad(self.to_WGS84, fmta, fmtd)
 
     def __format__(self, formatstr=''):
         if formatstr == '':

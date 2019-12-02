@@ -88,7 +88,7 @@ class CaseVector3D(unittest.TestCase):
         self.north_pole = coord.Vector3D.from_geodetic(90, 0, 0)
         self.south_pole = coord.Vector3D.from_geodetic(-90, 0, 0)
 
-        self.modra_meteor_ECEF = coord.Vector3D.from_local(self.modra, -self.meteor_local)
+        self.modra_meteor_ECEF = (-self.meteor_local).altaz_to_dxdydz_at(self.modra)
 
 
     def testAdd(self):
@@ -100,38 +100,27 @@ class CaseVector3D(unittest.TestCase):
     def testNorm(self):
         self.assertEqual(self.a.norm(), math.sqrt(57*57 + 38*38 + 49*49))
 
-    def testLatitude(self):
-        self.assertAlmostEqual(self.modra.latitude(), 48.352, delta = 1e-12)
+    def testGeodetic(self):
+        coord = self.modra.to_geodetic()
+        self.assertAlmostEqual(coord.lat, 48.352, delta = 1e-12)
+        self.assertAlmostEqual(coord.lon, 17.313, delta = 1e-12)
+        self.assertAlmostEqual(coord.alt, 531, delta = 1e-12)
         
-    def testLongitude(self):
-        self.assertAlmostEqual(self.modra.longitude(), 17.313, delta = 1e-12)
-        
-    def testElevation(self):
-        self.assertAlmostEqual(self.modra.elevation(), 531, delta = 1e-12)
-
     def test_null_island_arbitrary(self):
-        meteor_local = coord.Vector3D.from_local(self.null_island, self.meteor_local)
+        meteor_local = self.meteor_local.altaz_to_dxdydz_at(self.null_island)
         self.assertAlmostEqual(meteor_local.x, -np.sin(np.radians(42)) * 50000, delta = 1e-10)
         self.assertAlmostEqual(meteor_local.y, -np.cos(np.radians(42)) * np.sin(np.radians(130)) * 50000, delta = 1e-10)
         self.assertAlmostEqual(meteor_local.z, -np.cos(np.radians(42)) * np.cos(np.radians(130)) * 50000, delta = 1e-10)
 
     def test_modra_down(self):
-        meteor_local = coord.Vector3D.from_local(self.modra, self.meteor_down)
+        meteor_local = self.meteor_down.altaz_to_dxdydz_at(self.modra)
         self.assertAlmostEqual(meteor_local.x, -np.cos(np.radians(48.352)) * np.cos(np.radians(17.313)) * 50000, delta = 1e-10)
         self.assertAlmostEqual(meteor_local.y, -np.cos(np.radians(48.352)) * np.sin(np.radians(17.313)) * 50000, delta = 1e-10)
         self.assertAlmostEqual(meteor_local.z, -np.sin(np.radians(48.352)) * 50000, delta = 1e-10)
 
-    def test_arbitrary(self):
-        meteor_local_np = coord.Vector3D.from_local(self.north_pole, self.meteor_down)
-        meteor_local_ni = coord.Vector3D.from_local(self.null_island, self.meteor_down)
-        meteor_local_sp = coord.Vector3D.from_local(self.south_pole, self.meteor_down)
-    
-        diff = (meteor_local_np - meteor_local_ni).norm()
-        self.assertAlmostEqual(diff, 50000 * np.sqrt(2))
-
     def test_poles(self):
-        north = coord.Vector3D.from_local(self.north_pole, self.meteor_down)
-        south = coord.Vector3D.from_local(self.south_pole, self.meteor_down)
+        north = self.meteor_down.altaz_to_dxdydz_at(self.north_pole)
+        south = self.meteor_down.altaz_to_dxdydz_at(self.south_pole)
         summed = north + south
         
         self.assertAlmostEqual(summed.x, 0, delta=1e-10)
@@ -146,7 +135,7 @@ class CaseVector3DFormatting(unittest.TestCase):
     def test_default(self):
         self.assertEqual(
             f"{self.vector}",
-            "(6371000, 0, 0)"
+            "(6371000.000000, 0.000000, 0.000000)"
         )
 
     def test_cartesian_default(self):

@@ -18,16 +18,18 @@ GRAVITY_VECTOR = coord.Vector3D(0, 0, -constants.EARTH_GRAVITY)
 
 
 def main():
-    position = coord.Vector3D.from_geodetic(48.746, 21.083, 18000)
+    position = coord.Vector3D.from_WGS84(48.746, 21.083, 18000)
+    #position = coord.Vector3D.from_WGS84(89, 0, 0.01)
     meteor = Meteor(
-        mass=0.228602,
+#        mass=0.228602,
+        mass=0.000002,
         density=3370,
         position=position,
-        velocity=position.from_local(coord.Vector3D.from_spherical(-30.2, 72.6, 2200)),
+        velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(-30.2, 72.6, 2200)),
+        #velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(45, 0, 500)),
         timestamp=datetime.datetime.now(tz=pytz.utc),
-        drag_coefficient=0.5,    
     )
-    meteor.fly(fps=1, spf=10, method='rk4')
+    meteor.fly(fps=1, spf=20, method='rk4')
     #meteor.to_dataframe()
     #meteor.plot()
 

@@ -14,7 +14,7 @@ class Frame:
         self.mass_initial       = meteor.mass_initial
         self.density            = meteor.density
         self.ablation_heat      = meteor.ablation_heat
-        self.local_vector       = meteor.local_vector
+        self.velocity_altaz     = meteor.velocity_altaz
 
     def __str__(self):
         return f"<MeteorFrame: {self.position}, {self.velocity:.0f} m/s, {self.velocity.norm():6.0f} m/s, {self.luminousPower:e} W>"
