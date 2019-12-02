@@ -128,6 +128,22 @@ class CaseVector3D(unittest.TestCase):
         self.assertAlmostEqual(summed.z, 0, delta=1e-10)
          
 
+    def test_WGS84_pyproj(self):
+        import pyproj
+        ecef = pyproj.Proj(proj='geocent', ellps='WGS84', datum='WGS84') 
+        lla = pyproj.Proj(proj='latlong', ellps='WGS84', datum='WGS84') 
+        for a in range(0, 10):
+            lat = np.random.uniform(-90, 90)
+            lon = np.random.uniform(-180, 180)
+            alt = np.random.uniform(-1e6, 1e6)
+            x, y, z = pyproj.transform(lla, ecef, lon, lat, alt)
+            v = coord.Vector3D.from_WGS84(lat, lon, alt)
+
+            self.assertAlmostEqual(x, v.x, delta=1e-6)
+            self.assertAlmostEqual(y, v.y, delta=1e-6)
+            self.assertAlmostEqual(z, v.z, delta=1e-6)
+
+
 class CaseVector3DFormatting(unittest.TestCase):
     def setUp(self):
         self.vector = coord.Vector3D.from_geodetic(0, 0, 0)

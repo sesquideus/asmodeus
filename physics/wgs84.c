@@ -6,9 +6,6 @@ Karl Osen
 
 #include <math.h>
 #include "wgs84.h"
-const static double invcbrt2 = WGS84_INVCBRT2; // 1/(2^(1/3))
-const static double inv3 = WGS84_INV3; // 1/3
-const static double inv6 = WGS84_INV6; // 1/6
 /*****************************************************************************\
 |* Convert geodetic coordinates to ECEF coordinates
 \*****************************************************************************/
@@ -58,11 +55,8 @@ ECEF spherical_to_ecef(double lat, double lon, double alt) {
 }
 
 WGS84 ecef_to_geodetic(double x, double y, double z) {
-    WGS84 geo;
-    double r = sqrt(x * x + y * y + z * z);
-    geo.lat = degrees(asin(z / r));
-    geo.lon = fmod(degrees(atan2(y, x)), 360);
-    geo.alt = r - 6371000;
+    WGS84 geo = ecef_to_spherical(x, y, z);
+    geo.alt -= 6371000;
     return geo;
 }
 
@@ -105,7 +99,7 @@ WGS84 ecef_to_wgs84(double x, double y, double z) {
     m = w_squared * WGS84_INVAA;
     n = z * z * WGS84_P1MEEDAA;
     mpn = m + n;
-    p = inv6 * (mpn - WGS84_EEEE);
+    p = WGS84_INV6 * (mpn - WGS84_EEEE);
     G = m * n * WGS84_EEEED4;
     H = 2 * p * p * p + G;
     
@@ -113,10 +107,10 @@ WGS84 ecef_to_wgs84(double x, double y, double z) {
        return geo;
     }
    
-    C = pow(H + G + 2 * sqrt(H * G), inv3) * invcbrt2;
+    C = pow(H + G + 2 * sqrt(H * G), WGS84_INV3) * WGS84_INVCBRT2;
     i = -WGS84_EEEED4 - 0.5 * mpn;
     P = p * p;
-    beta = inv3 * i - C - P / C;
+    beta = WGS84_INV3 * i - C - P / C;
     k = WGS84_EEEED4 * (WGS84_EEEED4 - mpn);
     // Compute left part of t
     t4 = sqrt(sqrt(beta * beta - k) - 0.5 * (beta + i));
@@ -129,7 +123,7 @@ WGS84 ecef_to_wgs84(double x, double y, double z) {
     // Add left and right parts
     t = t4 + t7;
     // Use Newton-Raphson's method to compute t correction
-    g = 2 * WGS84_EED2 * (m - n);
+    g = 2 * WGS84_EED2 * (m - n);
     tt = t * t;
     ttt = tt * t;
     tttt = tt * tt;
