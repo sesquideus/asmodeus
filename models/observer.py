@@ -13,7 +13,7 @@ class Observer():
     def __init__(self, id, parameters):
         self.id                 = id
         self.name               = parameters.name
-        self.position           = coord.Vector3D.from_geodetic(parameters.latitude, parameters.longitude, parameters.altitude)
+        self.position           = coord.Vector3D.from_WGS84(parameters.latitude, parameters.longitude, parameters.altitude)
         try:
             self.horizon        = parameters.horizon
         except KeyError:
@@ -28,14 +28,15 @@ class Observer():
         return coord.Vector3D.from_numpy_vector(self.rotation_matrix @ (point - self.position).as_numpy_vector())
 
     def __str__(self):
-        return f"{c.name(self.name)} ({c.name(self.id)}) at {self.position.str_geodetic()}"
+        return f"{c.name(self.name)} ({c.name(self.id)}) at {self.position.str_WGS84()}"
 
     def as_dict(self):
+        pos = self.position.to_WGS84()
         return {
             'name':         self.name,
-            'latitude':     self.position.latitude(),
-            'longitude':    self.position.longitude(),
-            'altitude':     self.position.elevation(),
+            'latitude':     pos.lat,
+            'longitude':    pos.lon,
+            'altitude':     pos.alt, 
             'horizon':      self.horizon,
         }
 

@@ -126,6 +126,9 @@ class Vector3D:
     def norm(self):
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
+    def elevation_WGS84(self):
+        return self.to_WGS84().alt
+
     def unit(self):
         return self / self.norm()
 

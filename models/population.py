@@ -116,7 +116,7 @@ def init_simulate(_queue, _fps, _spf, _streaks):
 
 
 def simulate(meteor):
-    meteor.fly(fps, spf, method='RK4', wgs84=True)
+    meteor.fly(fps, spf, method='Euler', wgs84=True)
     queue.put(1)
 
     if not streaks:

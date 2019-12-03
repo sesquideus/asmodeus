@@ -49,7 +49,7 @@ def air_density_MSIS(altitude):
         return 0
 
     if altitude < 0:
-        return 1
+        return 1.2175
 
     i = int(altitude // 500)
     f = (altitude - 500 * i) / 500

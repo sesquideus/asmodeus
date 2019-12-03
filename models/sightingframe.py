@@ -22,7 +22,7 @@ class SightingFrame():
         rejection               = self.frame.velocity - projection
         self.angular_speed      = math.degrees(rejection.norm() / self.relative_position.norm())
 
-        air_mass                = atmosphere.air_mass(self.alt_az.latitude(), self.observer.position.elevation())
+        air_mass                = atmosphere.air_mass(self.alt_az.to_spherical().alt, self.observer.position.to_WGS84().alt)
         attenuated_power        = atmosphere.attenuate(self.frame.luminous_power, air_mass)
         self.flux_density       = radiometry.flux_density(attenuated_power, self.alt_az.norm())
 
@@ -68,14 +68,15 @@ class SightingFrame():
         return dotmap.DotMap(self.as_dict())
 
     def as_tuple(self):
+        relative_position = self.alt_az.to_spherical()
         return (
             self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f"),
             self.frame.time,
-            self.alt_az.latitude(),
-            self.alt_az.longitude(),
-            self.alt_az.norm(),
-            self.frame.position.elevation(),
-            self.frame.entry_angle,
+            relative_position.lat,
+            relative_position.lon,
+            relative_position.alt,
+            self.frame.position.elevation_WGS84(),
+            self.frame.velocity_altaz.to_spherical().alt,
             self.frame.speed,
             self.angular_speed,
             self.frame.mass_initial,
