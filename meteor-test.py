@@ -29,7 +29,7 @@ def main():
         #velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(45, 0, 500)),
         timestamp=datetime.datetime.now(tz=pytz.utc),
     )
-    meteor.fly(fps=5, spf=10, method='DP')
+    meteor.fly(fps=100, spf=10, method='DP')
     #meteor.to_dataframe()
     #meteor.plot()
 
