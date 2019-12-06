@@ -1,6 +1,5 @@
 import sys
 import math
-import numba
 import numpy as np
 
 from physics import constants

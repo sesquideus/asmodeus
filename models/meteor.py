@@ -29,7 +29,7 @@ class Diff:
         self.drdt = drdt
         self.dvdt = dvdt
         self.dmdt = dmdt
-    
+
     ### Diff arithmetics
     def __add__(self, other):
         return Diff(
@@ -138,16 +138,26 @@ class Meteor:
         )
 
     def step_euler(self, state, dt):
-        return 1, self.evaluate(state, Diff.zero(), dt)
+        return self.evaluate(state, Diff.zero(), dt)
 
     def step_RK4(self, state, dt):
         d1 = self.evaluate(state, Diff.zero(), dt)
         d2 = self.evaluate(state, d1 * 0.5, dt)
         d3 = self.evaluate(state, d2 * 0.5, dt)
         d4 = self.evaluate(state, d3, dt)
-        return 1, (d1 + 2 * d2 + 2 * d3 + d4) / 6
+        return (d1 + 2 * d2 + 2 * d3 + d4) / 6
 
-    def step_DP(self, state, dt):
+    def step_DP_constant(self, state, dt):
+        d0 = Diff.zero()
+        d1 = self.evaluate(state, d0, dt)
+        d2 = self.evaluate(state, d1 * 0.2, dt)
+        d3 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2], [3/40, 9/40])], d0), dt)
+        d4 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2, d3], [44/45, -56/15, 32/9])], d0), dt)
+        d5 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2, d3, d4], [19372/6561, -25360/2187, 64448/6561, -212/729])], d0), dt)
+        d6 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2, d3, d4, d5], [9017/3168, -355/33, 46732/5247, 49/176, -5103/18656])], d0), dt)
+        return d1 * 35/384 + d3 * 500/1113 + d4 * 125/192 - d5 * 2187/6784 + d6 * 11/84
+
+    def step_DP_adaptive(self, state, dt):
         d0 = Diff.zero()
         d1 = self.evaluate(state, d0, dt)
         d2 = self.evaluate(state, d1 * 0.2, dt)
@@ -162,46 +172,35 @@ class Meteor:
 
         error_velocity = error_estimate.dvdt.norm() / state.velocity.norm()
         error_mass = abs(error_estimate.dmdt / state.mass)
-        error = max(error_velocity, error_mass)
 
-        return error, solution
+        return max(error_velocity, error_mass), solution
 
-    def fly(self, fps, spf, *, method='euler', wgs84=True, min_spf=1, max_spf=10000, error_coarser=1e-6, error_finer=1e-3):
-        integrator = {
+    def select_integrator_constant(self, method='euler'):
+        print(f"Selected constant-step integrator {method}")
+        return {
             'euler': self.step_euler,
             'RK4': self.step_RK4,
-            'DP': self.step_DP,
+            'DP': self.step_DP_constant,
         }.get(method, self.step_euler)
 
+    def select_integrator_adaptive(self, method='DP'):
+        print(f"Selected adaptive-step integrator {method}")
+        return {
+            'DP': self.step_DP_adaptive,
+        }.get(method, self.step_euler)
+
+    def fly_constant(self, fps, spf, *, method='euler', wgs84=True):
+        integrator = self.select_integrator_constant(method)
         dt = 1.0 / (fps * spf)
-        frame = 0
         clock = 0
 
         while True:
-            dt = 1.0 / (fps * spf)
-            error, state = integrator(State(self.position, self.velocity, self.mass), dt)
-            print(f"t = {self.time:12.6f} s, error = {error:.6f}, {clock}/{spf}")
+            state = integrator(State(self.position, self.velocity, self.mass), dt)
 
-            if error < error_coarser and spf > min_spf:
-                spf //= 2
-                clock //= 2
-                print(f"Step unnecessarily big (error = {error:.6f}), decreasing to {spf} steps per frame")
-                continue
-            if error > error_finer and spf < max_spf:
-                print(f"Step too small (error = {error:.6f}), increasing to {spf} steps per frame")
-                spf *= 2
-                clock *= 2
-                dt = 1.0 / (fps * spf)
-                continue
-
-            clock += 1
-
-            if (clock == spf):
+            if clock % spf == 0:
                 self.save_snapshot(state, wgs84=wgs84)
                 self.print_info(spf)
-                clock = 0
-
-            frame += 1
+            clock += 1
 
             self.position += state.drdt * dt
             self.velocity += state.dvdt * dt
@@ -211,27 +210,81 @@ class Meteor:
             self.timestamp += datetime.timedelta(seconds = dt)
             self.time += dt
 
-            # If all mass has been ablated away, the particle is pronounced dead
-            if self.mass < 1e-10:
-                log.debug("Burnt to death")
+            if self.check_terminate():
                 break
 
-            # If the particle flew above 400 km, it will likely leave Earth altogether
-            #if self.position.elevation() > 400000:
-            #    log.debug("Flew away")
-            #    break
 
-            # If the velocity is very low, it is a meteorite
-            if self.velocity.norm() < 1:
-                log.debug(f"Survived with final mass {self.mass:12.6f} kg")
-                break
+    def fly_adaptive(self, fps, spf, *, method='DP', wgs84=True, min_spf=1, max_spf=10000, error_coarser=1e-6, error_finer=1e-3):
+        integrator = self.select_integrator_adaptive()
+        if spf < min_spf:
+            spf = min_spf
+        if spf > max_spf:
+            spf = max_spf
+        clock = 0
 
-            # If the elevation is below zero, we have an impact
-            if self.position.to_WGS84().alt < 0:
-                log.debug("IMPACT")
+        while True:
+            dt = 1.0 / (fps * spf)
+            error, state = integrator(State(self.position, self.velocity, self.mass), dt)
+            print(f"t = {self.time:12.6f} s, error = {error:.6f}, {clock}/{spf}")
+
+            if error < error_coarser and spf > min_spf:
+                print(f"Step unnecessarily big (error = {error:.6f}), {clock}/{spf}")
+                if clock == 0 or clock % 2 == 0:
+                    spf //= 2
+                    clock //= 2
+                    print(f"Decreasing to {spf} steps per frame at clock {clock}")
+                    continue
+                else:
+                    print("Waiting another step")
+
+            if error > error_finer and spf < max_spf:
+                spf *= 2
+                clock *= 2
+                print(f"Step too small (error = {error:.6f}), increasing to {spf} steps per frame at clock {clock}")
+                dt = 1.0 / (fps * spf)
+                continue
+
+            if (clock % spf == 0):
+                self.save_snapshot(state, wgs84=wgs84)
+                self.print_info(spf)
+                clock = 0
+
+            self.position += state.drdt * dt
+            self.velocity += state.dvdt * dt
+            self.mass     += state.dmdt * dt
+
+            # Advance time by dt
+            self.timestamp += datetime.timedelta(seconds = dt)
+            self.time += dt
+            clock += 1
+
+            if self.check_terminate():
                 break
 
         log.debug(f"Meteor generated ({len(self.frames)} frames)")
+
+    def check_terminate(self):
+        """Check if the simulation of the flight should be terminated"""
+        # If all mass has been ablated away, the particle is pronounced dead
+        if self.mass < 1e-10:
+            log.debug("Burnt to death")
+            return True
+
+        # If the particle flew above 400 km, it will likely leave Earth altogether
+        #if self.position.elevation() > 400000:
+        #    log.debug("Flew away")
+        #    break
+
+        # If the velocity is very low, it is a meteorite
+        if self.velocity.norm() < 1:
+            log.debug(f"Survived with final mass {self.mass:12.6f} kg")
+            return True
+
+        # If the elevation is below zero, we have an impact
+        if self.position.to_WGS84().alt < 0:
+            log.debug("IMPACT")
+            return True
+
 
     def save_snapshot(self, state, *, wgs84):
         coordinates = self.position.to_WGS84() if wgs84 else self.position.to_spherical()
@@ -255,7 +308,7 @@ class Meteor:
         #print(f"{self.position:g8.6f,6.0f}")
         #return
         print(
-            f"{self.time:8.3f} s | "
+            f"{self.time:8.3f} s | "
             f"{self.position:w10.6f,10.3f} | "
             f"{self.velocity_altaz:s10.6f,9.3f} m/s | "
             f"\u03c1 {self.air_density:9.3e} kg/m³ | "

@@ -25,11 +25,11 @@ def main():
 #        mass=0.000002,
         density=3370,
         position=position,
-        velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(-30.2, 72.6, 52000)),
+        velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(-30.2, 72.6, 58000)),
         #velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(45, 0, 500)),
         timestamp=datetime.datetime.now(tz=pytz.utc),
     )
-    meteor.fly(fps=100, spf=10, method='DP')
+    meteor.fly_adaptive(fps=1, spf=1, method='DP')
     #meteor.to_dataframe()
     #meteor.plot()
 
