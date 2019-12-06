@@ -5,6 +5,7 @@ import pandas
 import datetime
 import pytz
 import logging
+import copy
 
 from matplotlib import pyplot
 
@@ -29,7 +30,23 @@ def main():
         #velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(45, 0, 500)),
         timestamp=datetime.datetime.now(tz=pytz.utc),
     )
-    meteor.fly_adaptive(fps=1, spf=1, method='DP')
+    #meteor.fly_constant(fps=0.1, spf=1, method='euler')
+
+    meteor1 = copy.deepcopy(meteor)
+    meteor2 = copy.deepcopy(meteor)
+    meteor3 = copy.deepcopy(meteor)
+    meteor4 = copy.deepcopy(meteor)
+    meteor5 = copy.deepcopy(meteor)
+
+    #meteor1.fly_constant(fps=8, spf=4, method='Euler')
+    #meteor2.fly_constant(fps=8, spf=4, method='RK4')
+    #meteor3.fly_constant(fps=8, spf=4, method='DP')
+    #meteor4.fly_adaptive(fps=8, spf=4, method='DP', error_coarser=1e-6)
+
+    for i in range(0, 1):
+        meteor5 = copy.deepcopy(meteor)
+        #meteor5.fly_constant(fps=8, spf=4, method='Euler')
+        meteor5.fly_adaptive(fps=20, spf=1, method='DP', error_coarser=1e-6, error_finer=1e-2, max_spf=16)
     #meteor.to_dataframe()
     #meteor.plot()
 

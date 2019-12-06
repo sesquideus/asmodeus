@@ -54,7 +54,7 @@ class SightingFrame():
             'azimuth'           : self.altAz.longitude(),
             'distance'          : self.altAz.norm(),
             'elevation'         : self.frame.position.elevation(),
-            'entryAngle'        : self.frame.entry_angle,
+            'entry_angle'       : self.frame.entry_angle,
             'speed'             : self.frame.speed,
             'angular_speed'     : self.angular_speed,
             'mass'              : self.frame.mass,

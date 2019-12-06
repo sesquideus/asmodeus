@@ -10,8 +10,47 @@ import models.frame
 
 from physics import atmosphere, coord, radiometry, constants
 
-log = logging.getLogger('root')
+#log = logging.getLogger('root')
+class L():
+    def debug(self, p):
+        print(p)
+log = L()
+
 EARTH_ROTATION = coord.Vector3D(0, 0, constants.EARTH_ANGULAR_SPEED)
+
+DP_A21 = 1/5
+
+DP_A31 = 3/40
+DP_A32 = 9/40
+
+DP_A41 = 44/45
+DP_A42 = -56/15
+DP_A43 = 32/9
+
+DP_A51 = 19372/6561
+DP_A52 = -25360/2187
+DP_A53 = 64448/6561
+DP_A54 = -212/729
+
+DP_A61 = 9017/3168
+DP_A62 = -355/33
+DP_A63 = 46732/5247
+DP_A64 = 49/176
+DP_A65 = -5103/18656
+
+DP_A71 = 35/384
+DP_A73 = 500/1113
+DP_A74 = 125/192
+DP_A75 = -2187/6784
+DP_A76 = 11/84
+
+DP_B1 = 5179/57600
+DP_B3 = 7571/16695
+DP_B4 = 393/640
+DP_B5 = -92097/339200
+DP_B6 = 187/2100
+DP_B7 = 1/40
+
 
 
 class State:
@@ -107,7 +146,7 @@ class Meteor:
         return pickle.load(io.FileIO(filename, 'rb'))
 
     def __str__(self):
-        return f"<Meteor {self.id} at {self.position}, velocity {self.velocity} | " \
+        return f"<Meteor {self.id} at {self.position:w.3f,.0f}, velocity {self.velocity:c.3f} | " \
             f"{self.density:4.0f} kg/m³, Q {self.ablation_heat:8.0f} J/kg, " \
             f"m {self.mass:8.6e} kg, r {self.radius * 1000:10.3f} mm, {len(self.frames)} frames>"
 
@@ -118,7 +157,7 @@ class Meteor:
         new_state = State(
             state.position + diff.drdt * dt,
             state.velocity + diff.dvdt * dt,
-            max(state.mass + diff.dmdt * dt, 1e-10)
+            max(state.mass + diff.dmdt * dt, 1e-12)
         )
         coordinates = new_state.position.to_WGS84()
         air_density = atmosphere.air_density(coordinates.alt)
@@ -134,7 +173,7 @@ class Meteor:
         return Diff(
             new_state.velocity,
             drag_vector + gravity_vector + coriolis_vector + huygens_vector,
-            0#-(self.heat_transfer * self.shape_factor * air_density * speed**3 * (new_state.mass / self.density)**(2 / 3) / (2 * self.ablation_heat)),
+            -(self.heat_transfer * self.shape_factor * air_density * speed**3 * (new_state.mass / self.density)**(2 / 3) / (2 * self.ablation_heat)),
         )
 
     def step_euler(self, state, dt):
@@ -150,24 +189,25 @@ class Meteor:
     def step_DP_constant(self, state, dt):
         d0 = Diff.zero()
         d1 = self.evaluate(state, d0, dt)
-        d2 = self.evaluate(state, d1 * 0.2, dt)
-        d3 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2], [3/40, 9/40])], d0), dt)
-        d4 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2, d3], [44/45, -56/15, 32/9])], d0), dt)
-        d5 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2, d3, d4], [19372/6561, -25360/2187, 64448/6561, -212/729])], d0), dt)
-        d6 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2, d3, d4, d5], [9017/3168, -355/33, 46732/5247, 49/176, -5103/18656])], d0), dt)
-        return d1 * 35/384 + d3 * 500/1113 + d4 * 125/192 - d5 * 2187/6784 + d6 * 11/84
+        d2 = self.evaluate(state, d1 * DP_A21, dt)
+        d3 = self.evaluate(state, d1 * DP_A31 + d2 * DP_A32, dt)
+        d4 = self.evaluate(state, d1 * DP_A41 + d2 * DP_A42 + d3 * DP_A43, dt)
+        d5 = self.evaluate(state, d1 * DP_A51 + d2 * DP_A52 + d3 * DP_A53 + d4 * DP_A54, dt)
+        d6 = self.evaluate(state, d1 * DP_A61 + d2 * DP_A62 + d3 * DP_A63 + d4 * DP_A64 + d5 * DP_A65, dt)
+        solution = d1 * DP_A71 + d3 * DP_A73 + d4 * DP_A74 + d5 * DP_A75 + d6 * DP_A76
+        return solution
 
     def step_DP_adaptive(self, state, dt):
         d0 = Diff.zero()
         d1 = self.evaluate(state, d0, dt)
-        d2 = self.evaluate(state, d1 * 0.2, dt)
-        d3 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2], [3/40, 9/40])], d0), dt)
-        d4 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2, d3], [44/45, -56/15, 32/9])], d0), dt)
-        d5 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2, d3, d4], [19372/6561, -25360/2187, 64448/6561, -212/729])], d0), dt)
-        d6 = self.evaluate(state, sum([dx * x for (dx, x) in zip([d1, d2, d3, d4, d5], [9017/3168, -355/33, 46732/5247, 49/176, -5103/18656])], d0), dt)
-        solution = (d1 * 35/384 + d3 * 500/1113 + d4 * 125/192 - d5 * 2187/6784 + d6 * 11/84)
+        d2 = self.evaluate(state, d1 * DP_A21, dt)
+        d3 = self.evaluate(state, d1 * DP_A31 + d2 * DP_A32, dt)
+        d4 = self.evaluate(state, d1 * DP_A41 + d2 * DP_A42 + d3 * DP_A43, dt)
+        d5 = self.evaluate(state, d1 * DP_A51 + d2 * DP_A52 + d3 * DP_A53 + d4 * DP_A54, dt)
+        d6 = self.evaluate(state, d1 * DP_A61 + d2 * DP_A62 + d3 * DP_A63 + d4 * DP_A64 + d5 * DP_A65, dt)
+        solution = d1 * DP_A71 + d3 * DP_A73 + d4 * DP_A74 + d5 * DP_A75 + d6 * DP_A76
         d7 = self.evaluate(state, solution, dt)
-        alternative = (d1 * 5179/57600 + d3 * 7571/16695 + d4 * 393/640 - d5 * 92097/339200 + d6 * 187/2100 + d7 * 1/40)
+        alternative = (d1 * DP_B1 + d3 * DP_B3 + d4 * DP_B4 + d5 * DP_B5 + d6 * DP_B6 + d7 * DP_B7)
         error_estimate = solution - alternative
 
         error_velocity = error_estimate.dvdt.norm() / state.velocity.norm()
@@ -176,7 +216,7 @@ class Meteor:
         return max(error_velocity, error_mass), solution
 
     def select_integrator_constant(self, method='euler'):
-        print(f"Selected constant-step integrator {method}")
+        log.debug(f"Selected constant-step integrator {method}")
         return {
             'euler': self.step_euler,
             'RK4': self.step_RK4,
@@ -184,7 +224,7 @@ class Meteor:
         }.get(method, self.step_euler)
 
     def select_integrator_adaptive(self, method='DP'):
-        print(f"Selected adaptive-step integrator {method}")
+        log.debug(f"Selected adaptive-step integrator {method}")
         return {
             'DP': self.step_DP_adaptive,
         }.get(method, self.step_euler)
@@ -193,13 +233,15 @@ class Meteor:
         integrator = self.select_integrator_constant(method)
         dt = 1.0 / (fps * spf)
         clock = 0
+        self.step = 0
 
         while True:
+            self.step += 1
             state = integrator(State(self.position, self.velocity, self.mass), dt)
 
             if clock % spf == 0:
                 self.save_snapshot(state, wgs84=wgs84)
-                self.print_info(spf)
+                #self.print_info(spf)
             clock += 1
 
             self.position += state.drdt * dt
@@ -221,30 +263,37 @@ class Meteor:
         if spf > max_spf:
             spf = max_spf
         clock = 0
+        self.step = 0
+        last_change = 0
 
         while True:
             dt = 1.0 / (fps * spf)
+            self.step += 1
             error, state = integrator(State(self.position, self.velocity, self.mass), dt)
-            print(f"t = {self.time:12.6f} s, error = {error:.6f}, {clock}/{spf}")
+            #print(f"t = {self.time:12.6f} s, error = {error:.6f}, {clock}/{spf}")
 
             if error < error_coarser and spf > min_spf:
-                print(f"Step unnecessarily big (error = {error:.6f}), {clock}/{spf}")
-                if clock == 0 or clock % 2 == 0:
+                log.debug(f"Step unnecessarily big (error = {error:.6f}), {clock}/{spf}")
+                if clock % 2 == 0:
                     spf //= 2
                     clock //= 2
-                    print(f"Decreasing to {spf} steps per frame at clock {clock}")
+                    log.debug(f"Decreasing to {spf} steps per frame at clock {clock}")
+                    last_change = +1
                     continue
                 else:
-                    print("Waiting another step")
+                    log.debug("Waiting another step")
+                    pass
 
-            if error > error_finer and spf < max_spf:
+            if error > error_finer and spf < max_spf and last_change != 1:
                 spf *= 2
                 clock *= 2
-                print(f"Step too small (error = {error:.6f}), increasing to {spf} steps per frame at clock {clock}")
-                dt = 1.0 / (fps * spf)
+                log.debug(f"Step too small (error = {error:.6f}), increasing to {spf} steps per frame at clock {clock}")
+                last_change = -1
                 continue
 
-            if (clock % spf == 0):
+            last_change = 0
+
+            if clock % spf == 0:
                 self.save_snapshot(state, wgs84=wgs84)
                 self.print_info(spf)
                 clock = 0
@@ -305,9 +354,8 @@ class Meteor:
         self.frames.append(models.frame.Frame(self))
 
     def print_info(self, spf):
-        #print(f"{self.position:g8.6f,6.0f}")
-        #return
-        print(
+        log.debug(
+            f"{self.step:4d} | "
             f"{self.time:8.3f} s | "
             f"{self.position:w10.6f,10.3f} | "
             f"{self.velocity_altaz:s10.6f,9.3f} m/s | "

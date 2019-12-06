@@ -1,5 +1,5 @@
 quantities:                 &quantities
-    ablationHeat:           &ablationHeat
+    ablation_heat:          &ablation_heat
         id:                 ablationHeat
         bin:                1
         unit:               'J/kg'
@@ -15,21 +15,21 @@ quantities:                 &quantities
         bin:                5
         name:               'azimuth'
         unit:               '°'
-    appMag:                 &appMag
+    apparent_magnitude:     &apparent_magnitude
         id:                 appMag
         bin:                0.25
         name:               'apparent magnitude'
-    absMag:                 &absMag
-        id:                 absMag
+    absolute_magnitude:     &absolute_magnitude
+        id:                 absolute_magnitude
         bin:                0.25
         name:               'absolute magnitude'
-    angSpeed:               &angSpeed
-        id:                 angSpeed
+    angular_speed:          &angular_speed
+        id:                 ang_speed
         bin:                1
         name:               'angular speed'
         unit:               '°/s'
-    logMassInitial:         &logMassInitial
-        id:                 massInitial
+    log_mass_initial:       &lmi
+        id:                 mass_initial
         bin:                0.1
         name:               'log initial mass'
         unit:               'kg'
@@ -41,7 +41,7 @@ quantities:                 &quantities
         max:                0.0011
         name:               'mass'
         unit:               'kg'
-    logMass:                &logMass
+    log_mass:               &log_mass
         id:                 mass
         bin:                0.1
         name:               'mass'
@@ -57,8 +57,8 @@ quantities:                 &quantities
         bin:                1000
         name:               'elevation'
         unit:               'm'
-    entryAngle:             &entryAngle
-        id:                 entryAngle
+    entry_angle:            &entry_angle
+        id:                 entry_angle
         bin:                2
         name:               'entry angle'
         unit:               '°'
@@ -77,14 +77,14 @@ quantities:                 &quantities
         bin:                500
         name:               'density'
         unit:               'kg/m³'
-    logDensity:             &logDensity
+    log_density:            &log_density
         id:                 density
         bin:                0.1
         name:               'density'
         unit:               'kg/m³'
         scale:              'log'
-    massFraction:           &mf
-        id:                 massFraction
+    mass_fraction:           &mf
+        id:                 mass_fraction
         name:               'mass fraction'
     fpkg:                   &fpkg
         id:                 fpkg
@@ -104,15 +104,15 @@ quantities:                 &quantities
 #            xaxis:              time
 
 scatters:
-    -   {x:             *time, y:        *absMag, colour: *logMassInitial, cmap: viridis}
-    -   {x:             *time, y:         *speed, colour: *logMassInitial, cmap: viridis}
-    -   {x:   *logMassInitial, y:         *speed, colour: *logMassInitial, cmap: viridis}
-    -   {x:           *absMag, y:     *elevation, colour: *logMassInitial, cmap: viridis}
-    -   {x:          *logMass, y:        *absMag, colour: *logMassInitial, cmap: viridis}
-    -   {x:   *logMassInitial, y:        *absMag, colour: *logMassInitial, cmap: viridis}
-    -   {x:   *logMassInitial, y:            *mf, colour: *logMassInitial, cmap: viridis}
-    -   {x:             *time, y:          *fpkg, colour: *logMassInitial, cmap: viridis}
-    -   {x:             *time, y:         *fpkgi, colour: *logMassInitial, cmap: viridis}
-    -   {x:               *mf, y:          *fpkg, colour: *logMassInitial, cmap: viridis}
-    -   {x:               *mf, y:         *fpkgi, colour: *logMassInitial, cmap: viridis}
-    -   {x:               *mf, y:     *elevation, colour: *logMassInitial, cmap: viridis}
+    -   {x:             *time, y:        *absolute_magnitude, colour: *lmi, cmap: viridis}
+    -   {x:             *time, y:         *speed, colour: *lmi, cmap: viridis}
+    -   {x:              *lmi, y:         *speed, colour: *lmi, cmap: viridis}
+    -   {x: *absolute_magnitude, y:     *elevation, colour: *lmi, cmap: viridis}
+    -   {x:         *log_mass, y:        *absolute_magnitude, colour: *lmi, cmap: viridis}
+    -   {x:              *lmi, y:        *absolute_magnitude, colour: *lmi, cmap: viridis}
+    -   {x:              *lmi, y:            *mf, colour: *lmi, cmap: viridis}
+    -   {x:             *time, y:          *fpkg, colour: *lmi, cmap: viridis}
+    -   {x:             *time, y:         *fpkgi, colour: *lmi, cmap: viridis}
+    -   {x:               *mf, y:          *fpkg, colour: *lmi, cmap: viridis}
+    -   {x:               *mf, y:         *fpkgi, colour: *lmi, cmap: viridis}
+    -   {x:               *mf, y:     *elevation, colour: *lmi, cmap: viridis}

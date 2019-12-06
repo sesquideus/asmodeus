@@ -13,7 +13,7 @@ wgs84_module = Extension('_wgs84',
 setup(name='wgs84',
     version='0.1',
     author="Kvík",
-    description="""Simple swig example from docs""",
+    description="""WGS84 utilities for ASMODEUS""",
     ext_modules=[wgs84_module],
     py_modules=["wgs84"],
 )

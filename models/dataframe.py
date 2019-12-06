@@ -42,9 +42,9 @@ class Dataframe():
 
     def expand(self):
         self.data['mjd'] = Time(self.data.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
-        #self.data['mass_fraction'] = self.data.mass / self.data.mass_initial
-        #self.data['fpkgi'] = self.data.luminous_power / self.data.mass_initial
-        #self.data['fpkg'] = self.data.luminous_power / self.data.mass
+        self.data['mass_fraction'] = self.data.mass / self.data.mass_initial
+        self.data['fpkgi'] = self.data.luminous_power / self.data.mass_initial
+        self.data['fpkg'] = self.data.luminous_power / self.data.mass
 
     def save(self):
         filename = self.dataset.path('sightings', self.observer.id, 'sky.tsv')
@@ -139,7 +139,7 @@ class Dataframe():
                 self.visible[scatter.y.id],
                 c           = self.visible[scatter.colour.id],
                 #s           = 30000 / np.log10(self.visible.mass_initial)**4,
-                s           = 0.5 * np.exp(-self.visible.abs_mag / 10) * (1 + self.visible.is_abs_brightest * 8),
+                s           = 0.5 * np.exp(-self.visible.absolute_magnitude / 10) * (1 + self.visible.is_abs_brightest * 8),
                 cmap        = scatter.get('cmap', 'viridis_r'),
                 alpha       = 1,
                 linewidths  = 0,
@@ -206,8 +206,7 @@ class Dataframe():
             axes.scatter([], [], c='k', alpha=0.6, s=size_formatter(magnitude), label=f'{sign}{abs(magnitude)}$^\\mathrm{{m}}$')
         axes.legend(scatterpoints=1, frameon=False, labelspacing=0.8, title='Apparent magnitude', loc=(-0.06, 0.8))
         
-#        handles, labels = scatter.legend_elements(prop='sizes', alpha=0.6, num=20, func=(lambda x: -2 * np.log(x / 18)))
-#        legend = axes.legend(handles, labels, loc=(0, 0), title='magnitudes')
+        print("f")
 
         figure.savefig(path, facecolor = background, dpi = 300)
 
