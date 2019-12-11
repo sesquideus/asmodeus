@@ -48,13 +48,16 @@ class Dataframe():
 
     def save(self):
         filename = self.dataset.path('sightings', self.observer.id, 'sky.tsv')
-        log.info(f"Saving a TSV file for observer {c.name(self.observer.name)} {c.path(filename)}")
         self.data.to_csv(filename, sep = '\t', float_format = '%6g')
+
+        log.info(f"Saved a TSV file for observer {c.name(self.observer.name)} {c.path(filename)}")
 
     def apply_bias(self, bias_function):
         log.info(f"Applying bias DPFs on dataframe for observer {c.name(self.observer.name)}")
+
         self.data['visible'] = self.data.apply(bias_function, axis = 1)
         self.visible = self.data[(self.data.visible) & (self.data.altitude > self.observer.horizon)]
+
         log.info(f"Bias applied, {c.num(len(self.visible.index))}/{c.num(len(self.data.index))} sightings marked as detected")
 
     def skip_bias(self):
@@ -62,6 +65,7 @@ class Dataframe():
 
     def make_scatters(self, settings):
         log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
+
         self.dataset.create('analyses', 'scatters', self.observer.id, exist_ok = True)
 
         for scatter in settings:

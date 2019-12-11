@@ -52,7 +52,6 @@ DP_B6 = 187/2100
 DP_B7 = 1/40
 
 
-
 class State:
     def __init__(self, position, velocity, mass):
         self.position = position
@@ -159,6 +158,7 @@ class Meteor:
             state.velocity + diff.dvdt * dt,
             max(state.mass + diff.dmdt * dt, 1e-12)
         )
+        print(new_state)
         coordinates = new_state.position.to_WGS84()
         air_density = atmosphere.air_density(coordinates.alt)
         speed = new_state.velocity.norm()
@@ -241,7 +241,7 @@ class Meteor:
 
             if clock % spf == 0:
                 self.save_snapshot(state, wgs84=wgs84)
-                #self.print_info(spf)
+                self.print_info(spf)
             clock += 1
 
             self.position += state.drdt * dt
@@ -273,7 +273,7 @@ class Meteor:
             #print(f"t = {self.time:12.6f} s, error = {error:.6f}, {clock}/{spf}")
 
             if error < error_coarser and spf > min_spf:
-                log.debug(f"Step unnecessarily big (error = {error:.6f}), {clock}/{spf}")
+                log.debug(f"Step unnecessarily small (error = {error:.6f}), {clock}/{spf}")
                 if clock % 2 == 0:
                     spf //= 2
                     clock //= 2
@@ -287,7 +287,7 @@ class Meteor:
             if error > error_finer and spf < max_spf and last_change != 1:
                 spf *= 2
                 clock *= 2
-                log.debug(f"Step too small (error = {error:.6f}), increasing to {spf} steps per frame at clock {clock}")
+                log.debug(f"Step too long (error = {error:.6f}), increasing to {spf} steps per frame at clock {clock}")
                 last_change = -1
                 continue
 
@@ -345,6 +345,7 @@ class Meteor:
 
         self.reynolds_number = atmosphere.Reynolds_number(2 * self.radius, speed, self.air_density)
         self.gamma = atmosphere.drag_coefficient_smooth_sphere(self.reynolds_number)
+        self.dynamic_pressure = self.air_density * speed**2
         self.acceleration = state.dvdt.norm()
         self.mass_change = state.dmdt
 
@@ -364,6 +365,7 @@ class Meteor:
             #f"{radiometry.luminous_efficiency(self.velocity.norm()):6.4f} "
             f"{self.reynolds_number:8.0f} | "
             f"\u0393 {self.gamma:6.2f} | "
+            f"Q {self.dynamic_pressure:6.2f} | "
             #f"{self.mass_initial:6.2e} kg, {self.mass:6.2e} kg, {self.mass_change:9.3e} kg/s, "
             f"{self.radius * 1000:7.3f} mm | "
             #f"{self.luminous_power:10.3e} W, "

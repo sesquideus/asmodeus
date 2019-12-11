@@ -4,17 +4,17 @@ generator:
         count:                      10000
 
         shape:
-            drag_coefficient:        
+            drag_coefficient:
                 distribution:       constant
                 parameters:
                     value:          0.6                         # 0.6 for a spherical body
             shape_factor:           1.21                        # 1.21 for a spherical body
 
         material:
-            density:                
+            density:
                 distribution:       'constant'
                 parameters:
-                    value:          625 
+                    value:          625
             heat_transfer:          1.0                         # Heat transfer coefficient, default 0.5
             ablation_heat:          6000000                     # Specific enthalpy of vaporization, in J/kg
 
@@ -47,7 +47,7 @@ generator:
                 begin:              2016-08-11T19:00:00         # Beginning of the interval, ISO8601
                 end:                2016-08-12T02:00:00         # End of the interval, ISO8601
 
-integrator:                                             
+integrator:
     name:                           'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
-    fps:                            20                          # Frames per second
+    fps:                            200                         # Frames per second
     spf:                            1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time

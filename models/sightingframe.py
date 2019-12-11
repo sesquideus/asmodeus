@@ -22,7 +22,7 @@ class SightingFrame():
         rejection               = self.frame.velocity - projection
         self.angular_speed      = math.degrees(rejection.norm() / self.relative_position.norm())
 
-        air_mass                = atmosphere.air_mass(self.alt_az.to_spherical().alt, self.observer.position.to_WGS84().alt)
+        air_mass                = atmosphere.air_mass(self.alt_az.to_spherical().lat, self.observer.position.to_WGS84().alt)
         attenuated_power        = atmosphere.attenuate(self.frame.luminous_power, air_mass)
         self.flux_density       = radiometry.flux_density(attenuated_power, self.alt_az.norm())
 
@@ -47,26 +47,6 @@ class SightingFrame():
             true_speed          = self.frame.velocity.norm(),
         )
 
-    def as_dict(self):
-        return {
-            'timestamp'         : self.frame.timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            'altitude'          : self.altAz.latitude(),
-            'azimuth'           : self.altAz.longitude(),
-            'distance'          : self.altAz.norm(),
-            'elevation'         : self.frame.position.elevation(),
-            'entry_angle'       : self.frame.entry_angle,
-            'speed'             : self.frame.speed,
-            'angular_speed'     : self.angular_speed,
-            'mass'              : self.frame.mass,
-            'luminous_power'    : self.frame.luminous_power,
-            'flux_density'      : self.flux_density,
-            'apparent_magnitude': self.apparent_magnitude,
-            'absolute_magnitude': self.absolute_magnitude,
-        }
-
-    def as_dotmap(self):
-        return dotmap.DotMap(self.as_dict())
-
     def as_tuple(self):
         relative_position = self.alt_az.to_spherical()
         return (
@@ -76,7 +56,7 @@ class SightingFrame():
             relative_position.lon,
             relative_position.alt,
             self.frame.position.elevation_WGS84(),
-            self.frame.velocity_altaz.to_spherical().alt,
+            self.frame.velocity_altaz.to_spherical().lat,
             self.frame.speed,
             self.angular_speed,
             self.frame.mass_initial,

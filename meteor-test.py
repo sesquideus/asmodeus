@@ -22,7 +22,7 @@ def main():
     position = coord.Vector3D.from_WGS84(48.746, 21.083, 180000)
     #position = coord.Vector3D.from_WGS84(89, 0, 0.01)
     meteor = Meteor(
-        mass=0.228602,
+        mass=0.0000228602,
 #        mass=0.000002,
         density=3370,
         position=position,
@@ -45,8 +45,8 @@ def main():
 
     for i in range(0, 1):
         meteor5 = copy.deepcopy(meteor)
-        #meteor5.fly_constant(fps=8, spf=4, method='Euler')
-        meteor5.fly_adaptive(fps=20, spf=1, method='DP', error_coarser=1e-6, error_finer=1e-2, max_spf=16)
+        meteor5.fly_constant(fps=20, spf=1, method='DP')
+        #meteor5.fly_adaptive(fps=20, spf=1, method='DP', error_coarser=1e-6, error_finer=1e-4, max_spf=16)
     #meteor.to_dataframe()
     #meteor.plot()
 
