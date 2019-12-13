@@ -24,6 +24,13 @@
 #define WGS84_D2R +1.74532925199432957691e-0002 /* pi/180 */
 #define WGS84_R2D +5.72957795130823208766e+0001 /* 180/pi */
 
+#define SPHERICAL_EARTH_RADIUS 6371000
+
+/*class XYZ() {
+private:
+    double x, y, z;
+}*/
+
 typedef struct {
     double x, y, z;
 } ECEF;
@@ -32,8 +39,12 @@ typedef struct {
     double lat, lon, alt;
 } WGS84;
 
-double degrees(double rad);
-double radians(double deg);
+typedef struct {
+    double alt, az, dist;
+} Spherical;
+
+//double degrees(double rad);
+//double radians(double deg);
 
 ECEF wgs84_to_ecef(double lat, double lon, double alt);
 WGS84 ecef_to_wgs84(double x, double y, double z);
@@ -41,5 +52,5 @@ WGS84 ecef_to_wgs84(double x, double y, double z);
 ECEF geodetic_to_ecef(double lat, double lon, double alt);
 WGS84 ecef_to_geodetic(double x, double y, double z);
 
-ECEF spherical_to_ecef(double lat, double lon, double alt);
+ECEF spherical_to_ecef(double alt, double az, double dist);
 WGS84 ecef_to_spherical(double x, double y, double z);

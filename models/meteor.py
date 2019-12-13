@@ -53,13 +53,13 @@ DP_B7 = 1/40
 
 
 class State:
-    def __init__(self, position, velocity, mass):
+    def __init__(self, position, velocity, log_mass):
         self.position = position
         self.velocity = velocity
-        self.mass = mass
+        self.log_mass = log_mass
 
     def __str__(self):
-        return f"{self.position} {self.velocity} {self.mass}"
+        return f"{self.position:w} {self.velocity:s} {self.log_mass:6.2g}"
 
 
 class Diff:
@@ -112,9 +112,12 @@ class Diff:
     def norm(self):
         return self.drdt.norm(), self.dvdt.norm(), self.dmdt**2
 
+
 class Meteor:
     def __init__(self, *, mass, density, position, velocity, timestamp, **kwargs):
+        self.mass_initial       = mass
         self.mass               = mass
+        self.log_mass           = math.log(mass)
         self.density            = density
         self.radius             = (3 * self.mass / (self.density * math.pi * 4))**(1 / 3)
 
@@ -132,7 +135,6 @@ class Meteor:
 
         self.id                 = self.timestamp.strftime("%Y%m%d-%H%M%S-%f")
         self.frames             = []
-        self.mass_initial       = self.mass
 
         log.debug(self.__str__())
 
@@ -156,24 +158,25 @@ class Meteor:
         new_state = State(
             state.position + diff.drdt * dt,
             state.velocity + diff.dvdt * dt,
-            max(state.mass + diff.dmdt * dt, 1e-12)
+            state.log_mass + diff.dmdt * dt,
         )
-        print(new_state)
         coordinates = new_state.position.to_WGS84()
         air_density = atmosphere.air_density(coordinates.alt)
         speed = new_state.velocity.norm()
         reynolds = atmosphere.Reynolds_number(self.radius, new_state.velocity.norm(), air_density / constants.AIR_VISCOSITY)
         gamma = atmosphere.drag_coefficient_smooth_sphere(reynolds)
 
-        drag_vector = -(gamma * self.shape_factor * air_density * speed / (new_state.mass**(1 / 3) * self.density**(2 / 3))) * new_state.velocity
+        #drag_vector = -(gamma * self.shape_factor * air_density * speed / (new_state.mass**(1 / 3) * self.density**(2 / 3))) * new_state.velocity
+        drag_vector = -(gamma * self.shape_factor * air_density * speed / (np.exp(new_state.log_mass / 3) * self.density**(2 / 3))) * new_state.velocity
         gravity_vector = -constants.GRAVITATIONAL_CONSTANT * constants.EARTH_MASS / new_state.position.norm()**3 * new_state.position
         coriolis_vector = -2 * EARTH_ROTATION ^ new_state.velocity
         huygens_vector = -EARTH_ROTATION ^ (EARTH_ROTATION ^ new_state.position)
+        log_mass_change = -(self.heat_transfer * self.shape_factor * air_density * speed**3 * np.exp(-new_state.log_mass / 3) * self.density**(-2 / 3) / (2 * self.ablation_heat))
 
         return Diff(
             new_state.velocity,
             drag_vector + gravity_vector + coriolis_vector + huygens_vector,
-            -(self.heat_transfer * self.shape_factor * air_density * speed**3 * (new_state.mass / self.density)**(2 / 3) / (2 * self.ablation_heat)),
+            log_mass_change,
         )
 
     def step_euler(self, state, dt):
@@ -210,10 +213,7 @@ class Meteor:
         alternative = (d1 * DP_B1 + d3 * DP_B3 + d4 * DP_B4 + d5 * DP_B5 + d6 * DP_B6 + d7 * DP_B7)
         error_estimate = solution - alternative
 
-        error_velocity = error_estimate.dvdt.norm() / state.velocity.norm()
-        error_mass = abs(error_estimate.dmdt / state.mass)
-
-        return max(error_velocity, error_mass), solution
+        return max(error_estimate.dvdt.norm(), error_estimate.dmdt), solution
 
     def select_integrator_constant(self, method='euler'):
         log.debug(f"Selected constant-step integrator {method}")
@@ -237,7 +237,7 @@ class Meteor:
 
         while True:
             self.step += 1
-            state = integrator(State(self.position, self.velocity, self.mass), dt)
+            state = integrator(State(self.position, self.velocity, self.log_mass), dt)
 
             if clock % spf == 0:
                 self.save_snapshot(state, wgs84=wgs84)
@@ -246,7 +246,7 @@ class Meteor:
 
             self.position += state.drdt * dt
             self.velocity += state.dvdt * dt
-            self.mass     += state.dmdt * dt
+            self.log_mass += state.dmdt * dt
 
             # Advance time by dt
             self.timestamp += datetime.timedelta(seconds = dt)
@@ -256,10 +256,9 @@ class Meteor:
                 break
 
 
-    def fly_adaptive(self, fps, spf, *, method='DP', wgs84=True, min_spf=1, max_spf=10000, error_coarser=1e-6, error_finer=1e-3):
+    def fly_adaptive(self, fps, *, method='DP', wgs84=True, min_spf=1, max_spf=10000, error_coarser=1e-6, error_finer=1e-3):
         integrator = self.select_integrator_adaptive()
-        if spf < min_spf:
-            spf = min_spf
+        spf = min_spf
         if spf > max_spf:
             spf = max_spf
         clock = 0
@@ -269,7 +268,7 @@ class Meteor:
         while True:
             dt = 1.0 / (fps * spf)
             self.step += 1
-            error, state = integrator(State(self.position, self.velocity, self.mass), dt)
+            error, diff = integrator(State(self.position, self.velocity, self.log_mass), dt)
             #print(f"t = {self.time:12.6f} s, error = {error:.6f}, {clock}/{spf}")
 
             if error < error_coarser and spf > min_spf:
@@ -294,13 +293,13 @@ class Meteor:
             last_change = 0
 
             if clock % spf == 0:
-                self.save_snapshot(state, wgs84=wgs84)
+                self.save_snapshot(diff, wgs84=wgs84)
                 self.print_info(spf)
                 clock = 0
 
-            self.position += state.drdt * dt
-            self.velocity += state.dvdt * dt
-            self.mass     += state.dmdt * dt
+            self.position += diff.drdt * dt
+            self.velocity += diff.dvdt * dt
+            self.log_mass += diff.dmdt * dt
 
             # Advance time by dt
             self.timestamp += datetime.timedelta(seconds = dt)
@@ -315,7 +314,7 @@ class Meteor:
     def check_terminate(self):
         """Check if the simulation of the flight should be terminated"""
         # If all mass has been ablated away, the particle is pronounced dead
-        if self.mass < 1e-10:
+        if self.log_mass < -20:
             log.debug("Burnt to death")
             return True
 
@@ -341,15 +340,16 @@ class Meteor:
         speed = self.velocity.norm()
         self.air_density = atmosphere.air_density(coordinates.alt)
         self.velocity_altaz = self.velocity.dxdydz_to_altaz_at(self.position)
+        self.mass = np.exp(self.log_mass)
         self.radius = ((3 * self.mass) / (4 * np.pi * self.density))**(1 / 3)
 
         self.reynolds_number = atmosphere.Reynolds_number(2 * self.radius, speed, self.air_density)
         self.gamma = atmosphere.drag_coefficient_smooth_sphere(self.reynolds_number)
         self.dynamic_pressure = self.air_density * speed**2
         self.acceleration = state.dvdt.norm()
-        self.mass_change = state.dmdt
+        self.mass_change = self.mass * state.dmdt
 
-        self.luminous_power = -(radiometry.luminous_efficiency(speed) * state.dmdt * speed**2 / 2.0)
+        self.luminous_power = -(radiometry.luminous_efficiency(speed) * self.mass_change * speed**2 / 2.0)
         self.absolute_magnitude = radiometry.absolute_magnitude(self.luminous_power)
 
         self.frames.append(models.frame.Frame(self))
@@ -363,10 +363,10 @@ class Meteor:
             f"\u03c1 {self.air_density:9.3e} kg/m³ | "
             f"{self.acceleration:13.3f} m/s², "
             #f"{radiometry.luminous_efficiency(self.velocity.norm()):6.4f} "
-            f"{self.reynolds_number:8.0f} | "
-            f"\u0393 {self.gamma:6.2f} | "
-            f"Q {self.dynamic_pressure:6.2f} | "
-            #f"{self.mass_initial:6.2e} kg, {self.mass:6.2e} kg, {self.mass_change:9.3e} kg/s, "
+            #f"{self.reynolds_number:8.0f} | "
+            #f"\u0393 {self.gamma:8.2f} | "
+            #f"Q {self.dynamic_pressure:8.0f} Pa | "
+            f"{self.mass_initial:6.2e} kg, {self.mass:6.2e} kg, {self.mass_change:9.3e} kg/s, "
             f"{self.radius * 1000:7.3f} mm | "
             #f"{self.luminous_power:10.3e} W, "
             f"{self.absolute_magnitude:6.2f}m"

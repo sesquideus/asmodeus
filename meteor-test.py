@@ -45,8 +45,8 @@ def main():
 
     for i in range(0, 1):
         meteor5 = copy.deepcopy(meteor)
-        meteor5.fly_constant(fps=20, spf=1, method='DP')
-        #meteor5.fly_adaptive(fps=20, spf=1, method='DP', error_coarser=1e-6, error_finer=1e-4, max_spf=16)
+        #meteor5.fly_constant(fps=20, spf=1, method='Euler')
+        meteor5.fly_adaptive(fps=20, method='DP', error_coarser=1e-8, error_finer=1e-4, min_spf=1, max_spf=8)
     #meteor.to_dataframe()
     #meteor.plot()
 

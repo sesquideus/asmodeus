@@ -48,16 +48,28 @@ ECEF geodetic_to_ecef(double lat, double lon, double alt) {
 ECEF spherical_to_ecef(double lat, double lon, double alt) {
     ECEF ecef;
     double coslat = cos(lat);
-    ecef.x = coslat * cos(lon);
-    ecef.y = coslat * sin(lon);
-    ecef.z = sin(lat);
+    ecef.x = coslat * cos(lon) * (alt + SPHERICAL_EARTH_RADIUS);
+    ecef.y = coslat * sin(lon) * (alt + SPHERICAL_EARTH_RADIUS);
+    ecef.z = sin(lat) * (alt + SPHERICAL_EARTH_RADIUS);
+    return ecef;
+}
+
+ECEF altaz_to_ecef(double alt, double az, double dist) {
+    ECEF ecef;
+    double cosalt = cos(alt);
+    ecef.x = cosalt * cos(az) * dist;
+    ecef.y = cosalt * sin(az) * dist;
+    ecef.z = sin(alt) * dist;
     return ecef;
 }
 
 WGS84 ecef_to_geodetic(double x, double y, double z) {
     WGS84 geo = ecef_to_spherical(x, y, z);
-    geo.alt -= 6371000;
-    return geo;
+    WGS84 fake;
+    fake.lat = geo.lat;
+    fake.lon = geo.lon;
+    fake.alt = geo.alt - SPHERICAL_EARTH_RADIUS;
+    return fake;
 }
 
 WGS84 ecef_to_spherical(double x, double y, double z) {

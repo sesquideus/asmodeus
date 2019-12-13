@@ -26,19 +26,21 @@ def air_mass_Kasten_Young(altitude, observer_elevation = 0):
     if altitude >= 0:
         return (air_density(observer_elevation) / air_density(0)) / (math.sin(math.radians(altitude)) + 0.50572 * ((altitude + 6.07995) ** (-1.6364)))
     else:
-        return np.inf
+        return 1000
 
 
 def air_mass_pickering_2002(altitude, observer_elevation = 0):
     if altitude >= 0:
         return (air_density(observer_elevation) / air_density(0)) / (math.sin(math.radians(altitude + (244 / (165 + 47 * altitude**1.1)))))
     else:
-        return np.inf
+        return 1000
 
 air_mass = air_mass_Kasten_Young
 
 
 def attenuate(flux, air_mass):
+    if air_mass > 100:
+        return 0
     return flux * math.exp(constants.ATTENUATION_ONE_AIR_MASS * air_mass)
 
 

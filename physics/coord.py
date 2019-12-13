@@ -9,18 +9,57 @@ from physics import constants, wgs84
 from ctypes import CDLL, c_double, Structure
 
 
-#class VectorC(Structure):
-#    _fields_ = [
-#        ('x', c_double),
-#        ('y', c_double),
-#        ('z', c_double),
-#    ]
-#
-#wgs84 = CDLL('physics/wgs84.o')
-#wgs84.wgs84_to_ecef.restype = VectorC
-#wgs84.wgs84_to_ecef.argtypes = [c_double, c_double, c_double]
-#wgs84.ecef_to_wgs84.restype = VectorC
-#wgs84.ecef_to_wgs84.argtypes = [c_double, c_double, c_double]
+class ECEF():
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def __eq__(self, other):
+        return isinstance(other, ECEF) and self.x == other.x and self.y == other.y and self.z == other.z
+
+    def __add__(self, other):
+        if not isinstance(other, Vector):
+            raise TypeError(f"ECEF: cannot __add__ {type(other)} (only Vector)")
+        return ECEF(
+            self.x + other.x,
+            self.y + other.y,
+            self.z + other.z,
+        )
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __iadd__(self, other):
+        if not isinstance(other, Vector):
+            raise TypeError(f"ECEF: cannot __iadd__ {type(other)}")
+        self.x += other.x
+        self.y += other.y
+        self.z += other.z
+        return self
+
+    def __sub__(self, other):
+        if not isinstance(other, Vector):
+            raise TypeError(f"ECEF: cannot __sub__ {type(other)}")
+        return ECEF(
+            self.x - other.x,
+            self.y - other.y,
+            self.z - other.z
+        )
+    
+    def __isub__(self, other):
+        if not isinstance(other, Vector):
+            raise TypeError(f"ECEF: cannot __isub__ {type(other)}")
+        self.x -= other.x
+        self.y -= other.y
+        self.z -= other.z
+        return self
+
+    @classmethod
+    def from_vector(cls, vector):
+        self.x = vector.x
+        self.y = vector.y
+        self.z = vector.z
 
 
 class Vector3D:
@@ -164,6 +203,9 @@ class Vector3D:
         )
 
     def to_spherical(self):
+        return wgs84.ecef_to_spherical(self.x, self.y, self.z)
+
+    def to_altaz(self):
         return wgs84.ecef_to_spherical(self.x, self.y, self.z)
 
     @classmethod

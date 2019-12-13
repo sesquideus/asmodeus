@@ -28,13 +28,12 @@ def flux_density(flux, distance):
 
 
 def absolute_magnitude(flux: float) -> float:
-    if flux < 1e-30:
-        return math.inf
     return constants.ABSOLUTE_MAGNITUDE_ONE_WATT - 2.5 * math.log10(flux) 
 
 
 def apparent_magnitude(flux_density: float) -> float:
-    if flux_density < 1e-50:
-        return math.inf
+    if flux_density == 0:
+        return 30
     return constants.APPARENT_MAGNITUDE_ONE_WM2 - 2.5 * math.log10(flux_density)
+
 
