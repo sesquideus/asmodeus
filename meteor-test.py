@@ -11,15 +11,15 @@ from matplotlib import pyplot
 
 from models import Meteor
 from physics import atmosphere, coord, constants
+from flight.textbook import TextbookModel
+from integrators import base
 
 def get_wind(vector):
     return coord.Vector3D(0, 0, 0)
 
-GRAVITY_VECTOR = coord.Vector3D(0, 0, -constants.EARTH_GRAVITY)
-
 
 def main():
-    position = coord.Vector3D.from_WGS84(48.746, 21.083, 180000)
+    position = coord.Vector3D.from_WGS84(48.746, 21.083, 130000)
     #position = coord.Vector3D.from_WGS84(89, 0, 0.01)
     meteor = Meteor(
         mass=0.0000228602,
@@ -30,23 +30,13 @@ def main():
         #velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(45, 0, 500)),
         timestamp=datetime.datetime.now(tz=pytz.utc),
     )
-    #meteor.fly_constant(fps=0.1, spf=1, method='euler')
 
-    meteor1 = copy.deepcopy(meteor)
-    meteor2 = copy.deepcopy(meteor)
-    meteor3 = copy.deepcopy(meteor)
-    meteor4 = copy.deepcopy(meteor)
-    meteor5 = copy.deepcopy(meteor)
+    model = TextbookModel()
+    integrator = base.IntegratorRungeKutta4(model, 20, 1)
 
-    #meteor1.fly_constant(fps=8, spf=4, method='Euler')
-    #meteor2.fly_constant(fps=8, spf=4, method='RK4')
-    #meteor3.fly_constant(fps=8, spf=4, method='DP')
-    #meteor4.fly_adaptive(fps=8, spf=4, method='DP', error_coarser=1e-6)
-
-    for i in range(0, 1):
-        meteor5 = copy.deepcopy(meteor)
-        #meteor5.fly_constant(fps=20, spf=1, method='Euler')
-        meteor5.fly_adaptive(fps=20, method='DP', error_coarser=1e-8, error_finer=1e-4, min_spf=1, max_spf=8)
+    integrator.simulate(meteor)
+        
+    #.fly_adaptive(fps=20, method='DP', error_coarser=1e-12, error_finer=1e-4, min_spf=1, max_spf=16)
     #meteor.to_dataframe()
     #meteor.plot()
 

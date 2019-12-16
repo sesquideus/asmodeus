@@ -51,10 +51,10 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
             period      = self.config.mp.report,
         )
 
-        log.info("{num} meteors were generated in {time} seconds ({rate} meteors per second)".format(
-            num     = c.num(self.population.count),
-            time    = c.num(f"{self.stop_time():.6f}"),
-            rate    = c.num(f"{self.population.count / self.stop_time():.3f}"),
+        log.info("Generating took {time} s ({meteor_rate} meteors/s, {frame_rate} frames/s)".format(
+            time        = c.num(f"{self.stop_time():.6f}"),
+            meteor_rate = c.num(f"{self.population.count / self.stop_time():.3f}"),
+            frame_rate  = c.num(f"{self.population.total_frames / self.stop_time():.3f}"),
         ))
 
         self.mark_time()

@@ -48,6 +48,13 @@ generator:
                 end:                2016-08-12T02:00:00         # End of the interval, ISO8601
 
 integrator:
-    name:                           'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
-    fps:                            200                         # Frames per second
-    spf:                            1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time
+    name:                           'DP'                        # Integrator to be used. Allowed values are 'Euler', 'RK4', 'DP' and 'DP-adaptive'
+    fps:                            20                          # Frames per second
+    parameters:
+        spf:
+            min:                    1
+            max:                    256
+        error:
+            min:                    1.0e-12
+            max:                    1.0e-4
+

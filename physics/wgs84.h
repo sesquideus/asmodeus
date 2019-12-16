@@ -31,6 +31,8 @@ private:
     double x, y, z;
 }*/
 
+
+
 typedef struct {
     double x, y, z;
 } ECEF;

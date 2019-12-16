@@ -72,7 +72,7 @@ class Population():
         self.total_frames   = sum(map(lambda x: len(x.frames), self.meteors))
         self.total_mass     = sum(map(lambda x: x.mass_initial, self.meteors))
 
-        log.info("Generated {meteoroids} with {frames} frames, total mass {mass}".format(
+        log.info("Simulated {meteoroids} meteors with {frames} frames, total mass {mass}".format(
             meteoroids      = c.num(len(self.meteors)),
             frames          = c.num(self.total_frames),
             mass            = c.num("{:6f} kg".format(self.total_mass)),
@@ -116,8 +116,8 @@ def init_simulate(_queue, _fps, _spf, _streaks):
 
 
 def simulate(meteor):
-    meteor.fly_constant(fps, spf, method='DP', wgs84=True)
-    #meteor.fly_adaptive(fps, spf, method='DP', wgs84=True, max_spf=4, error_coarser=1e-6, error_finer=1e-3)
+    #meteor.fly_constant(fps, spf, method='DP', wgs84=True)
+    meteor.fly_adaptive(fps, method='DP', wgs84=True, max_spf=256, error_coarser=1e-12, error_finer=1e-4)
     queue.put(1)
 
     if not streaks:
