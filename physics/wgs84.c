@@ -76,7 +76,7 @@ WGS84 ecef_to_spherical(double x, double y, double z) {
     WGS84 geo;
     double r = sqrt(x * x + y * y + z * z);
     geo.lat = degrees(asin(z / r));
-    geo.lon = fmod(degrees(atan2(y, x)), 360);
+    geo.lon = fmod(degrees(atan2(y, x)) + 360, 360);
     geo.alt = r;
     return geo;
 }

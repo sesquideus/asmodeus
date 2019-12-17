@@ -13,7 +13,7 @@ def drag_coefficient_smooth_sphere(reynolds):
     c = reynolds / 1000000
 
     return 24 / reynolds \
-        + 2.6 * a / (1 + a)**1.52 \
+        + 2.6 * a / (1 + a**1.52) \
         + 0.411 * b**-7.94 / (1 + b**-8) \
         + 0.25 * c / (1 + c)
 

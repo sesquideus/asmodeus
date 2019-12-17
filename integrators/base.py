@@ -28,11 +28,12 @@ class IntegratorConstantStep(Integrator):
             state = State(meteor.position, meteor.velocity, math.log(meteor.mass))
             diff = self.step(meteor, state, self.dt)
 
-            meteor.update_state(diff, self.dt)
+            meteor.update_properties(diff, self.dt)
             if self.steps_taken % self.spf == 0:
                 meteor.save_snapshot()
                 meteor.print_info()
 
+            meteor.update_state(diff, self.dt)
             self.steps_taken += 1
 
             if meteor.check_terminate():

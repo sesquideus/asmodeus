@@ -264,7 +264,7 @@ class Vector3D:
         lon = (coordinates.lon + 180) % 360 - 180
         ns = 'N' if lat >= 0 else 'S'
         ew = 'E' if lon <= 180 else 'W'
-        return f"{lat:{fmta}}° {ns} {lon:{fmta}}° {ew} {coordinates.alt:{fmtd}}"
+        return f"{abs(lat):{fmta}}° {ns} {abs(lon):{fmta}}° {ew} {coordinates.alt:{fmtd}}"
 
     def str_spherical(self, fmta='.6f', fmtd='.6f'):
         coordinates = self.to_spherical()
@@ -331,9 +331,9 @@ class EarthLocation(Vector3D):
 
     def __str__(self):
         return "{lat:9.6f}° {ns}, {lon:9.6f}° {ew}, {ele:6.0f} m".format(
-            lat     = self.latitude(),
+            lat     = abs(self.latitude()),
             ns      = 'N' if self.latitude() >= 0 else 'S',
-            lon     = self.longitude(),
+            lon     = abs(self.longitude()),
             ew      = 'E' if self.longitude() >= 0 else 'W',
             ele     = self.elevation(),
         )

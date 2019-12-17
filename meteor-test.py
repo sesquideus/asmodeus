@@ -19,15 +19,16 @@ def get_wind(vector):
 
 
 def main():
-    position = coord.Vector3D.from_WGS84(48.746, 21.083, 130000)
-    #position = coord.Vector3D.from_WGS84(89, 0, 0.01)
+    position = coord.Vector3D.from_WGS84(48.746, 21.083, 380000)
+#    position = coord.Vector3D.from_WGS84(90, 0, 1e9)
     meteor = Meteor(
         mass=0.0000228602,
 #        mass=0.000002,
         density=3370,
         position=position,
         velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(-30.2, 72.6, 58000)),
-        #velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(45, 0, 500)),
+#        velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(0, 84.5, 7460)),
+     #   velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(45, 0, 500)),
         timestamp=datetime.datetime.now(tz=pytz.utc),
     )
 

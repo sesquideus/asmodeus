@@ -10,7 +10,7 @@ class State:
         self.log_mass = log_mass
 
     def __str__(self):
-        return f"{self.position:w} {self.velocity:s} {self.log_mass:6.2g}"
+        return f"{self.position:w10.6f,10.3f} {self.velocity:c.6f} {self.log_mass:10.4g}"
 
     def __add__(self, diff):
         return State(
@@ -68,7 +68,7 @@ class Diff:
 
     ### Representations
     def __str__(self):
-        return f"{self.drdt} {self.dvdt} {self.dmdt}"
+        return f"{self.drdt:c} {self.dvdt:c} {self.dmdt:8.2f}"
 
     ### Logic
     def norm(self):
