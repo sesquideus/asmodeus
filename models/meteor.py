@@ -18,41 +18,6 @@ log = L()
 
 EARTH_ROTATION = coord.Vector3D(0, 0, constants.EARTH_ANGULAR_SPEED)
 
-DP_A21 = 1/5
-
-DP_A31 = 3/40
-DP_A32 = 9/40
-
-DP_A41 = 44/45
-DP_A42 = -56/15
-DP_A43 = 32/9
-
-DP_A51 = 19372/6561
-DP_A52 = -25360/2187
-DP_A53 = 64448/6561
-DP_A54 = -212/729
-
-DP_A61 = 9017/3168
-DP_A62 = -355/33
-DP_A63 = 46732/5247
-DP_A64 = 49/176
-DP_A65 = -5103/18656
-
-DP_A71 = 35/384
-DP_A73 = 500/1113
-DP_A74 = 125/192
-DP_A75 = -2187/6784
-DP_A76 = 11/84
-
-DP_B1 = 5179/57600
-DP_B3 = 7571/16695
-DP_B4 = 393/640
-DP_B5 = -92097/339200
-DP_B6 = 187/2100
-DP_B7 = 1/40
-
-
-
 
 class Meteor:
     def __init__(self, *, mass, density, position, velocity, timestamp, **kwargs):
@@ -96,61 +61,6 @@ class Meteor:
 
     def save(self, filename):
         pickle.dump(self, io.FileIO(os.path.join(filename, f"{self.id}x{datetime.datetime.now().strftime('%H%M%S%f')}.pickle"), 'wb'))
-
-    def fly_adaptive(self, fps, *, method='DP', wgs84=True, min_spf=1, max_spf=10000, error_coarser=1e-6, error_finer=1e-3):
-        integrator = self.select_integrator_adaptive()
-        spf = min_spf
-        if spf > max_spf:
-            spf = max_spf
-        clock = 0
-        self.step = 0
-        last_change = 0
-
-        while True:
-            dt = 1.0 / (fps * spf)
-            self.step += 1
-            error, diff = integrator(State(self.position, self.velocity, self.log_mass), dt)
-            #print(f"t = {self.time:12.6f} s, error = {error:.6f}, {clock}/{spf}")
-
-            if error < error_coarser and spf > min_spf:
-                log.debug(f"Step unnecessarily small (error = {error:.6f}), {clock}/{spf}")
-                if clock % 2 == 0:
-                    spf //= 2
-                    clock //= 2
-                    log.debug(f"Decreasing to {spf} steps per frame at clock {clock}")
-                    last_change = +1
-                    continue
-                else:
-                    log.debug("Waiting another step")
-                    pass
-
-            if error > error_finer and spf < max_spf and last_change != 1:
-                spf *= 2
-                clock *= 2
-                log.debug(f"Step too long (error = {error:.6f}), increasing to {spf} steps per frame at clock {clock}")
-                last_change = -1
-                continue
-
-            last_change = 0
-
-            if clock % spf == 0:
-                self.save_snapshot(diff, wgs84=wgs84)
-                self.print_info(spf)
-                clock = 0
-
-            self.position += diff.drdt * dt
-            self.velocity += diff.dvdt * dt
-            self.log_mass += diff.dmdt * dt
-
-            # Advance time by dt
-            self.timestamp += datetime.timedelta(seconds = dt)
-            self.time += dt
-            clock += 1
-
-            if self.check_terminate():
-                break
-
-        log.debug(f"Meteor generated ({len(self.frames)} frames)")
 
     def update_properties(self, diff, dt):
         self.acceleration = diff.dvdt
@@ -221,7 +131,7 @@ class Meteor:
             f"{self.reynolds_number:8.0f} | "
             f"\u0393 {self.gamma:8.2f} | "
             #f"Q {self.dynamic_pressure:8.0f} Pa | "
-            f"{self.mass_initial:6.2e} kg, {self.mass:6.2e} kg, {self.mass_change:9.3e} kg/s, "
+            #f"{self.mass_initial:6.2e} kg, {self.mass:6.2e} kg, {self.mass_change:9.3e} kg/s, "
             f"{self.radius * 1000:7.3f} mm | "
             #f"{self.luminous_power:10.3e} W, "
             #f"{self.absolute_magnitude:6.2f}m"
