@@ -80,14 +80,14 @@ class Dataframe():
 
             axes.set_xlabel(histogram.name, fontdict = {'fontsize': 12})
             axes.set_ylabel('relative count', fontdict = {'fontsize': 12})
-            axes.set_title(f"{self.observer.name} – {histogram.name}", fontdict = {'fontsize': 14})
+            axes.set_title(f"{self.observer.name} – {histogram.name} (bin width {histogram.bin})", fontdict = {'fontsize': 14})
 
             count = int(np.ceil((histogram.max - histogram.min) / histogram.bin))
             bins = np.linspace(histogram.min, histogram.max, count + 1)
             hist, edges = np.histogram(self.visible[histogram.id], bins = bins, range = (histogram.min, histogram.max), density = True)
 
             bar = axes.bar(
-                edges[:-1], hist, width = histogram.bin, alpha = 0.5, align = 'edge', color = (0.1, 0.7, 0.4, 0.5), edgecolor = (0.1, 0.3, 0.2, 1)
+                edges[:-1], hist, width = histogram.bin, alpha = 0.5, align = 'edge', color = (0.1, 0.7, 0.4, 0.5), edgecolor = (0.1, 0.3, 0.2, 0)
             )
 
             figure.savefig(self.dataset.path('analyses', 'histograms', self.observer.id, f"{histogram.id}.png"), dpi = 300)
