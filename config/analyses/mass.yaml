@@ -116,3 +116,10 @@ scatters:
     -   {x:               *mf, y:          *fpkg, colour: *lmi, cmap: viridis}
     -   {x:               *mf, y:         *fpkgi, colour: *lmi, cmap: viridis}
     -   {x:               *mf, y:     *elevation, colour: *lmi, cmap: viridis}
+
+histograms:
+    -   id:     'apparent_magnitude'
+        name:   'apparent magnitude'
+        min:    -10
+        max:    10
+        bin:    0.5

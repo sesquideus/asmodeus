@@ -18,7 +18,7 @@ class DataManager():
 
     def create_root(self):
         os.makedirs(self.root)
-        
+
     def path(self, *path):
         return os.path.join(self.root, *path)
 
@@ -57,7 +57,7 @@ class DataManager():
         self.protected_reset()
         self.protected_reset('meteors')
         self.remove('meteors.yaml')
-        
+
         self.remove('sightings')
         self.remove('campaign.yaml')
 
@@ -78,10 +78,12 @@ class DataManager():
 
     def reset_scatters(self):
         self.protected_reset('analyses', 'scatters')
-    
+
     def reset_sky_plots(self):
         self.protected_reset('analyses', 'skyplots')
 
+    def reset_histograms(self):
+        self.protected_reset('analyses', 'histograms')
+
     def meteor_files(self):
         return self.list('meteors')
-        

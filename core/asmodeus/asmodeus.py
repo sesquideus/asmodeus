@@ -62,7 +62,7 @@ class Asmodeus():
         self.argparser.add_argument('-l', '--logfile',          type = argparse.FileType('w'),      help = "output log to file")
 
     def prepare_dataset(self):
-        raise NotImplementedError(f"You need to define the {c.name('prepareDataset')} method for every ASMODEUS subclass.")
+        raise NotImplementedError(f"You need to define the {c.name('prepare_dataset')} method for every ASMODEUS subclass.")
 
     def load_config(self):
         self.config = configuration.load_YAML(self.args.config)

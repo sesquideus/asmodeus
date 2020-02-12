@@ -105,3 +105,7 @@ class Campaign():
     def make_sky_plots(self, *, dark = True):
         for dataframe in self.dataframes:
             dataframe.make_sky_plot(dark = dark)
+
+    def make_histograms(self):
+        for dataframe in self.dataframes:
+            dataframe.make_histograms(self.analyses.histograms)

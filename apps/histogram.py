@@ -7,8 +7,8 @@ class AsmodeusHistogram(asmodeus.AsmodeusAnalyze):
     name = 'histogram'
 
     def prepare_dataset(self):
-        super().prepare_dataset()
-        self.protect_overwrite('analyses', 'histograms')
+        self.dataset.reset_histograms()
 
-    def run_analysis(self, observer):
-        observer.make_histograms()
+    def run_specific(self):
+        super().run_specific()
+        self.campaign.make_histograms()

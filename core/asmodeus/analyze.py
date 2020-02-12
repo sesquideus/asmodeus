@@ -45,7 +45,7 @@ class AsmodeusAnalyze(Asmodeus):
                     discriminator.log_info()
 
                 self.campaign.set_discriminators(discriminators)
-                
+
             except AttributeError as e:
                 raise exceptions.ConfigurationError(e) from e
         else:

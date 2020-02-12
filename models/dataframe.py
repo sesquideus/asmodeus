@@ -41,10 +41,11 @@ class Dataframe():
         return dataframe
 
     def expand(self):
-        self.data['mjd'] = Time(self.data.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
-        self.data['mass_fraction'] = self.data.mass / self.data.mass_initial
-        self.data['fpkgi'] = self.data.luminous_power / self.data.mass_initial
-        self.data['fpkg'] = self.data.luminous_power / self.data.mass
+#        self.data['mjd'] = Time(self.data.timestamp.to_numpy(dtype = 'datetime64[ns]')).mjd
+#        self.data['mass_fraction'] = self.data.mass / self.data.mass_initial
+#        self.data['fpkgi'] = self.data.luminous_power / self.data.mass_initial
+#        self.data['fpkg'] = self.data.luminous_power / self.data.mass
+        pass
 
     def save(self):
         filename = self.dataset.path('sightings', self.observer.id, 'sky.tsv')
@@ -63,10 +64,42 @@ class Dataframe():
     def skip_bias(self):
         self.visible = self.data#[self.data.altitude > self.observer.horizon]
 
+    def make_histograms(self, settings):
+        log.info(f"Creating {c.name('histograms')} for observer {c.name(self.observer.name)}")
+
+        self.dataset.create('analyses', 'histograms', self.observer.id, exist_ok=True)
+
+        for histogram in settings:
+            self.histogram(histogram)
+
+    def histogram(self, histogram):
+        print(histogram)
+        try:
+            figure, axes = self.empty_figure()
+            axes.tick_params(axis = 'both', which = 'major', labelsize = 12)
+
+            axes.set_xlabel(histogram.name, fontdict = {'fontsize': 12})
+            axes.set_ylabel('relative count', fontdict = {'fontsize': 12})
+            axes.set_title(f"{self.observer.name} – {histogram.name}", fontdict = {'fontsize': 14})
+
+            count = int(np.ceil((histogram.max - histogram.min) / histogram.bin))
+            bins = np.linspace(histogram.min, histogram.max, count + 1)
+            hist, edges = np.histogram(self.visible[histogram.id], bins = bins, range = (histogram.min, histogram.max), density = True)
+
+            bar = axes.bar(
+                edges[:-1], hist, width = histogram.bin, alpha = 0.5, align = 'edge', color = (0.1, 0.7, 0.4, 0.5), edgecolor = (0.1, 0.3, 0.2, 1)
+            )
+
+            figure.savefig(self.dataset.path('analyses', 'histograms', self.observer.id, f"{histogram.id}.png"), dpi = 300)
+            pyplot.close(figure)
+        except KeyError as e:
+            log.error(f"Invalid scatter configuration parameter {c.param(e)}")
+
+
     def make_scatters(self, settings):
         log.info(f"Creating {c.name('scatter plots')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
 
-        self.dataset.create('analyses', 'scatters', self.observer.id, exist_ok = True)
+        self.dataset.create('analyses', 'scatters', self.observer.id, exist_ok=True)
 
         for scatter in settings:
             self.cross_scatter(scatter)
