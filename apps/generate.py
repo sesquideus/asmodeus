@@ -46,7 +46,7 @@ class AsmodeusGenerate(asmodeus.AsmodeusMultiprocessing):
         self.mark_time()
         self.population.simulate(
             self.config.integrator.fps,
-            self.config.integrator.spf,
+            self.config.integrator.parameters.spf,
             processes   = self.config.mp.processes,
             period      = self.config.mp.report,
         )

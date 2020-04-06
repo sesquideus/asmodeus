@@ -6,6 +6,8 @@ from core.parallel      import parallel
 from core               import exceptions, configuration
 from models             import Meteor, Generator
 from utilities          import colour as c
+from integrators        import base
+from flight.whipple     import Whipple
 
 log = logging.getLogger('root')
 
@@ -111,13 +113,15 @@ def save(meteor):
 
 
 def init_simulate(_queue, _fps, _spf, _streaks):
-    global queue, fps, spf, streaks
+    global queue, fps, spf, streaks, integrator
     queue, fps, spf, streaks = _queue, _fps, _spf, _streaks
+    integrator = base.IntegratorRungeKutta4(Whipple(), 20, spf=1)
+    #integrator = base.IntegratorDormandPrinceAdaptive(Whipple(), 20, spf_min=1, spf_max=8, error_coarser=1e-8, error_finer=1e-2)
 
 
 def simulate(meteor):
     #meteor.fly_constant(fps, spf, method='DP', wgs84=True)
-    meteor.fly_adaptive(fps, method='DP', wgs84=True, max_spf=256, error_coarser=1e-12, error_finer=1e-4)
+    integrator.simulate(meteor)
     queue.put(1)
 
     if not streaks:

@@ -7,7 +7,7 @@ generator:
             drag_coefficient:
                 distribution:       constant
                 parameters:
-                    value:          0.6                         # 0.6 for a spherical body
+                    value:          1                           # 0.6 for a spherical body
             shape_factor:           1.21                        # 1.21 for a spherical body
 
         material:
@@ -48,13 +48,7 @@ generator:
                 end:                2016-08-12T02:00:00         # End of the interval, ISO8601
 
 integrator:
-    name:                           'DP'                        # Integrator to be used. Allowed values are 'Euler', 'RK4', 'DP' and 'DP-adaptive'
+    name:                           'RK4'                       # Integrator to be used. Allowed values are 'Euler', 'RK4', 'DP' and 'DP-adaptive'
     fps:                            20                          # Frames per second
     parameters:
-        spf:
-            min:                    1
-            max:                    256
-        error:
-            min:                    1.0e-12
-            max:                    1.0e-4
-
+        spf:                        1

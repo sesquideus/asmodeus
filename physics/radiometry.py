@@ -17,7 +17,7 @@ def excitation_coefficient(speed: float) -> float:
 
 
 def luminous_efficiency(speed: float) -> float:
-    if speed > 1000:
+    if speed > 2000:
         return 2 * 7.668e6 * excitation_coefficient(speed) / speed**2
     else:
         return 0
@@ -34,8 +34,8 @@ def absolute_magnitude(flux: float) -> float:
 
 
 def apparent_magnitude(flux_density: float) -> float:
-    if flux_density == 0:
-        return 30
+    if flux_density < 1e-15:
+        return 20
     return constants.APPARENT_MAGNITUDE_ONE_WM2 - 2.5 * math.log10(flux_density)
 
 

@@ -8,9 +8,9 @@ from utilities import colour as c
 log = logging.getLogger('root')
 
 
-def load_YAML(fileObject):
+def load_YAML(file_object):
     try:
-        config = yaml.safe_load(fileObject)
+        config = yaml.safe_load(file_object)
     except yaml.composer.ComposerError as e:
         log.error(f"YAML composer error {e}")
         raise exceptions.ConfigurationError(e) from e

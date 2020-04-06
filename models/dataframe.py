@@ -194,20 +194,15 @@ class Dataframe():
         except KeyError as e:
             log.error(f"Invalid scatter configuration parameter {c.param(e)}")
 
-    def make_sky_plot(self, *, dark = True):
+    def make_sky_plot(self, *, dark=True):
         log.info(f"Creating {c.name('sky plot')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
 
-        if dark:
-            background, line_colour = 'black', 'white'
-        else:
-            background, line_colour = 'white', 'grey'
-
         self.dataset.create('analyses', 'skyplots', self.observer.id, exist_ok = True)
+        path = self.dataset.path('analyses', 'skyplots', self.observer.id, 'sky.png')
 
+        background, line_colour = 'black', 'white' if dark else 'white', 'grey'
         pyplot.rcParams['font.family'] = "Minion Pro"
         pyplot.rcParams['mathtext.fontset'] = "dejavuserif"
-
-        path = self.dataset.path('analyses', 'skyplots', self.observer.id, 'sky.png')
 
         size_formatter = lambda x: 20 * np.exp(-x / 2)
 
@@ -232,9 +227,9 @@ class Dataframe():
         axes.set_facecolor(background)
         axes.grid(linewidth = 0.2, color = line_colour)
 
-        scatter = axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'viridis', alpha = 1, linewidths = 0)
+        scatter = axes.scatter(azimuths, altitudes, c=colours, s=sizes, cmap='viridis', alpha=1, linewidths=0)
 
-        cb = figure.colorbar(scatter, extend = 'max', fraction = 0.1, pad = 0.06)
+        cb = figure.colorbar(scatter, extend='max', fraction=0.1, pad=0.06)
         cb.set_label(f"angular speed [°/s]", fontsize=16)
         cb.ax.tick_params(labelsize=15)
 
@@ -242,8 +237,6 @@ class Dataframe():
             sign = '+' if magnitude >= 0 else '\u2212'
             axes.scatter([], [], c='k', alpha=0.6, s=size_formatter(magnitude), label=f'{sign}{abs(magnitude)}$^\\mathrm{{m}}$')
         axes.legend(scatterpoints=1, frameon=False, labelspacing=0.8, title='Apparent magnitude', loc=(-0.06, 0.8))
-        
-        print("f")
 
         figure.savefig(path, facecolor = background, dpi = 300)
 

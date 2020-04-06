@@ -3,7 +3,7 @@ _bias_functions:
         sigmoid: &sigmoid
             discriminator:      sigmoid                     # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
             parameters:                        
-                limit:          6.0                         # Limiting magnitude m0
+                limit:          6                           # Limiting magnitude m0
                 width:          1                           # Width of the function
         all: &all
             discriminator:      'all'                       # Angular speed detection efficiency profile, possible values 'flat' or 'linear'
@@ -15,5 +15,3 @@ _bias_functions:
                 exponent:       0.3                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
 
 magnitude: *sigmoid
-angular_speed: *all
-altitude: *powersine

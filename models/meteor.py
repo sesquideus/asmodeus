@@ -5,16 +5,17 @@ import io
 import os
 import numpy as np
 import pickle
+import logging
 
 import models.frame
 
 from physics import atmosphere, coord, radiometry, constants
 
-#log = logging.getLogger('root')
-class L():
-    def debug(self, p):
-        print(p)
-log = L()
+log = logging.getLogger('root')
+#class L():
+#    def debug(self, p):
+#        print(p)
+#log = L()
 
 EARTH_ROTATION = coord.Vector3D(0, 0, constants.EARTH_ANGULAR_SPEED)
 
@@ -36,6 +37,7 @@ class Meteor:
         self.shape_factor       = kwargs.get('shape_factor', 1.21)
         self.heat_transfer      = kwargs.get('heat_transfer', 0.5)
         self.ablation_heat      = kwargs.get('ablation_heat', 8e6)
+        self.drag_coefficient   = kwargs.get('drag_coefficient', 1)
 
         self.ablation_const     = 0.5 * self.heat_transfer * self.shape_factor * self.density**(-2/3) / self.ablation_heat
 
@@ -79,17 +81,21 @@ class Meteor:
     def check_terminate(self):
         """Check if the simulation of the flight should be terminated"""
         # If all mass has been ablated away, the particle is pronounced dead
-        if self.mass < 1e-10:
+        if self.acceleration.norm() > 1e6:
+            log.debug("Acceleration anomaly")
+            return True
+
+        if self.mass < -21:
             log.debug("Burnt to death")
             return True
 
-        # If the particle flew above 400 km, it will likely leave Earth altogether
-        #if self.position.elevation() > 400000:
-        #    log.debug("Flew away")
-        #    break
+        # If the particle flew above 200 km, it will likely leave Earth altogether
+        if self.position.to_WGS84().alt > 200000:
+            log.debug("Flew away")
+            return True
 
         # If the velocity is very low, it is a meteorite
-        if self.velocity.norm() < 0:
+        if self.velocity.norm() < 6000:
             log.debug(f"Survived with final mass {self.mass:12.6f} kg")
             return True
 
@@ -108,7 +114,7 @@ class Meteor:
         self.radius = ((3 * self.mass) / (4 * np.pi * self.density))**(1 / 3)
 
         self.reynolds_number = atmosphere.Reynolds_number(2 * self.radius, speed, self.air_density)
-        self.gamma = atmosphere.drag_coefficient_smooth_sphere(self.reynolds_number)
+        self.gamma = 1#atmosphere.drag_coefficient_smooth_sphere(self.reynolds_number)
         self.dynamic_pressure = self.air_density * speed**2
 
         self.luminous_power = -(radiometry.luminous_efficiency(speed) * self.mass_change * speed**2 / 2.0)
@@ -126,15 +132,15 @@ class Meteor:
             f"{self.position:w10.6f,10.3f} | "
             f"{self.velocity_altaz:s10.6f,9.3f} m/s | "
             #f"\u03c1 {self.air_density:9.3e} kg/m³ | "
-            f"{self.acceleration.norm():13.3f} m/s², "
+            f"{self.acceleration.norm():13.3f} m/s² | "
             #f"{radiometry.luminous_efficiency(self.velocity.norm()):6.4f} "
-            f"{self.reynolds_number:8.0f} | "
-            f"\u0393 {self.gamma:8.2f} | "
+            #f"{self.reynolds_number:8.0f} | "
+            #f"\u0393 {self.gamma:8.2f} | "
             #f"Q {self.dynamic_pressure:8.0f} Pa | "
-            #f"{self.mass_initial:6.2e} kg, {self.mass:6.2e} kg, {self.mass_change:9.3e} kg/s, "
-            f"{self.radius * 1000:7.3f} mm | "
+            f"{self.mass_initial:6.2e} kg, {self.mass:6.2e} kg, {self.mass_change:9.3e} kg/s | "
+            #f"{self.radius * 1000:7.3f} mm | "
             #f"{self.luminous_power:10.3e} W, "
-            #f"{self.absolute_magnitude:6.2f}m"
+            f"{self.absolute_magnitude:6.2f}m"
         )
 
 

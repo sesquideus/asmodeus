@@ -1,6 +1,7 @@
 import numbers
 import math
 import numpy as np
+import logging
 
 from integrators.state import State, Diff
 
@@ -37,11 +38,11 @@ DP_B5 = -92097/339200
 DP_B6 = 187/2100
 DP_B7 = 1/40
 
-#log = logging.getLogger('root')
-class L():
-    def debug(self, p):
-        print(p)
-log = L()
+log = logging.getLogger('root')
+#class L():
+#    def debug(self, p):
+#        print(p)
+#log = L()
 
 
 class Integrator:
@@ -63,19 +64,24 @@ class IntegratorConstantStep(Integrator):
         self.steps_taken = 0
 
         while True:
-            state = State(meteor.position, meteor.velocity, math.log(meteor.mass))
-            diff = self.step(meteor, state, self.dt)
+            try:
+                state = State(meteor.position, meteor.velocity, math.log(meteor.mass))
+                diff = self.step(meteor, state, self.dt)
+            except Exception as e:
+                log.debug(f"Terminated {e}")
+                break
 
             meteor.update_properties(diff, self.dt)
+            
+            if meteor.check_terminate():
+                break
+
             if self.steps_taken % self.spf == 0:
                 meteor.save_snapshot()
                 meteor.print_info()
 
             meteor.update_state(diff, self.dt)
             self.steps_taken += 1
-
-            if meteor.check_terminate():
-                break
 
 
 class IntegratorAdaptiveStep(Integrator):
@@ -99,12 +105,16 @@ class IntegratorAdaptiveStep(Integrator):
         last_change = 0
 
         while True:
-            self.dt = 1.0 / (self.fps * self.spf)
-            state = State(meteor.position, meteor.velocity, math.log(meteor.mass))
-            diff, error = self.step(meteor, state, self.dt)
+            try:
+                self.dt = 1.0 / (self.fps * self.spf)
+                state = State(meteor.position, meteor.velocity, math.log(meteor.mass))
+                diff, error = self.step(meteor, state, self.dt)
 
-            self.steps_taken += 1
-            diff, error = self.step(meteor, state, self.dt)
+                self.steps_taken += 1
+                diff, error = self.step(meteor, state, self.dt)
+            except _ as e:
+                log.warning(f"Simulation aborted, {e}")
+                break
             #print(f"t = {self.time:12.6f} s, error = {error:.6f}, {clock}/{spf}")
 
             if error < self.error_coarser and self.spf > self.spf_min:
@@ -159,12 +169,12 @@ class IntegratorRungeKutta4(IntegratorConstantStep):
 class IntegratorDormandPrince(IntegratorConstantStep):
     def step(self, meteor, state, dt):
         d0 = Diff.zero()
-        d1 = self.model.evaluate(state, d0, dt)
-        d2 = self.model.evaluate(state, d1 * DP_A21, dt)
-        d3 = self.model.evaluate(state, d1 * DP_A31 + d2 * DP_A32, dt)
-        d4 = self.model.evaluate(state, d1 * DP_A41 + d2 * DP_A42 + d3 * DP_A43, dt)
-        d5 = self.model.evaluate(state, d1 * DP_A51 + d2 * DP_A52 + d3 * DP_A53 + d4 * DP_A54, dt)
-        d6 = self.model.evaluate(state, d1 * DP_A61 + d2 * DP_A62 + d3 * DP_A63 + d4 * DP_A64 + d5 * DP_A65, dt)
+        d1 = self.model.evaluate(meteor, state, d0, dt)
+        d2 = self.model.evaluate(meteor, state, d1 * DP_A21, dt)
+        d3 = self.model.evaluate(meteor, state, d1 * DP_A31 + d2 * DP_A32, dt)
+        d4 = self.model.evaluate(meteor, state, d1 * DP_A41 + d2 * DP_A42 + d3 * DP_A43, dt)
+        d5 = self.model.evaluate(meteor, state, d1 * DP_A51 + d2 * DP_A52 + d3 * DP_A53 + d4 * DP_A54, dt)
+        d6 = self.model.evaluate(meteor, state, d1 * DP_A61 + d2 * DP_A62 + d3 * DP_A63 + d4 * DP_A64 + d5 * DP_A65, dt)
         return d1 * DP_A71 + d3 * DP_A73 + d4 * DP_A74 + d5 * DP_A75 + d6 * DP_A76
 
 

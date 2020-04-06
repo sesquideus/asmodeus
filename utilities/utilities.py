@@ -11,26 +11,26 @@ from utilities import colour as c
 
 class readable_dir(argparse.Action):
     def __call__(self, parser, namespace, values, option_string = None):
-        tryDir = values
-        if not os.path.isdir(tryDir):
-            raise argparse.ArgumentTypeError("readableDir: {0} is not a valid path".format(tryDir))
-        if os.access(tryDir, os.R_OK):
-            setattr(namespace, self.dest, tryDir)
+        try_dir = values
+        if not os.path.isdir(try_dir):
+            raise argparse.ArgumentTypeError(f"readable_dir: {try_dir} is not a valid path")
+        if os.access(try_dir, os.R_OK):
+            setattr(namespace, self.dest, try_dir)
         else:
-            raise argparse.ArgumentTypeError("readableDir: {0} is not a readable directory".format(tryDir))
+            raise argparse.ArgumentTypeError(f"readable_dir: {try_dir} is not a readable directory")
 
 
 class writeable_dir(argparse.Action):
     def __call__(self, parser, namespace, values, option_string = None):
-        tryDir = values
-        os.mkdir(tryDir, exist_ok = True)
+        try_dir = values
+        os.mkdir(try_dir, exist_ok = True)
 
-        if not os.path.isdir(tryDir):
-            raise argparse.ArgumentTypeError("writeableDir: {0} is not a valid path".format(tryDir))
-        if os.access(tryDir, os.W_OK):
-            setattr(namespace, self.dest, tryDir)
+        if not os.path.isdir(try_dir):
+            raise argparse.ArgumentTypeError(f"writeable_dir: {try_dir} is not a valid path")
+        if os.access(try_dir, os.W_OK):
+            setattr(namespace, self.dest, try_dir)
         else:
-            raise argparse.ArgumentTypeError("writeableDir: {0} is not a writeable directory".format(tryDir))
+            raise argparse.ArgumentTypeError(f"writeable_dir: {try_dir} is not a writeable directory")
 
 
 def format_list(items):
