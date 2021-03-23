@@ -46,7 +46,7 @@ class ECEF():
             self.y - other.y,
             self.z - other.z
         )
-    
+
     def __isub__(self, other):
         if not isinstance(other, Vector):
             raise TypeError(f"ECEF: cannot __isub__ {type(other)}")
@@ -99,7 +99,7 @@ class Vector3D:
             self.y - other.y,
             self.z - other.z
         )
-    
+
     def __isub__(self, other):
         if not isinstance(other, Vector3D):
             raise TypeError(f"Vector3D: cannot __isub__ {type(other)}")
@@ -179,7 +179,7 @@ class Vector3D:
             rot_matrix_y(coordinates.lat),
             np.fliplr(np.eye(3)),
         ])
-    
+
     def derotation_matrix(self, *, wgs84=False):
         """Get an inverse transformation matrix (this location to ECEF)"""
         coordinates = self.to_WGS84() if wgs84 else self.to_spherical()
@@ -241,7 +241,7 @@ class Vector3D:
 
     def altaz_to_dxdydz_at(self, location: 'Vector3D') -> 'Vector3D':
         return Vector3D.from_numpy_vector(location.rotation_matrix() @ self.as_numpy_vector())
-    
+
     def dxdydz_to_altaz_at(self, location: 'Vector3D') -> 'Vector3D':
         return Vector3D.from_numpy_vector(location.derotation_matrix() @ self.as_numpy_vector())
 
@@ -341,7 +341,6 @@ class EarthLocation(Vector3D):
 
 def cos_sin(angle):
     return np.cos(np.radians(angle)), np.sin(np.radians(angle))
-   
 
 def rot_matrix_x(angle):
     c, s = cos_sin(angle)

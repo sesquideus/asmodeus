@@ -10,11 +10,11 @@ import models.frame
 
 from physics import atmosphere, coord, radiometry, constants
 
-#log = logging.getLogger('root')
-class L():
-    def debug(self, p):
-        print(p)
-log = L()
+log = logging.getLogger('root')
+#class L():
+#    def debug(self, p):
+#        print(p)
+#log = L()
 
 EARTH_ROTATION = coord.Vector3D(0, 0, constants.EARTH_ANGULAR_SPEED)
 
@@ -59,7 +59,7 @@ class State:
         self.log_mass = log_mass
 
     def __str__(self):
-        return f"{self.position:w} {self.velocity:s} {self.log_mass:6.2g}"
+        return f"{self.position:w} {self.velocity:s} {self.log_mass:6.3f}"
 
 
 class Diff:
@@ -106,7 +106,7 @@ class Diff:
 
     ### Representations
     def __str__(self):
-        return f"{self.drdt} {self.dvdt} {self.dmdt}"
+        return f"{self.drdt} {self.dvdt} {self.dmdt:6.3f}"
 
     ### Logic
     def norm(self):
@@ -235,26 +235,30 @@ class Meteor:
         clock = 0
         self.step = 0
 
-        while True:
-            self.step += 1
-            state = integrator(State(self.position, self.velocity, self.log_mass), dt)
+        try:
+            while True:
+                self.step += 1
+                state = integrator(State(self.position, self.velocity, self.log_mass), dt)
 
-            if clock % spf == 0:
-                self.save_snapshot(state, wgs84=wgs84)
-                self.print_info(spf)
-            clock += 1
+                if clock % spf == 0:
+                    self.save_snapshot(state, wgs84=wgs84)
+                    self.print_info(spf)
+                clock += 1
 
-            self.position += state.drdt * dt
-            self.velocity += state.dvdt * dt
-            self.log_mass += state.dmdt * dt
+                self.position += state.drdt * dt
+                self.velocity += state.dvdt * dt
+                self.log_mass += state.dmdt * dt
 
-            # Advance time by dt
-            self.timestamp += datetime.timedelta(seconds = dt)
-            self.time += dt
+                # Advance time by dt
+                self.timestamp += datetime.timedelta(seconds = dt)
+                self.time += dt
 
-            if self.check_terminate():
-                break
-
+                if self.check_terminate():
+                    break
+        except ValueError:
+            log.debug(f"Generation aborted")
+        finally:
+            log.debug(f"Meteor generated ({len(self.frames)} frames)")
 
     def fly_adaptive(self, fps, *, method='DP', wgs84=True, min_spf=1, max_spf=10000, error_coarser=1e-6, error_finer=1e-3):
         integrator = self.select_integrator_adaptive()
@@ -265,56 +269,59 @@ class Meteor:
         self.step = 0
         last_change = 0
 
-        while True:
-            dt = 1.0 / (fps * spf)
-            self.step += 1
-            error, diff = integrator(State(self.position, self.velocity, self.log_mass), dt)
-            #print(f"t = {self.time:12.6f} s, error = {error:.6f}, {clock}/{spf}")
+        try:
+            while True:
+                dt = 1.0 / (fps * spf)
+                self.step += 1
+                error, diff = integrator(State(self.position, self.velocity, self.log_mass), dt)
+                #print(f"t = {self.time:12.6f} s, error = {error:.6f}, {clock}/{spf}")
 
-            if error < error_coarser and spf > min_spf:
-                log.debug(f"Step unnecessarily small (error = {error:.6f}), {clock}/{spf}")
-                if clock % 2 == 0:
-                    spf //= 2
-                    clock //= 2
-                    log.debug(f"Decreasing to {spf} steps per frame at clock {clock}")
-                    last_change = +1
+                if error < error_coarser and spf > min_spf:
+                    log.debug(f"Step unnecessarily small (error = {error:.6f}), {clock}/{spf}")
+                    if clock % 2 == 0:
+                        spf //= 2
+                        clock //= 2
+                        log.debug(f"Decreasing to {spf} steps per frame at clock {clock}")
+                        last_change = +1
+                        continue
+                    else:
+                        log.debug("Waiting another step")
+                        pass
+
+                if error > error_finer and spf < max_spf and last_change != 1:
+                    spf *= 2
+                    clock *= 2
+                    log.debug(f"Step too long (error = {error:.6f}), increasing to {spf} steps per frame at clock {clock}")
+                    last_change = -1
                     continue
-                else:
-                    log.debug("Waiting another step")
-                    pass
 
-            if error > error_finer and spf < max_spf and last_change != 1:
-                spf *= 2
-                clock *= 2
-                log.debug(f"Step too long (error = {error:.6f}), increasing to {spf} steps per frame at clock {clock}")
-                last_change = -1
-                continue
+                last_change = 0
 
-            last_change = 0
+                if clock % spf == 0:
+                    self.save_snapshot(diff, wgs84=wgs84)
+                    self.print_info(spf)
+                    clock = 0
 
-            if clock % spf == 0:
-                self.save_snapshot(diff, wgs84=wgs84)
-                self.print_info(spf)
-                clock = 0
+                self.position += diff.drdt * dt
+                self.velocity += diff.dvdt * dt
+                self.log_mass += diff.dmdt * dt
 
-            self.position += diff.drdt * dt
-            self.velocity += diff.dvdt * dt
-            self.log_mass += diff.dmdt * dt
+                # Advance time by dt
+                self.timestamp += datetime.timedelta(seconds = dt)
+                self.time += dt
+                clock += 1
 
-            # Advance time by dt
-            self.timestamp += datetime.timedelta(seconds = dt)
-            self.time += dt
-            clock += 1
-
-            if self.check_terminate():
-                break
-
-        log.debug(f"Meteor generated ({len(self.frames)} frames)")
+                if self.check_terminate():
+                    break
+        except ValueError:
+            log.info("Generation aborted")
+        finally:
+            log.debug(f"Meteor generated ({len(self.frames)} frames)")
 
     def check_terminate(self):
         """Check if the simulation of the flight should be terminated"""
         # If all mass has been ablated away, the particle is pronounced dead
-        if self.log_mass < -20:
+        if self.log_mass < -10:
             log.debug("Burnt to death")
             return True
 
