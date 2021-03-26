@@ -256,7 +256,7 @@ class Vector3D:
         return self.str_cartesian(fmt='.6f')
 
     def str_cartesian(self, fmt='.0f'):
-        return f"({self.x:{fmt}}, {self.y:{fmt}}, {self.z:{fmt}})"
+        return f"({self.x:{fmt}}, {self.y:{fmt}}, {self.z:{fmt}}) XYZ"
 
     def _str_format_aad(self, func, fmta='.6f', fmtd='.6f'):
         coordinates = func()
@@ -268,13 +268,13 @@ class Vector3D:
 
     def str_spherical(self, fmta='.6f', fmtd='.6f'):
         coordinates = self.to_spherical()
-        return f"{coordinates.lat:{fmta}}° {coordinates.lon:{fmta}}° {coordinates.alt:{fmtd}}"
+        return f"{coordinates.lat:{fmta}}° {coordinates.lon:{fmta}}° {coordinates.alt:{fmtd}} SPH"
 
     def str_geodetic(self, fmta='.6f', fmtd='.6f'):
-        return self._str_format_aad(self.to_geodetic, fmta, fmtd)
+        return self._str_format_aad(self.to_geodetic, fmta, fmtd) + " GEO"
 
     def str_WGS84(self, fmta='.6f', fmtd='.6f'):
-        return self._str_format_aad(self.to_WGS84, fmta, fmtd)
+        return self._str_format_aad(self.to_WGS84, fmta, fmtd) + " WGS"
 
     def __format__(self, formatstr=''):
         if formatstr == '':

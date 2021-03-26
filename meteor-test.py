@@ -20,35 +20,15 @@ GRAVITY_VECTOR = coord.Vector3D(0, 0, -constants.EARTH_GRAVITY)
 
 def main():
     position = coord.Vector3D.from_WGS84(48.746, 21.083, 180000)
-    #position = coord.Vector3D.from_WGS84(89, 0, 0.01)
+    #position = coord.Vector3D.from_WGS84(90, 0, 100000)
     meteor = Meteor(
-        mass=0.0000228602,
-#        mass=0.000002,
+        mass=1,
         density=3370,
         position=position,
-        velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(-30.2, 72.6, 58000)),
-        #velocity=position.altaz_to_dxdydz(coord.Vector3D.from_spherical(45, 0, 500)),
+        velocity=coord.Vector3D(0, 0, 0),
         timestamp=datetime.datetime.now(tz=pytz.utc),
     )
-    #meteor.fly_constant(fps=0.1, spf=1, method='euler')
-
-    meteor1 = copy.deepcopy(meteor)
-    meteor2 = copy.deepcopy(meteor)
-    meteor3 = copy.deepcopy(meteor)
-    meteor4 = copy.deepcopy(meteor)
-    meteor5 = copy.deepcopy(meteor)
-
-    #meteor1.fly_constant(fps=8, spf=4, method='Euler')
-    #meteor2.fly_constant(fps=8, spf=4, method='RK4')
-    #meteor3.fly_constant(fps=8, spf=4, method='DP')
-    #meteor4.fly_adaptive(fps=8, spf=4, method='DP', error_coarser=1e-6)
-
-    for i in range(0, 1):
-        meteor5 = copy.deepcopy(meteor)
-        #meteor5.fly_constant(fps=20, spf=1, method='Euler')
-        meteor5.fly_adaptive(fps=20, method='DP', error_coarser=1e-8, error_finer=1e-4, min_spf=1, max_spf=8)
-    #meteor.to_dataframe()
-    #meteor.plot()
+    meteor.fly_constant(fps=1, spf=1, method='RK4')
 
 main()
 

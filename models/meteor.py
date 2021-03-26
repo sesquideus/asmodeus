@@ -11,10 +11,10 @@ import models.frame
 from physics import atmosphere, coord, radiometry, constants
 
 log = logging.getLogger('root')
-#class L():
-#    def debug(self, p):
-#        print(p)
-#log = L()
+class L():
+    def debug(self, p):
+        print(p)
+log = L()
 
 EARTH_ROTATION = coord.Vector3D(0, 0, constants.EARTH_ANGULAR_SPEED)
 
@@ -164,7 +164,7 @@ class Meteor:
         air_density = atmosphere.air_density(coordinates.alt)
         speed = new_state.velocity.norm()
         reynolds = atmosphere.Reynolds_number(self.radius, new_state.velocity.norm(), air_density / constants.AIR_VISCOSITY)
-        gamma = atmosphere.drag_coefficient_smooth_sphere(reynolds)
+        gamma = 1#atmosphere.drag_coefficient_smooth_sphere(reynolds)
 
         #drag_vector = -(gamma * self.shape_factor * air_density * speed / (new_state.mass**(1 / 3) * self.density**(2 / 3))) * new_state.velocity
         drag_vector = -(gamma * self.shape_factor * air_density * speed / (np.exp(new_state.log_mass / 3) * self.density**(2 / 3))) * new_state.velocity
@@ -172,6 +172,9 @@ class Meteor:
         coriolis_vector = -2 * EARTH_ROTATION ^ new_state.velocity
         huygens_vector = -EARTH_ROTATION ^ (EARTH_ROTATION ^ new_state.position)
         log_mass_change = -(self.heat_transfer * self.shape_factor * air_density * speed**3 * np.exp(-new_state.log_mass / 3) * self.density**(-2 / 3) / (2 * self.ablation_heat))
+
+        #print(new_state.position.str_WGS84(), new_state.velocity.str_cartesian(), air_density, speed**3, -new_state.log_mass, log_mass_change)
+        print(state.position.derotation_matrix())
 
         return Diff(
             new_state.velocity,
@@ -237,7 +240,6 @@ class Meteor:
 
         try:
             while True:
-                self.step += 1
                 state = integrator(State(self.position, self.velocity, self.log_mass), dt)
 
                 if clock % spf == 0:
@@ -252,11 +254,13 @@ class Meteor:
                 # Advance time by dt
                 self.timestamp += datetime.timedelta(seconds = dt)
                 self.time += dt
+                self.step += 1
 
                 if self.check_terminate():
                     break
-        except ValueError:
+        except ValueError as e:
             log.debug(f"Generation aborted")
+            raise e
         finally:
             log.debug(f"Meteor generated ({len(self.frames)} frames)")
 

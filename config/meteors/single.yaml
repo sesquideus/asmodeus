@@ -10,10 +10,10 @@ meteors:
         shapeFactor:            1.21                        # 1.21 for a spherical body
 
     material:
-        density:                
+        density:
             distribution:       'constant'
             parameters:
-                value:          625 
+                value:          3000 
         heatTransfer:           0.5                         # Heat transfer coefficient, default 0.5
         ablationHeat:           6000000                     # Specific enthalpy of vaporization, in J/kg
 
