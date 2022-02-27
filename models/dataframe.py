@@ -161,7 +161,7 @@ class Dataframe():
         except KeyError as e:
             log.error(f"Invalid scatter configuration parameter {c.param(e)}")
 
-    def make_sky_plot(self, *, dark = True):
+    def make_sky_plot(self, *, dark=True):
         log.info(f"Creating {c.name('sky plot')} for observer {c.name(self.observer.name)}, {c.num(len(self.visible.index))} frames to process")
 
         if dark:
@@ -186,12 +186,12 @@ class Dataframe():
         figure, axes = pyplot.subplots(subplot_kw = {'projection': 'polar'})
 
         figure.tight_layout(rect = (0.0, 0.0, 1.0, 1.0))
-        figure.set_size_inches(9, 8)
+        figure.set_size_inches(12, 12)
 
         axes.tick_params(axis='x', which='major', labelsize=20)
         axes.tick_params(axis='x', which='minor', labelsize=0)
         axes.xaxis.set_ticks([0, np.pi / 2.0, np.pi, np.pi * 3 / 2.0])
-        axes.xaxis.set_ticks(np.linspace(0, 2 * np.pi, 25), minor=True)
+        axes.xaxis.set_ticks(np.linspace(0, 2 * np.pi, 20), minor=True)
         axes.xaxis.set_ticklabels(['W', 'N', 'E', 'S'])
         axes.yaxis.set_ticklabels([])
         axes.yaxis.set_ticks(np.linspace(0, 90, 7))
@@ -201,16 +201,14 @@ class Dataframe():
 
         scatter = axes.scatter(azimuths, altitudes, c = colours, s = sizes, cmap = 'viridis', alpha = 1, linewidths = 0)
 
-        cb = figure.colorbar(scatter, extend = 'max', fraction = 0.1, pad = 0.06)
-        cb.set_label(f"angular speed [°/s]", fontsize=16)
-        cb.ax.tick_params(labelsize=15)
+        #cb = figure.colorbar(scatter, extend = 'max', fraction = 0.1, pad = 0.06)
+        #cb.set_label(f"angular speed [°/s]", fontsize=16)
+        #cb.ax.tick_params(labelsize=15)
 
-        for magnitude in [-6, -3, 0, 3, 6]:
-            sign = '+' if magnitude >= 0 else '\u2212'
-            axes.scatter([], [], c='k', alpha=0.6, s=size_formatter(magnitude), label=f'{sign}{abs(magnitude)}$^\\mathrm{{m}}$')
-        axes.legend(scatterpoints=1, frameon=False, labelspacing=0.8, title='Apparent magnitude', loc=(-0.06, 0.8))
-        
-        print("f")
+        #for magnitude in [-6, -3, 0, 3, 6]:
+        #    sign = '+' if magnitude >= 0 else '\u2212'
+        #    axes.scatter([], [], c='k', alpha=0.6, s=size_formatter(magnitude), label=f'{sign}{abs(magnitude)}$^\\mathrm{{m}}$')
+        #axes.legend(scatterpoints=1, frameon=False, labelspacing=0.8, title='Apparent magnitude', loc=(-0.06, 0.8))
 
         figure.savefig(path, facecolor = background, dpi = 300)
 

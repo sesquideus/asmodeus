@@ -13,7 +13,7 @@ from physics import atmosphere, coord, radiometry, constants
 log = logging.getLogger('root')
 class L():
     def debug(self, p):
-        print(p)
+        pass
 log = L()
 
 EARTH_ROTATION = coord.Vector3D(0, 0, constants.EARTH_ANGULAR_SPEED)
@@ -160,21 +160,20 @@ class Meteor:
             state.velocity + diff.dvdt * dt,
             state.log_mass + diff.dmdt * dt,
         )
+        if new_state.log_mass < -100:
+            raise OverflowError
+
         coordinates = new_state.position.to_WGS84()
         air_density = atmosphere.air_density(coordinates.alt)
         speed = new_state.velocity.norm()
         reynolds = atmosphere.Reynolds_number(self.radius, new_state.velocity.norm(), air_density / constants.AIR_VISCOSITY)
-        gamma = 1#atmosphere.drag_coefficient_smooth_sphere(reynolds)
+        gamma = 1 #atmosphere.drag_coefficient_smooth_sphere(reynolds)
 
-        #drag_vector = -(gamma * self.shape_factor * air_density * speed / (new_state.mass**(1 / 3) * self.density**(2 / 3))) * new_state.velocity
         drag_vector = -(gamma * self.shape_factor * air_density * speed / (np.exp(new_state.log_mass / 3) * self.density**(2 / 3))) * new_state.velocity
         gravity_vector = -constants.GRAVITATIONAL_CONSTANT * constants.EARTH_MASS / new_state.position.norm()**3 * new_state.position
         coriolis_vector = -2 * EARTH_ROTATION ^ new_state.velocity
         huygens_vector = -EARTH_ROTATION ^ (EARTH_ROTATION ^ new_state.position)
         log_mass_change = -(self.heat_transfer * self.shape_factor * air_density * speed**3 * np.exp(-new_state.log_mass / 3) * self.density**(-2 / 3) / (2 * self.ablation_heat))
-
-        #print(new_state.position.str_WGS84(), new_state.velocity.str_cartesian(), air_density, speed**3, -new_state.log_mass, log_mass_change)
-        print(state.position.derotation_matrix())
 
         return Diff(
             new_state.velocity,
@@ -240,11 +239,13 @@ class Meteor:
 
         try:
             while True:
-                state = integrator(State(self.position, self.velocity, self.log_mass), dt)
+                try:
+                    state = integrator(State(self.position, self.velocity, self.log_mass), dt)
+                except OverflowError:
+                    break
 
                 if clock % spf == 0:
                     self.save_snapshot(state, wgs84=wgs84)
-                    self.print_info(spf)
                 clock += 1
 
                 self.position += state.drdt * dt
@@ -278,7 +279,6 @@ class Meteor:
                 dt = 1.0 / (fps * spf)
                 self.step += 1
                 error, diff = integrator(State(self.position, self.velocity, self.log_mass), dt)
-                #print(f"t = {self.time:12.6f} s, error = {error:.6f}, {clock}/{spf}")
 
                 if error < error_coarser and spf > min_spf:
                     log.debug(f"Step unnecessarily small (error = {error:.6f}), {clock}/{spf}")
@@ -303,7 +303,6 @@ class Meteor:
 
                 if clock % spf == 0:
                     self.save_snapshot(diff, wgs84=wgs84)
-                    self.print_info(spf)
                     clock = 0
 
                 self.position += diff.drdt * dt
@@ -325,7 +324,7 @@ class Meteor:
     def check_terminate(self):
         """Check if the simulation of the flight should be terminated"""
         # If all mass has been ablated away, the particle is pronounced dead
-        if self.log_mass < -10:
+        if self.log_mass < -18:
             log.debug("Burnt to death")
             return True
 
@@ -335,7 +334,7 @@ class Meteor:
         #    break
 
         # If the velocity is very low, it is a meteorite
-        if self.velocity.norm() < 1:
+        if self.velocity.norm() < 1000:
             log.debug(f"Survived with final mass {self.mass:12.6f} kg")
             return True
 
