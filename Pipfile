@@ -9,16 +9,16 @@ colorama = "*"
 numpy = "*"
 astropy = "*"
 scipy = "*"
-"flake8" = "*"
 nose = "*"
 matplotlib = "*"
 pandas = "*"
-ipython = "*"
 pyproj = "*"
 pyyaml = "*"
 jinja2 = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.11"
 
 [dev-packages]
+ipython = "*"
+"flake8" = "*"
