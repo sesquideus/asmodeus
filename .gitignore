@@ -6,3 +6,6 @@
 *.o
 *.so
 datasets/*
+*/build/*
+physics/wgs84.py
+physics/*_wrap.c

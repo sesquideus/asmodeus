@@ -30,3 +30,12 @@ datasets/%/plot-sky: \
 	datasets/$$*/sightings \
 	datasets/$$*/sky
 	./asmodeus-plot.py config/$*.yaml
+
+physics/wgs84.py: physics/wgs84.i
+	cd physics
+	swig -python $<
+
+.PHONY:
+
+physics/wgs84: physics/wgs84.py
+	cd physics && python setup.py build_ext --inplace
