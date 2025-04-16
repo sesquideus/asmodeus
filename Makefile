@@ -32,8 +32,7 @@ datasets/%/plot-sky: \
 	./asmodeus-plot.py config/$*.yaml
 
 physics/wgs84.py: physics/wgs84.i
-	cd physics
-	swig -python $<
+	cd physics && swig -python $<
 
 .PHONY:
 
