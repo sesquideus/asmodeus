@@ -7,10 +7,10 @@ meteors:
         dragCoefficient:        0.6                         # 0.6 for a spherical body
         shapeFactor:            1.21                        # 1.21 for a spherical body
     material:
-        density:                
+        density:
             distribution:       constant
             parameters:
-                value:          625 
+                value:          625
         heatTransfer:           0.5                         # Heat transfer coefficient, default 0.5
         ablationHeat:           6000000                     # Specific enthalpy of vaporization, in J/kg
     mass:
@@ -37,7 +37,7 @@ meteors:
         parameters:
             begin:              2016-08-11T19:00:00         # Beginning of the interval, ISO8601
             end:                2016-08-12T02:00:00         # End of the interval, ISO8601
-    integrator:                                             
+    integrator:
         name:                   'rk4'                       # Integrator to be used. Allowed values are 'rk4' and 'euler'.
         fps:                    20                          # Frames per second
         spf:                    1                           # Steps per frame. Higher values result in more precise trajectories but increase computation time
@@ -54,10 +54,10 @@ observations:
             horizon:            15
 
 biasFunctions:
-    magnitude:   
+    magnitude:
         sigmoid: &sigmoid
             discriminator:      'sigmoid'                   # Magnitude detection efficiency profile, possible values 'sigmoid' or 'step'. Sigmoid is 1/(1 + exp((m - limit) / omega))
-            parameters:                        
+            parameters:
                 limit:          8.5                         # Limiting magnitude m0
                 width:          0.35                        # Width of the function
         all: &all
@@ -67,7 +67,7 @@ biasFunctions:
         sinexp: &sinexp
             discriminator:      'sinexp'                    # Altitude detection efficiency profile, possible values 'step' or 'linear' or 'sinexp'
             parameters:
-                exponent:       0.0                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear', 
+                exponent:       0.0                         # Limit of altitude (sharp cutoff for 'step', zero efficiency for 'linear',
 
 bias:
     magnitude: *sigmoid
