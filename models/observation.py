@@ -17,7 +17,7 @@ class Observation():
         self.population     = population
         self.config         = config
 
-    def observe(self, *, processes = 1, period = 1):
+    def observe(self, *, processes: int = 1, period: int = 1):
         log.info(
             f"Calculating {c.num(self.population.count)} observations for observer {c.name(self.observer.name)} "
             f"using {c.num(processes)} processes, "
@@ -27,14 +27,14 @@ class Observation():
         meteorFiles = sorted(self.dataset.list('meteors'))
         self.count = 0
 
-        argList = [(
+        arglist = [(
             self.dataset.path('meteors', meteorFile),
             self.dataset.path('sightings', self.observer.id, meteorFile),
         ) for meteorFile in meteorFiles]
 
         self.sightings = parallel(
             observe,
-            argList,
+            arglist,
             initializer = init_observe,
             initargs    = (self.observer, self.config.streaks),
             processes   = processes,

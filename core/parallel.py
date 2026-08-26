@@ -2,15 +2,15 @@ import logging
 import time
 import multiprocessing as mp
 
-from utilities          import colour as c
+from utilities import colour as c
 
 log = logging.getLogger('root')
 
 
-def parallel(function, args, *, initializer = None, initargs = (), processes = 1, action = "<default action>", period = 1):
+def parallel(function, args, *, initializer=None, initargs=(), processes=1, action="<default action>", period=1):
     manager = mp.Manager()
     queue = manager.Queue()
-    pool = mp.Pool(processes = processes, initializer = initializer, initargs = (queue, *initargs))
+    pool = mp.Pool(processes=processes, initializer=initializer, initargs=(queue, *initargs))
     total = len(args)
     chunksize = (total // processes)
 
@@ -18,7 +18,7 @@ def parallel(function, args, *, initializer = None, initargs = (), processes = 1
 
     while not results.ready():
         size = queue.qsize()
-        log.info("{action}: {count} of {total} ({perc})".format(
+        log.info("{action}: {count} of {total} ({perc})".format(
             action      = action,
             count       = c.num(f"{size:6d}"),
             total       = c.num(f"{total:6d}"),
